@@ -45,7 +45,6 @@ static size_t __partition(char* base,
      * empty, which would lead to infinite recursion. */
     size_t p = (end - 1 + start) / 2;
 
-
     /* Copy the pivot value to the allocated workspace because it may be moved
      * and it's ugly (and less efficient?) to keep track of it. */
     char* pivot = temp + size;
@@ -60,12 +59,12 @@ static size_t __partition(char* base,
         } while (compare(base + j * size, pivot) > 0);
 
         /* At this point we have a few invariants:
-         * 1. A[k] <= p if k < i and A[k] >= p if k > j.
-         * 2. j >= i - 1. If j = i then A[j] = p. If j = i - 1 then A[j] <= p.
+         * 1. A[k] <= pivot if k < i and A[k] >= pivot if k > j.
+         * 2. j >= i - 1. If j = i then A[j] = pivot. If j = i - 1 then A[j] <= pivot.
          * 3. start <= j < end - 1.
          * Assuming end - start > 1, these guarantee that we partition the
-         * range in two non-empty partitions [start, p] (elements <= pivot) and
-         * ]p, end[ (elements >= pivot). */
+         * range in two non-empty partitions [start, j] (elements <= pivot) and
+         * ]j, end[ (elements >= pivot). */
         if (i >= j) {
             return j;
         } else {
@@ -98,9 +97,9 @@ static void __quicksort(char* base,
 {
     if (end - start <= 1) {
         return;
-    /* Using insertion sort for short ranges gives a significant speed boost of
-     * about 10-15%. */
     } else if (end - start <= 16) {
+        /* Using insertion sort for short ranges gives a significant speed boost of
+         * about 10-15%. */
         __insertionsort(base, start, end, size, compare, temp);
     } else {
         size_t p = __partition(base, start, end, size, compare, temp);
