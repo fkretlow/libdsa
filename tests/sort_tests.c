@@ -16,7 +16,10 @@ int test_quicksort(void)
 {
     make_random(A, N_ELEMENTS, MAX_VALUE);
     quicksort(A, N_ELEMENTS, sizeof(*A), compint);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint), "Quicksort: Not sorted.")
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint), "Quicksort: Not sorted.");
+    quicksort(A, N_ELEMENTS, sizeof(*A), compint);
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint),
+            "Quicksort: Not sorted after sorting already sorted array.");
     return TEST_OK;
 }
 
@@ -24,7 +27,10 @@ int test_mergesort(void)
 {
     make_random(A, N_ELEMENTS, MAX_VALUE);
     mergesort(A, N_ELEMENTS, sizeof(*A), compint);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint), "Mergesort: Not sorted.")
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint), "Mergesort: Not sorted.");
+    mergesort(A, N_ELEMENTS, sizeof(*A), compint);
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint),
+            "Mergesort: Not sorted after sorting already sorted array.");
     return TEST_OK;
 }
 
