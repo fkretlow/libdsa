@@ -1,32 +1,37 @@
 CFLAGS= -g -Wall -Wextra -I./src
 LDFLAGS= -L./build
-LDLIBS= -lsort
 
-SOURCES=$(wildcard ./src/*.c)
-OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
-TARGET=./build/libsort.a
+LIB_SOURCES=$(wildcard ./src/*.c)
+LIB_OBJECTS=$(patsubst %.c,%.o,$(LIB_SOURCES))
+LIB=./build/libdsa.a
 
 TEST_SOURCES=$(wildcard ./tests/*_tests.c)
-TESTS=$(patsubst %.c,%,$(TEST_SOURCES))
+TEST=$(patsubst %.c,%,$(TEST_SOURCES))
 
-.PHONY: all clean build tests
+BIN_SOURCES=$(wildcard ./programs/*.c)
+BIN=$(patsubst ./programs/%.c,./build/%,$(BIN_SOURCES))
 
-all: clean $(TARGET) tests
+.PHONY: all clean build test
+
+all: clean $(LIB) test
 
 clean:
-	rm -rf ./build ./**/*.o `find ./tests/ -type f -name "*_tests"` ./tests/sort_comparisons
+	rm -rf ./build ./bin ./**/*.o
+	rm -rf `find ./tests/ -type f ! -name "*.*"`
 
 build:
 	mkdir -p ./build
 
-$(TARGET): build $(OBJECTS)
-	ar rcs $@ $(OBJECTS)
+$(LIB): build $(LIB_OBJECTS)
+	ar rcs $@ $(LIB_OBJECTS)
 	ranlib $@
 
-$(TESTS): $(TARGET)
+$(TEST): $(LIB)
 
-tests: $(TESTS)
+test: $(TEST)
 	sh ./tests/runtests.sh
 
-compare: clean $(TARGET) ./tests/sort_comparisons
-	./tests/sort_comparisons
+$(BIN): $(LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(BIN_SOURCES) $(LIB)
+
+bin: $(BIN)
