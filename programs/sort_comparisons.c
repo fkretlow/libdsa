@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "debug.h"
-#include "quicksort.h"
+#include "sort.h"
 #include "stats.h"
 
 #define NMEMB 10000
