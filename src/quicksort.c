@@ -2,15 +2,7 @@
 #include <string.h>
 
 #include "debug.h"
-
-typedef int (*__comparison_f)(void* a, void* b);
-
-static inline void __swap(char* a, char* b, size_t size, char* temp)
-{
-    memcpy(temp, a, size);
-    memcpy(a, b, size);
-    memcpy(b, temp, size);
-}
+#include "sort_tools.h"
 
 static size_t __partition(char* base,
                           size_t start, size_t end,
@@ -67,22 +59,6 @@ static size_t __partition(char* base,
             return j;
         } else {
             __swap(base + i * size, base + j * size, size, temp);
-        }
-    }
-}
-
-static void __insertionsort(char *base,
-                            size_t start, size_t end,
-                            size_t size,
-                            __comparison_f compare,
-                            char* temp)
-{
-    size_t i, j;
-    for (i = start + 1; i < end; ++i) {
-        j = i;
-        while (compare(base + j * size, base + (j - 1) * size) < 0 && j > start) {
-            __swap(base + j * size, base + (j - 1) * size, size, temp);
-            --j;
         }
     }
 }

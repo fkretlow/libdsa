@@ -6,9 +6,9 @@
 #include "sort.h"
 #include "stats.h"
 
-#define NMEMB 10000
-#define MAXV 1000
-#define NRUNS 1000
+#define N_ELEMENTS 10000
+#define MAX_VALUE 1000
+#define N_RUNS 1000
 
 #define init_comparisons() \
     clock_t start, end; \
@@ -21,11 +21,11 @@
     Stats_init(&stats); \
     start = clock(); \
     while ((double)(clock() - start) / CLOCKS_PER_SEC < 1.0) { \
-        make_random((A), NMEMB, MAXV); \
+        make_random((A), N_ELEMENTS, MAX_VALUE); \
         f((A), ##__VA_ARGS__); \
     } \
     for (size_t i = 0; i < nruns; ++i) { \
-        make_random((A), NMEMB, MAXV); \
+        make_random((A), N_ELEMENTS, MAX_VALUE); \
         start = clock(); \
         f((A), ##__VA_ARGS__); \
         end = clock(); \
@@ -51,11 +51,12 @@ int main()
 {
     init_comparisons();
 
-    int* A = malloc(NMEMB * sizeof(*A));
+    int* A = malloc(N_ELEMENTS * sizeof(*A));
     check_alloc(A);
 
-    measure(100, qsort, A, NMEMB, sizeof(*A), compint);
-    measure(100, quicksort, A, NMEMB, sizeof(*A), compint);
+    measure(N_RUNS, qsort, A, N_ELEMENTS, sizeof(*A), compint);
+    measure(N_RUNS, quicksort, A, N_ELEMENTS, sizeof(*A), compint);
+    measure(N_RUNS, mergesort, A, N_ELEMENTS, sizeof(*A), compint);
 
     free(A);
     return 0;

@@ -25,5 +25,10 @@
     #define debug(M, ...) fprintf(stderr, "Debug: " M "\n", ##__VA_ARGS__);
 #endif
 
+#define debug_array(M, A, n) \
+    fprintf(stderr, "Debug: " M); \
+    for (size_t i = 0; i < (n); ++i) fprintf(stderr, "%d ", (A)[i]); \
+    fprintf(stderr, "\n");
+
 
 #endif // _debug_h
