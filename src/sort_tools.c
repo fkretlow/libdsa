@@ -19,7 +19,7 @@ void __insertionsort(char *base,
     size_t i, j;
     for (i = start + 1; i < end; ++i) {
         j = i;
-        while (compare(base + j * size, base + (j - 1) * size) < 0 && j > start) {
+        while (j > start && compare(base + j * size, base + (j - 1) * size) < 0) {
             __swap(base + j * size, base + (j - 1) * size, size, temp);
             --j;
         }

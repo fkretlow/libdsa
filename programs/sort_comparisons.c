@@ -8,7 +8,7 @@
 
 #define N_ELEMENTS 10000
 #define MAX_VALUE 1000
-#define N_RUNS 1000
+#define N_RUNS 10
 
 #define init_comparisons() \
     clock_t start, end; \
@@ -57,6 +57,7 @@ int main()
     measure(N_RUNS, qsort, A, N_ELEMENTS, sizeof(*A), compint);
     measure(N_RUNS, quicksort, A, N_ELEMENTS, sizeof(*A), compint);
     measure(N_RUNS, mergesort, A, N_ELEMENTS, sizeof(*A), compint);
+    measure(N_RUNS, heapsort, A, N_ELEMENTS, sizeof(*A), compint);
 
     free(A);
     return 0;

@@ -12,11 +12,10 @@ void quicksort(void* base, size_t nmemb, size_t size,
 void mergesort(void* base, size_t nmemb, size_t size,
                int (*compar)(const void*, const void*));
 
-int is_sorted(void* base, size_t nmemb, size_t size,
+void heapsort(void* base, size_t nmemb, size_t size,
               int (*compar)(const void*, const void*));
 
-void __heapify(int* A, size_t n);
-int is_heap(int* A, size_t n);
-void heapsort(int* A, size_t n);
+int is_sorted(void* base, size_t nmemb, size_t size,
+              int (*compar)(const void*, const void*));
 
 #endif // _sort_h

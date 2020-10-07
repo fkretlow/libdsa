@@ -34,5 +34,6 @@ test: $(TEST)
 $(BIN): $(LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(BIN_SOURCES) $(LIB)
 
+bin: CFLAGS += -DNDEBUG
 bin: $(BIN)
 	./build/sort_comparisons

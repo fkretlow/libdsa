@@ -52,6 +52,19 @@ int test_mergesort(void)
     return TEST_OK;
 }
 
+int test_heapsort(void)
+{
+    for (int i = 0; i < N_RUNS; ++i) {
+        make_random(A, N_ELEMENTS, MAX_VALUE);
+        heapsort(A, N_ELEMENTS, sizeof(*A), compint);
+        test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint), "Heapsort: Not sorted.");
+    }
+    heapsort(A, N_ELEMENTS, sizeof(*A), compint);
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), compint),
+            "Heapsort: Not sorted after sorting already sorted array.");
+    return TEST_OK;
+}
+
 int main()
 {
     srand((unsigned)time(NULL));
@@ -59,5 +72,6 @@ int main()
     run_test(test_is_sorted);
     run_test(test_quicksort);
     run_test(test_mergesort);
+    run_test(test_heapsort);
     test_suite_end();
 }
