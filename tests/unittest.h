@@ -24,16 +24,16 @@ static int __tests_failed = 0;
 static int __tests_ok = 0;
 static int __rc = TEST_ERR;
 
-#define test_suite_start() printf("\nRUNNING %s\n", __FILE__);
-#define test_suite_end() if (!__tests_failed) { \
-    printf("OK %d/%d\n", __tests_ok, __tests_run); \
+#define test_suite_start() printf("\n%s\n-------------------------------------------------\n", \
+    __FILE__);
+#define test_suite_end() if (__tests_failed == 0) { \
     return 0; \
 } else { \
-    printf("%d/%d tests failed.\n", __tests_failed, __tests_run); \
     return 1; \
 }
 
-#define run_test(T) __rc = (T)(); \
+#define run_test(T) fprintf(stderr, #T "\n"); \
+    __rc = (T)(); \
     if (__rc != TEST_ERR) { \
         __tests_ok++; \
     } else { \
@@ -42,7 +42,8 @@ static int __rc = TEST_ERR;
     __tests_run++;
 
 #define test(T, M, ...) if (!(T)) { \
-    fprintf(stderr, KRED "FAIL: " KRESET M "\n", ##__VA_ARGS__); \
+    fprintf(stderr, KRED "   Fail: " KRESET M " [%d]\n", \
+            ##__VA_ARGS__, __LINE__); \
     return TEST_ERR; \
 }
 

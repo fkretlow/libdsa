@@ -32,15 +32,16 @@ error:
     return -1;
 }
 
-int Vector_init(Vector* v, __destroy_f destroy)
+int Vector_init(Vector* v, const size_t element_size, __destroy_f destroy)
 {
     check_ptr(v);
 
-    v->data = malloc(VECTOR_MIN_CAPACITY * v->element_size);
+    v->data = malloc(VECTOR_MIN_CAPACITY * element_size);
     check_alloc(v->data);
 
     v->end = 0;
     v->max = VECTOR_MIN_CAPACITY;
+    v->element_size = element_size;
     v->destroy = destroy;
 
     return 0;
@@ -67,6 +68,7 @@ void Vector_destroy(Vector* v)
     if (v && v->data) {
         Vector_clear(v);
         free(v->data);
+        v->data = NULL;
     }
 }
 
