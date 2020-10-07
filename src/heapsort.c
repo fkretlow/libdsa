@@ -64,7 +64,6 @@ static inline void __heapsort(char* base,
         __sift_down(base, --n, size, 0, compare, temp);
         assert(__is_heap(base, n, size, compare) && "heapsort >> no longer a heap.");
     }
-
 }
 
 void heapsort(void* base, size_t nmemb, size_t size, __comparison_f compare)
