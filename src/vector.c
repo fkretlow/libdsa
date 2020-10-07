@@ -25,6 +25,7 @@ static int __Vector_resize(Vector* v, const size_t capacity)
 
     free(v->data);
     v->data = new_data;
+    v->max = c;
 
     return 0;
 error:

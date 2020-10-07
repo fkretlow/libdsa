@@ -24,8 +24,9 @@ static int __tests_failed = 0;
 static int __tests_ok = 0;
 static int __rc = TEST_ERR;
 
-#define test_suite_start() printf("\n%s\n-------------------------------------------------\n", \
-    __FILE__);
+#define test_suite_start() printf("\n%s\n" \
+        "-------------------------------------------------\n", \
+        __FILE__);
 #define test_suite_end() if (__tests_failed == 0) { \
     return 0; \
 } else { \
