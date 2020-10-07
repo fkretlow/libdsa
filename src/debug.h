@@ -25,8 +25,8 @@
     #define debug(M, ...) fprintf(stderr, "Debug: " M "\n", ##__VA_ARGS__);
 #endif
 
-#define debug_array(M, A, n) \
-    fprintf(stderr, "Debug: " M); \
+#define debug_array(M, A, n, ...) \
+    fprintf(stderr, "Debug: " M, ##__VA_ARGS__); \
     for (size_t i = 0; i < (n); ++i) fprintf(stderr, "%d ", (A)[i]); \
     fprintf(stderr, "\n");
 
