@@ -1,17 +1,15 @@
 #ifndef _debug_h
 #define _debug_h
 
-
 #include <stdio.h>
-
 
 #define KRED "\x1B[31m"
 #define KRESET "\x1B[0m"
 
-
 #define check(T, M, ...) if (!(T)) { \
     fprintf(stderr, KRED "Error: " KRESET M "\n", ##__VA_ARGS__); \
-    goto error; }
+    goto error; \
+}
 
 #define check_alloc(P) check((P), "Failed to allocate memory for " #P ".")
 #define check_ptr(P) check((P), #P " is NULL.")
