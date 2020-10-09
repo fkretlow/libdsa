@@ -6,8 +6,12 @@
 #define KRED "\x1B[31m"
 #define KRESET "\x1B[0m"
 
+int __suppress_errors;
+
 #define check(T, M, ...) if (!(T)) { \
-    fprintf(stderr, KRED "Error: " KRESET M "\n", ##__VA_ARGS__); \
+    if (!__suppress_errors) { \
+        fprintf(stderr, KRED "Error: " KRESET M "\n", ##__VA_ARGS__); \
+    } \
     goto error; \
 }
 

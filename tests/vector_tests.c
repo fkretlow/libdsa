@@ -54,8 +54,7 @@ int test_vector_usage(void)
     test(V.max == VECTOR_MIN_CAPACITY,
             "V.max = %lu (%lu) after removing all elements", V.max, VECTOR_MIN_CAPACITY);
 
-    rc = Vector_pop_back(&V, &out);
-    test(rc == -1, "Vector_pop_back should fail.");
+    test_fail(Vector_pop_back(&V, &out) == -1, "Vector_pop_back should fail.");
 
     return TEST_OK;
 }

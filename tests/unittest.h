@@ -24,9 +24,13 @@ static int __tests_failed = 0;
 static int __tests_ok = 0;
 static int __rc = TEST_ERR;
 
+extern int __suppress_errors;
+
 #define test_suite_start() printf("\n%s\n" \
         "-------------------------------------------------\n", \
-        __FILE__);
+        __FILE__); \
+        __suppress_errors = 0;
+
 #define test_suite_end() if (__tests_failed == 0) { \
     return 0; \
 } else { \
@@ -47,5 +51,14 @@ static int __rc = TEST_ERR;
             ##__VA_ARGS__, __LINE__); \
     return TEST_ERR; \
 }
+
+#define test_fail(T, M, ...) __suppress_errors = 1; \
+    if (!(T)) { \
+        fprintf(stderr, KRED "   Fail: " KRESET M " [%d]\n", \
+                ##__VA_ARGS__, __LINE__); \
+        __suppress_errors = 0; \
+        return TEST_ERR; \
+    } \
+    __suppress_errors = 0;
 
 #endif // _unittest_h
