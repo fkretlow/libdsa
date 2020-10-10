@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "debug.h"
 #include "unittest.h"
 #include "vector.h"
