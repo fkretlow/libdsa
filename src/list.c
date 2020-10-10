@@ -85,7 +85,7 @@ error:
     return -1;
 }
 
-int List_get(const List* l, const size_t i, const void* out)
+int List_get(const List* l, const size_t i, void* out)
 {
     check_ptr(l);
     check_ptr(out);
