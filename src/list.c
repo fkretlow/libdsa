@@ -1,6 +1,15 @@
 #include <assert.h>
-
 #include "list.h"
+
+static inline int __List_invariant(const List* l)
+{
+    if (l->first) check(l->last, "List invariant violated: l->first && !l->last");
+    if (l->last) check(l->first, "List invariant violated: !l->first && l->last");
+    if (l->first) check(l->size > 0, "List invariant violated: l->first && l->size == 0");
+    return 0;
+error:
+    return -1;
+}
 
 static int __ListNode_new(__ListNode** node_out)
 {
@@ -53,6 +62,7 @@ int List_init(List* l, const size_t element_size, __destroy_f destroy)
     l->size = 0;
     l->destroy = destroy;
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
@@ -60,6 +70,8 @@ error:
 
 void List_clear(List* l)
 {
+    assert(!__List_invariant(l));
+
     __ListNode* cur;
     __ListNode* next;
 
@@ -73,6 +85,7 @@ void List_clear(List* l)
 static int __List_get_node(const List* l, size_t i, __ListNode** node_out)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(node_out);
     check(i < l->size, "Index out of range: %lu >= %lu", i, l->size);
 
@@ -88,6 +101,7 @@ error:
 int List_get(const List* l, const size_t i, void* out)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(out);
 
     __ListNode* n;
@@ -102,6 +116,7 @@ error:
 int List_set(List* l, const size_t i, const void* in)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(in);
 
     __ListNode* n;
@@ -116,6 +131,7 @@ error:
 int List_insert(List* l, const size_t i, const void* in)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(in);
 
     __ListNode* new;
@@ -125,7 +141,7 @@ int List_insert(List* l, const size_t i, const void* in)
     if (i == 0) {
         new->next = l->first;
         if (l->first) l->first->prev = new;
-        l->first = new;
+        l->first = l->last = new;
     } else {
         __ListNode* next;
         check(!__List_get_node(l, i, &next), "Failed to get node at index %lu.", i);
@@ -138,6 +154,7 @@ int List_insert(List* l, const size_t i, const void* in)
     }
     ++l->size;
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
@@ -146,6 +163,7 @@ error:
 int List_delete(List* l, const size_t i)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
 
     __ListNode *n;
     check(!__List_get_node(l, i, &n), "Failed to get node at index %lu.", i);
@@ -171,6 +189,7 @@ int List_delete(List* l, const size_t i)
     --l->size;
     __ListNode_delete(l, n);
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
@@ -179,6 +198,7 @@ error:
 int List_push_back(List* l, const void* in)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(in);
 
     __ListNode* new;
@@ -194,6 +214,7 @@ int List_push_back(List* l, const void* in)
     }
     ++l->size;
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
@@ -202,12 +223,14 @@ error:
 int List_pop_front(List* l, void* out)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(out);
     check(l->size > 0, "Attempt to pop from empty list.");
 
     memmove(out, l->first->data, l->element_size);
     check(!List_delete(l, 0), "Failed to delete first node.");
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
@@ -216,12 +239,14 @@ error:
 int List_pop_back(List* l, void* out)
 {
     check_ptr(l);
+    assert(!__List_invariant(l));
     check_ptr(out);
     check(l->size > 0, "Attempt to pop from empty list.");
 
     memmove(out, l->last->data, l->element_size);
     check(!List_delete(l, l->size - 1), "Failed to delete last node.");
 
+    assert(!__List_invariant(l));
     return 0;
 error:
     return -1;
