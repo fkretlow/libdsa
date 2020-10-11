@@ -16,5 +16,5 @@ project.
 ## Available data structures
 
 1. [Vector](./doc/vector.md)
-1. [List](./doc/list.md)
-
+2. [List](./doc/list.md)
+3. [Stack](./doc/stack.md)

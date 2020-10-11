@@ -22,9 +22,10 @@ typedef struct List {
     size_t size;
 } List;
 
-#define List_first(L) (L)->first->data
-#define List_last(L) (L)->last->data
+#define List_first(L) ((L)->first ? (L)->first->data : NULL)
+#define List_last(L) ((L)->last ? (L)->last->data : NULL)
 #define List_size(L) (L)->size
+#define List_empty(L) ((L)->size == 0)
 
 int List_init(List* l, const size_t element_size, __destroy_f destroy);
 void List_clear(List* l);

@@ -20,8 +20,9 @@ typedef struct Stack {
     size_t size;
 } Stack;
 
-#define Stack_top(L) (L)->top->data
-#define Stack_size(L) (L)->size
+#define Stack_top(S) ((S)->top ? (S)->top->data : NULL)
+#define Stack_size(S) (S)->size
+#define Stack_empty(S) ((S)->size == 0)
 
 int Stack_init(Stack* s, const size_t element_size, __destroy_f destroy);
 void Stack_clear(Stack* s);

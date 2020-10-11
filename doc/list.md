@@ -15,7 +15,7 @@ List_init(&l, sizeof(int), NULL);
 
 // Pass pointers to values you want to add.
 for (int i = 0; i < max; ++i) {
-    List_push_back(&v, &i); // or push_front
+    List_push_back(&l, &i); // or push_front
 }
 
 // Pass an address if you want to store popped values.
@@ -26,6 +26,6 @@ while (List_size(&l) > 0) {
 }
 
 // There's no memory block allocated anywhere, but all elements are on the heap.
-// Clear the list when you're done to return the memory.
+// Clear a non-empty stack when you're done to return the memory.
 List_clear(&l);
 ```

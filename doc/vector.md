@@ -20,7 +20,7 @@ for (int i = 0; i < max; ++i) {
 // Pass an address if you want to store popped values.
 int value;
 while (Vector_size(&d) > 0) {
-    Vector_pop_back(&d, &value);
+    Vector_pop_back(&v, &value);
     // Have fun with value.
 }
 
