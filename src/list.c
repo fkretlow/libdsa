@@ -141,7 +141,8 @@ int List_insert(List* l, const size_t i, const void* in)
     if (i == 0) {
         new->next = l->first;
         if (l->first) l->first->prev = new;
-        l->first = l->last = new;
+        l->first = new;
+        if (l->size == 0) l->last = new;
     } else {
         __ListNode* next;
         check(!__List_get_node(l, i, &next), "Failed to get node at index %lu.", i);

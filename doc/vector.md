@@ -2,10 +2,10 @@
 
 [`vector.h`](./../src/vector.h), [`vector.c`](./../src/vector.c)
 
+The term vector is borrowed from the STL. It’s a dynamic array that expands and contracts automatically if needed when elements are added or removed.
+
 - Fast adding of elements at the end in O(1).
 - Fast random access in O(1).
-
-The term vector is borrowed from the STL. It’s a dynamic array that expands and contracts dynamically if necessary when elements are added or removed.
 
 ```C
 // Initialize with the element size and an optional callback for element destruction.

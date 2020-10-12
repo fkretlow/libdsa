@@ -2,11 +2,11 @@
 
 [`list.h`](./../src/list.h), [`list.c`](./../src/list.c)
 
+"You ain't a programmer before you've made your own linked list in C." – Well, here's mine and there's nothing special about it.
+
 - Fast adding of elements at both ends in O(1).
 - Fast access at both ends in O(1), but O(n) in the middle.
 - Small chunks of memory all over the place.
-
-"You ain't a programmer before you've made your own linked list in C." – Well, here's mine and there's nothing special about it.
 
 ```C
 // Initialize with the element size and an optional callback for element destruction.
@@ -26,6 +26,6 @@ while (List_size(&l) > 0) {
 }
 
 // There's no memory block allocated anywhere, but all elements are on the heap.
-// Clear a non-empty stack when you're done to return the memory.
+// Clear a non-empty list when you're done to return the memory.
 List_clear(&l);
 ```
