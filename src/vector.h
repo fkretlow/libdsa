@@ -1,6 +1,7 @@
 #ifndef _vector_h
 #define _vector_h
 
+#include <stdlib.h>
 #include "container_tools.h"
 
 #define VECTOR_MIN_CAPACITY 8lu
