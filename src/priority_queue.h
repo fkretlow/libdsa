@@ -20,7 +20,7 @@ int PriorityQueue_init(PriorityQueue* q,
                        __destroy_f destroy,
                        __comparison_f compare);
 #define PriorityQueue_clear(Q) Vector_clear( &((Q)->data) )
-#define PriorityQueue_destroy(Q) Vector_destroy( &((Q)->data) )
+void PriorityQueue_destroy(PriorityQueue* q);
 
 int PriorityQueue_push(PriorityQueue* q, const void* in);
 int PriorityQueue_pop(PriorityQueue* q, void* out);

@@ -28,8 +28,7 @@ static void __Heap_bubble_up(char* base,
                              char* temp)
 {
     size_t p = parent(i);
-    while (i > 0 && i != SIZE_MAX
-           && compare(base + i * size, base + p * size) > 0) {
+    while (i > 0 && compare(base + i * size, base + p * size) > 0) {
         __swap(base + i * size, base + p * size, size, temp);
         i = p;
         p = parent(p);
@@ -75,6 +74,13 @@ error:
     return -1;
 }
 
+void PriorityQueue_destroy(PriorityQueue* q)
+{
+    Vector_destroy(&(q->data));
+    free(q->temp);
+    q->temp = NULL;
+}
+
 int PriorityQueue_push(PriorityQueue* q, const void* in)
 {
     check_ptr(q);
@@ -87,13 +93,13 @@ int PriorityQueue_push(PriorityQueue* q, const void* in)
     // Move it upwards until the heap property is satisfied.
     if (Vector_size(&(q->data)) > 1) {
         __Heap_bubble_up(q->data.data,
-                         Vector_size(&(q->data)) - 1,
                          q->data.element_size,
+                         Vector_size(&(q->data)) - 1,
                          q->compare,
                          q->temp);
+        assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }
 
-    assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
 
     return 0;
 error:
@@ -120,9 +126,9 @@ int PriorityQueue_pop(PriorityQueue* q, void* out)
         __Heap_sift_down(q->data.data,
                          q->data.end, q->data.element_size, 0,
                          q->compare, q->temp);
+        assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }
 
-    assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
 
     return 0;
 error:
