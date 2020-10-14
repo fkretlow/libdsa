@@ -43,11 +43,9 @@ int PriorityQueue_push(PriorityQueue* q, const void* in)
 
     // Move it upwards until the heap property is satisfied.
     if (Vector_size(&(q->data)) > 1) {
-        Heap_bubble_up(q->data.data,
-                       q->data.element_size,
+        Heap_bubble_up(q->data.data, q->data.element_size,
                        Vector_size(&(q->data)) - 1,
-                       q->compare,
-                       q->temp);
+                       q->compare, q->temp);
         assert(is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }
 
@@ -74,8 +72,7 @@ int PriorityQueue_pop(PriorityQueue* q, void* out)
 
     // Repair the heap.
     if (Vector_size(&(q->data)) > 1) {
-        Heap_sift_down(q->data.data,
-                       q->data.end, q->data.element_size, 0,
+        Heap_sift_down(q->data.data, q->data.end, q->data.element_size, 0,
                        q->compare, q->temp);
         assert(is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }

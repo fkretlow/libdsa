@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 
 #include "container_tools.h"
@@ -28,6 +29,7 @@ void make_heap(char* base, const size_t n, const size_t size,
     for (int i = __parent((int)n - 1); i >= 0; --i) {
         Heap_sift_down(base, n, size, (size_t)i, compare, temp);
     }
+    assert(is_heap(base, n, size, compare));
 }
 
 void Heap_bubble_up(char* base, const size_t size,

@@ -5,11 +5,10 @@
 #include "heap.h"
 #include "sort_tools.h"
 
-static inline void __heapsort(char* base,
-                              size_t n, size_t size,
-                              __compare_f compare,
-                              char* temp)
+void heapsort(char* base, size_t n, size_t size, __compare_f compare)
 {
+    char* temp = malloc(size);
+
     make_heap(base, n, size, compare, temp);
     assert(is_heap(base, n, size, compare) && "heapsort >> initial __heapify failed.");
 
@@ -19,11 +18,6 @@ static inline void __heapsort(char* base,
         Heap_sift_down(base, n, size, 0, compare, temp);
         assert(is_heap(base, n, size, compare) && "heapsort >> no longer a heap.");
     }
-}
 
-void heapsort(void* base, size_t nmemb, size_t size, __compare_f compare)
-{
-    char* temp = malloc(size);
-    __heapsort(base, nmemb, size, compare, temp);
     free(temp);
 }
