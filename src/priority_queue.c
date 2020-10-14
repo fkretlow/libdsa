@@ -3,58 +3,9 @@
 #include <string.h>
 
 #include "debug.h"
+#include "heap.h"
 #include "priority_queue.h"
 #include "sort_tools.h"
-
-#define lchild(i) (2 * (i) + 1)
-#define rchild(i) (2 * (i) + 2)
-#define parent(i) (((i) - 1) / 2)
-
-static int __is_heap(char* base, size_t n, size_t size, __compare_f compare)
-{
-    if (n == 1) return 1;
-    for (size_t i = 0; i <= parent(n - 1); ++i) {
-        if (compare(base + i * size, base + lchild(i) * size) < 0 ||
-            (rchild(i) < n && compare(base + i * size, base + rchild(i) * size) < 0)) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-static void __Heap_bubble_up(char* base,
-                             const size_t size, size_t i,
-                             __compare_f compare,
-                             char* temp)
-{
-    size_t p = parent(i);
-    while (i > 0 && compare(base + i * size, base + p * size) > 0) {
-        __swap(base + i * size, base + p * size, size, temp);
-        i = p;
-        p = parent(p);
-    }
-}
-
-static void __Heap_sift_down(char* base,
-                             size_t n, size_t size, size_t i,
-                             __compare_f compare,
-                             char* temp)
-{
-    if (n == 1) return;
-    size_t max;
-    while (i <= parent(n - 1)) {
-        max = i;
-        if (compare(base + i * size, base + lchild(i) * size) < 0) {
-            max = lchild(i);
-        }
-        if (rchild(i) < n && compare(base + max * size, base + rchild(i) * size) < 0) {
-            max = rchild(i);
-        }
-        if (max == i) return;
-        __swap(base + i * size, base + max * size, size, temp);
-        i = max;
-    }
-}
 
 int PriorityQueue_init(PriorityQueue* q,
                        const size_t element_size,
@@ -92,12 +43,12 @@ int PriorityQueue_push(PriorityQueue* q, const void* in)
 
     // Move it upwards until the heap property is satisfied.
     if (Vector_size(&(q->data)) > 1) {
-        __Heap_bubble_up(q->data.data,
-                         q->data.element_size,
-                         Vector_size(&(q->data)) - 1,
-                         q->compare,
-                         q->temp);
-        assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
+        Heap_bubble_up(q->data.data,
+                       q->data.element_size,
+                       Vector_size(&(q->data)) - 1,
+                       q->compare,
+                       q->temp);
+        assert(is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }
 
 
@@ -123,10 +74,10 @@ int PriorityQueue_pop(PriorityQueue* q, void* out)
 
     // Repair the heap.
     if (Vector_size(&(q->data)) > 1) {
-        __Heap_sift_down(q->data.data,
-                         q->data.end, q->data.element_size, 0,
-                         q->compare, q->temp);
-        assert(__is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
+        Heap_sift_down(q->data.data,
+                       q->data.end, q->data.element_size, 0,
+                       q->compare, q->temp);
+        assert(is_heap(q->data.data, q->data.end, q->data.element_size, q->compare));
     }
 
 
