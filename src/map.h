@@ -10,7 +10,6 @@
 
 struct __MapNode;
 typedef struct __MapNode {
-    struct __MapNode* prev;
     struct __MapNode* next;
     char* key;
     char* value;
@@ -34,8 +33,8 @@ void Map_clear(Map* m);
 void Map_destroy(Map* m);
 
 int Map_set(Map* m, const void* key, const void* value);
-int Map_has(Map* m, const void* key);
-int Map_get(Map* m, const void* key, void* value_out, const void* deflt);
+int Map_has(const Map* m, const void* key, int* result_out);
+int Map_get(const Map* m, const void* key, void* value_out, const void* deflt);
 int Map_delete(Map* m, const void* key);
 
 #endif // _map_h
