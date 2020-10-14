@@ -10,7 +10,7 @@
 #define rchild(i) (2 * (i) + 2)
 #define parent(i) (((i) - 1) / 2)
 
-static int __is_heap(char* base, size_t n, size_t size, __comparison_f compare)
+static int __is_heap(char* base, size_t n, size_t size, __compare_f compare)
 {
     if (n == 1) return 1;
     for (size_t i = 0; i <= parent(n - 1); ++i) {
@@ -24,7 +24,7 @@ static int __is_heap(char* base, size_t n, size_t size, __comparison_f compare)
 
 static void __Heap_bubble_up(char* base,
                              const size_t size, size_t i,
-                             __comparison_f compare,
+                             __compare_f compare,
                              char* temp)
 {
     size_t p = parent(i);
@@ -37,7 +37,7 @@ static void __Heap_bubble_up(char* base,
 
 static void __Heap_sift_down(char* base,
                              size_t n, size_t size, size_t i,
-                             __comparison_f compare,
+                             __compare_f compare,
                              char* temp)
 {
     if (n == 1) return;
@@ -59,7 +59,7 @@ static void __Heap_sift_down(char* base,
 int PriorityQueue_init(PriorityQueue* q,
                        const size_t element_size,
                        __destroy_f destroy,
-                       __comparison_f compare)
+                       __compare_f compare)
 {
     check(!Vector_init(&(q->data), element_size, destroy),
             "Failed to initialize vector for priority queue data.");

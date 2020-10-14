@@ -7,7 +7,7 @@
 
 typedef struct PriorityQueue {
     Vector data;
-    __comparison_f compare;
+    __compare_f compare;
     char* temp;
 } PriorityQueue;
 
@@ -18,7 +18,7 @@ typedef struct PriorityQueue {
 int PriorityQueue_init(PriorityQueue* q,
                        const size_t element_size,
                        __destroy_f destroy,
-                       __comparison_f compare);
+                       __compare_f compare);
 #define PriorityQueue_clear(Q) Vector_clear( &((Q)->data) )
 void PriorityQueue_destroy(PriorityQueue* q);
 

@@ -8,7 +8,7 @@
 #define rchild(i) (2 * (i) + 2)
 #define parent(i) (((i) - 1) / 2)
 
-int __is_heap(char* base, size_t n, size_t size, __comparison_f compare)
+int __is_heap(char* base, size_t n, size_t size, __compare_f compare)
 {
     if (n == 1) return 1;
     for (size_t i = 0; i <= parent(n - 1); ++i) {
@@ -22,7 +22,7 @@ int __is_heap(char* base, size_t n, size_t size, __comparison_f compare)
 
 static void __sift_down(char* base,
                         size_t n, size_t size, size_t i,
-                        __comparison_f compare,
+                        __compare_f compare,
                         char* temp)
 {
     if (n == 1) return;
@@ -43,7 +43,7 @@ static void __sift_down(char* base,
 
 static inline void __heapify(char* base,
                              size_t n, size_t size,
-                             __comparison_f compare,
+                             __compare_f compare,
                              char* temp)
 {
     for (int i = parent((int)n - 1); i >= 0; --i) {
@@ -53,7 +53,7 @@ static inline void __heapify(char* base,
 
 static inline void __heapsort(char* base,
                               size_t n, size_t size,
-                              __comparison_f compare,
+                              __compare_f compare,
                               char* temp)
 {
     __heapify(base, n, size, compare, temp);
@@ -66,7 +66,7 @@ static inline void __heapsort(char* base,
     }
 }
 
-void heapsort(void* base, size_t nmemb, size_t size, __comparison_f compare)
+void heapsort(void* base, size_t nmemb, size_t size, __compare_f compare)
 {
     char* temp = malloc(size);
     __heapsort(base, nmemb, size, compare, temp);

@@ -13,7 +13,7 @@ void __swap(char* a, char* b, size_t size, char* temp)
 void __insertionsort(char *base,
                      size_t start, size_t end,
                      size_t size,
-                     __comparison_f compare,
+                     __compare_f compare,
                      char* temp)
 {
     size_t i, j;

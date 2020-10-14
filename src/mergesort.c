@@ -7,7 +7,7 @@
 static void __merge(char* base,
                     size_t start, size_t end, size_t middle,
                     size_t size,
-                    __comparison_f compare,
+                    __compare_f compare,
                     char* temp)
 {
     // Move the first half to the workspace.
@@ -35,7 +35,7 @@ static void __merge(char* base,
 static void __mergesort(char* base,
                         size_t start, size_t end,
                         size_t size,
-                        __comparison_f compare,
+                        __compare_f compare,
                         char* temp)
 {
     if (end - start <= 1) {
@@ -50,7 +50,7 @@ static void __mergesort(char* base,
     }
 }
 
-void mergesort(void* base, size_t nmemb, size_t size, __comparison_f compare)
+void mergesort(void* base, size_t nmemb, size_t size, __compare_f compare)
 {
     char* temp = malloc(nmemb * size);
     __mergesort((char*)base, 0, nmemb, size, compare, temp);
