@@ -143,18 +143,18 @@ int Map_set(Map* m, const void* key, const void* value)
     check_ptr(m);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode* node = NULL;
+    __MapNode* n = NULL;
 
-    check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
+    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
-    if (node) {
-        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
+    if (n) {
+        check(!__MapNode_set_value(m, n, value), "Failed to set value.");
     } else {
-        check(!__MapNode_new(&node), "Failed to create new node.");
-        check(!__MapNode_set_key(m, node, key), "Failed to set key.");
-        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
-        node->next = m->buckets[bucket_index];
-        m->buckets[bucket_index] = node;
+        check(!__MapNode_new(&n), "Failed to create new node.");
+        check(!__MapNode_set_key(m, n, key), "Failed to set key.");
+        check(!__MapNode_set_value(m, n, value), "Failed to set value.");
+        n->next = m->buckets[bucket_index];
+        m->buckets[bucket_index] = n;
     }
 
     return 0;
@@ -169,10 +169,10 @@ int Map_has(const Map* m, const void* key, int* result_out)
     check_ptr(result_out);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode* node = NULL;
-    check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
+    __MapNode* n = NULL;
+    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
-    *result_out = node ? 1 : 0;
+    *result_out = n ? 1 : 0;
 
     return 0;
 error:
@@ -186,11 +186,11 @@ int Map_get(const Map* m, const void* key, void* value_out, const void* deflt)
     check_ptr(value_out);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode* node = NULL;
-    check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
+    __MapNode* n = NULL;
+    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
-    if (node) {
-        memmove(value_out, node->value, m->value_size);
+    if (n) {
+        memmove(value_out, n->value, m->value_size);
     } else {
         if (deflt) {
             memmove(value_out, deflt, m->value_size);
