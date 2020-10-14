@@ -11,7 +11,7 @@ error:
     return -1;
 }
 
-static int __ListNode_new(__ListNode** node_out)
+static inline int __ListNode_new(__ListNode** node_out)
 {
     __ListNode* new = calloc(1, sizeof(*new));
     check_alloc(new);
@@ -21,7 +21,7 @@ error:
     return -1;
 }
 
-static void __ListNode_delete(const List* l, __ListNode* n)
+static inline void __ListNode_delete(const List* l, __ListNode* n)
 {
     if (n) {
         if (n->data && l && l->destroy) {
