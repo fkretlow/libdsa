@@ -20,3 +20,4 @@ project.
 3. [Stack](./doc/stack.md)
 4. [Queue](./doc/queue.md)
 5. [Priority Queue](./doc/priority_queue.md)
+6. [Heap](./doc/heap.md)
