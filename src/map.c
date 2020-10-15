@@ -138,48 +138,55 @@ error:
     return -1;
 }
 
+// Return values: 1 if the key already exists
+//                0 if a new entry was created
+//               -1 on error
 int Map_set(Map* m, const void* key, const void* value)
 {
     check_ptr(m);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode* n = NULL;
+    __MapNode* node = NULL;
 
-    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
+    check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
 
-    if (n) {
-        check(!__MapNode_set_value(m, n, value), "Failed to set value.");
+    if (node) {
+        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
+        return 1;
     } else {
-        check(!__MapNode_new(&n), "Failed to create new node.");
-        check(!__MapNode_set_key(m, n, key), "Failed to set key.");
-        check(!__MapNode_set_value(m, n, value), "Failed to set value.");
-        n->next = m->buckets[bucket_index];
-        m->buckets[bucket_index] = n;
+        check(!__MapNode_new(&node), "Failed to create new node.");
+        check(!__MapNode_set_key(m, node, key), "Failed to set key.");
+        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
+        node->next = m->buckets[bucket_index];
+        m->buckets[bucket_index] = node;
+        return 0;
     }
 
-    return 0;
 error:
     return -1;
 }
 
-int Map_has(const Map* m, const void* key, int* result_out)
+// Return values: 1 if found
+//                0 if not found
+//               -1 on error
+int Map_has(const Map* m, const void* key)
 {
     check_ptr(m);
     check_ptr(key);
-    check_ptr(result_out);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
     __MapNode* n = NULL;
     check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
-    *result_out = n ? 1 : 0;
-
-    return 0;
+    return n ? 1 : 0;
 error:
     return -1;
 }
 
-int Map_get(const Map* m, const void* key, void* value_out, const void* deflt)
+// Return values: 1 if found
+//                0 if not found
+//               -1 on error
+int Map_get(const Map* m, const void* key, void* value_out)
 {
     check_ptr(m);
     check_ptr(key);
@@ -191,19 +198,18 @@ int Map_get(const Map* m, const void* key, void* value_out, const void* deflt)
 
     if (n) {
         memmove(value_out, n->value, m->value_size);
+        return 1;
     } else {
-        if (deflt) {
-            memmove(value_out, deflt, m->value_size);
-        } else {
-            sentinel("Can't find key.");
-        }
+        return 0;
     }
 
-    return 0;
 error:
     return -1;
 }
 
+// Return values: 1 if found
+//                0 if not found
+//               -1 on error
 int Map_delete(Map* m, const void* key)
 {
     check_ptr(m);
@@ -214,24 +220,23 @@ int Map_delete(Map* m, const void* key)
     __MapNode* node = m->buckets[bucket_index];
     __MapNode* prev = NULL;
 
-    while (node && compare(node->key, key) != 0) {
+    while (node && m->compare(node->key, key) != 0) {
         prev = node;
         node = node->next;
     }
 
-    if (!node) {
-        sentinel("Can't find key.");
-    } else {
+    if (node) {
         if (prev) {
             prev->next = node->next;
         } else {
             m->buckets[bucket_index] = node->next;
         }
+        __MapNode_delete(m, node);
+        return 1;
+    } else {
+        return 0;
     }
 
-    __MapNode_delete(m, node);
-
-    return 0;
 error:
     return -1;
 }
