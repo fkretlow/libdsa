@@ -3,7 +3,7 @@
 
 #include "sort_tools.h"
 
-void __swap(char* a, char* b, size_t size, char* temp)
+void __swap(char *a, char *b, size_t size, char *temp)
 {
     memcpy(temp, a, size);
     memcpy(a, b, size);
@@ -14,7 +14,7 @@ void __insertionsort(char *base,
                      size_t start, size_t end,
                      size_t size,
                      __compare_f compare,
-                     char* temp)
+                     char *temp)
 {
     size_t i, j;
     for (i = start + 1; i < end; ++i) {

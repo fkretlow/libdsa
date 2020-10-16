@@ -5,9 +5,9 @@
 #include "heap.h"
 #include "sort_tools.h"
 
-void heapsort(char* base, size_t n, size_t size, __compare_f compare)
+void heapsort(char *base, size_t n, size_t size, __compare_f compare)
 {
-    char* temp = malloc(size);
+    char *temp = malloc(size);
 
     make_heap(base, n, size, compare, temp);
     assert(is_heap(base, n, size, compare) && "heapsort >> initial __heapify failed.");

@@ -7,7 +7,7 @@
 #include "priority_queue.h"
 #include "sort_tools.h"
 
-int PriorityQueue_init(PriorityQueue* q,
+int PriorityQueue_init(PriorityQueue *q,
                        const size_t element_size,
                        __destroy_f destroy,
                        __compare_f compare)
@@ -25,14 +25,14 @@ error:
     return -1;
 }
 
-void PriorityQueue_destroy(PriorityQueue* q)
+void PriorityQueue_destroy(PriorityQueue *q)
 {
     Vector_destroy(&(q->data));
     free(q->temp);
     q->temp = NULL;
 }
 
-int PriorityQueue_push(PriorityQueue* q, const void* in)
+int PriorityQueue_push(PriorityQueue *q, const void *in)
 {
     check_ptr(q);
     check_ptr(in);
@@ -55,7 +55,7 @@ error:
     return -1;
 }
 
-int PriorityQueue_pop(PriorityQueue* q, void* out)
+int PriorityQueue_pop(PriorityQueue *q, void *out)
 {
     check_ptr(q);
     check_ptr(out);

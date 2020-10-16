@@ -6,7 +6,7 @@
 #include <time.h>
 #include "debug.h"
 
-int compint(const int* a, const int* b)
+int compint(const int *a, const int *b)
 {
     return *a < *b ? -1 : *a > *b ? 1 : 0;
 }

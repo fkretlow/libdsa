@@ -12,7 +12,7 @@ typedef struct Stats {
 } Stats;
 
 
-void Stats_add(Stats* s, double v)
+void Stats_add(Stats *s, double v)
 {
     s->avg = (s->count * s->avg + v) / (s->count + 1);
     ++s->count;
@@ -23,7 +23,7 @@ void Stats_add(Stats* s, double v)
     }
 }
 
-void Stats_init(Stats* s)
+void Stats_init(Stats *s)
 {
     s->avg = 0.0;
     s->min = DBL_MAX;

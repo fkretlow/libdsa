@@ -42,7 +42,7 @@ static inline void make_random(int* A, size_t nmemb, unsigned maxv)
     }
 }
 
-static inline int compint(const void* a, const void* b)
+static inline int compint(const void *a, const void *b)
 {
     return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
 }

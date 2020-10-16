@@ -4,11 +4,11 @@
 #include "debug.h"
 #include "sort_tools.h"
 
-static size_t __partition(char* base,
+static size_t __partition(char *base,
                           size_t start, size_t end,
                           size_t size,
                           __compare_f compare,
-                          char* temp)
+                          char *temp)
 {
     // Lomuto partitioning scheme
     /* size_t first_high, pivot;
@@ -37,7 +37,7 @@ static size_t __partition(char* base,
 
     /* Copy the pivot value to the allocated workspace because it may be moved
      * and it's ugly (and less efficient?) to keep track of it. */
-    char* pivot = temp + size;
+    char *pivot = temp + size;
     memcpy(pivot, base + p * size, size);
 
     for ( ;; ) {
@@ -63,11 +63,11 @@ static size_t __partition(char* base,
     }
 }
 
-static void __quicksort(char* base,
+static void __quicksort(char *base,
                         size_t start, size_t end,
                         size_t size,
                         __compare_f compare,
-                        char* temp)
+                        char *temp)
 {
     if (end - start <= 1) {
         return;
@@ -87,14 +87,14 @@ static void __quicksort(char* base,
     }
 }
 
-void quicksort(void* base, size_t nmemb, size_t size, __compare_f compare) {
+void quicksort(void *base, size_t nmemb, size_t size, __compare_f compare) {
     // Allocate workspace for swaps and the pivot value.
-    char* temp = malloc(2 * size);
+    char *temp = malloc(2 * size);
     __quicksort((char*)base, 0, nmemb, size, compare, temp);
     free(temp);
 }
 
-int is_sorted(void* base, size_t nmemb, size_t size, __compare_f compare)
+int is_sorted(void *base, size_t nmemb, size_t size, __compare_f compare)
 {
     for (size_t i = 0; i < nmemb - 1; ++i) {
         if (compare(base + i*size, base + (i+1)*size) > 0) return 0;

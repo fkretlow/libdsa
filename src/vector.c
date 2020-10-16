@@ -5,14 +5,14 @@
 #include "debug.h"
 #include "vector.h"
 
-static int __Vector_resize(Vector* v, const size_t capacity)
+static int __Vector_resize(Vector *v, const size_t capacity)
 {
     size_t c = VECTOR_MIN_CAPACITY;
     while (c < capacity) c <<= 1;
 
     if (c == v->max) return 0;
 
-    char* new_data = malloc(c * v->element_size);
+    char *new_data = malloc(c * v->element_size);
     check_alloc(new_data);
 
     memmove(new_data, v->data, (c < v->end ? c : v->end) * v->element_size);
@@ -33,7 +33,7 @@ error:
     return -1;
 }
 
-int Vector_init(Vector* v, const size_t element_size, __destroy_f destroy)
+int Vector_init(Vector *v, const size_t element_size, __destroy_f destroy)
 {
     check_ptr(v);
 
@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-void Vector_clear(Vector* v)
+void Vector_clear(Vector *v)
 {
     if (v && v->data) {
         if (v->destroy) {
@@ -64,7 +64,7 @@ void Vector_clear(Vector* v)
     }
 }
 
-void Vector_destroy(Vector* v)
+void Vector_destroy(Vector *v)
 {
     if (v && v->data) {
         Vector_clear(v);
@@ -73,7 +73,7 @@ void Vector_destroy(Vector* v)
     }
 }
 
-int Vector_get(const Vector *v, const size_t i, void* out)
+int Vector_get(const Vector *v, const size_t i, void *out)
 {
     check_ptr(v);
     check_ptr(out);
@@ -85,7 +85,7 @@ error:
     return -1;
 }
 
-int Vector_set(Vector* v, const size_t i, const void* in)
+int Vector_set(Vector *v, const size_t i, const void *in)
 {
     check_ptr(v);
     check_ptr(in);
@@ -107,7 +107,7 @@ error:
     return -1;
 }
 
-int Vector_insert(Vector* v, const size_t i, const void* in)
+int Vector_insert(Vector *v, const size_t i, const void *in)
 {
     check_ptr(v);
     check_ptr(in);
@@ -132,7 +132,7 @@ error:
     return -1;
 }
 
-int Vector_delete(Vector* v, const size_t i)
+int Vector_delete(Vector *v, const size_t i)
 {
     check_ptr(v);
     check(i < v->end, "Index out of range: %lu > %lu", i, v->end);
@@ -162,12 +162,12 @@ error:
     return -1;
 }
 
-int Vector_push_back(Vector* v, const void* in)
+int Vector_push_back(Vector *v, const void *in)
 {
     return Vector_set(v, v->end, in);
 }
 
-int Vector_pop_back(Vector* v, void* out)
+int Vector_pop_back(Vector *v, void *out)
 {
     check_ptr(v);
     check(v->end > 0, "Attempt to pop_back from empty vector.");

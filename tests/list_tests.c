@@ -20,7 +20,7 @@ int test_list_init(void)
 int test_list_usage(void)
 {
     int val = 1;
-    int* ip;
+    int *ip;
 
     rc = List_push_back(&L, &val);
     test(rc == 0, "List_push_back failed.");
