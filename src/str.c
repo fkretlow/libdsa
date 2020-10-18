@@ -15,6 +15,12 @@ error:
     return -1;
 }
 
+void String_delete(String *s)
+{
+    if (s->data) free(s->data);
+    free(s);
+}
+
 static int __String_resize(String *s, size_t size)
 {
     check_ptr(s);
@@ -62,6 +68,7 @@ int String_set(String *s, const char *cstr, size_t len)
 
     memmove(s->data, cstr, len);
     s->data[len] = '\0';
+    s->slen = len;
 
     return 0;
 error:
@@ -87,4 +94,9 @@ int String_compare(const String *s1, const String *s2)
     return strncmp(s1->data, s2->data, __max(s1->slen, s2->slen));
 error:
     return -2;
+}
+
+uint32_t String_hash(const String *s)
+{
+    return jenkins_hash(s->data, s->slen);
 }
