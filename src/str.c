@@ -15,12 +15,6 @@ error:
     return -1;
 }
 
-void String_delete(String *s)
-{
-    if (s->data) free(s->data);
-    free(s);
-}
-
 static int __String_resize(String *s, size_t size)
 {
     check_ptr(s);
@@ -72,6 +66,17 @@ int String_set(String *s, const char *cstr, size_t len)
     return 0;
 error:
     return -1;
+}
+
+String *make_string(const char *cstr)
+{
+    check_ptr(cstr);
+    String *s;
+    check(!String_new(&s), "Failed to create new string.");
+    check(!String_set(s, cstr, strnlen(cstr, 1024)), "Failed to assign cstr.");
+    return s;
+error:
+    return NULL;
 }
 
 int String_compare(const String *s1, const String *s2)
