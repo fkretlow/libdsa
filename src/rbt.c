@@ -98,3 +98,4 @@ int __rbt_node_rotate_right(__rbt_node *n, __rbt_node **node_out)
 error:
     return -1;
 }
+
