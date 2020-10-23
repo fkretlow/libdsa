@@ -184,16 +184,21 @@ error:
     return -1;
 }
 
+static inline int __rbt_node_is_four_node(__rbt_node *n)
+{
+    return n->color == BLACK && n->left && n->left->color == RED && n->right && n->right->color == RED;
+}
+
 int __rbt_node_insert(__rbt *T, __rbt_node *n, const void *value)
 {
     check_ptr(T);
     check_ptr(n);
     check_ptr(value);
 
-    if (n->color == BLACK
-            && n->left && n->left->color == RED
-            && n->right && n->right->color == RED) {
+    if (__rbt_node_is_four_node(n)) {
         check(!__rbt_node_color_red(T, n), "__rbt_node_color_red failed.");
+    } else if (__rbt_node_is_four_node(n->parent)) {
+        check(!__rbt_node_color_red(T, n->parent)); // TODO: select other node to insert into?!
     }
 
     int comp = T->compare(value, n->data);
