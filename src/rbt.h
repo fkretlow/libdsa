@@ -42,7 +42,6 @@ int __rbt_traverse(__rbt *t, __traverse_f f);
 int __rbt_node_new(__rbt_node **node_out);
 void __rbt_node_delete(const __rbt *t, __rbt_node *n);
 int __rbt_node_set(const __rbt *t, __rbt_node *n, const void *value);
-void __rbt_node_replace_child(__rbt_node *n, __rbt_node *old, __rbt_node *succ);
 int __rbt_node_rotate_left(__rbt_node *n, __rbt_node **node_out);
 int __rbt_node_rotate_right(__rbt_node *n, __rbt_node **node_out);
 

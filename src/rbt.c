@@ -48,18 +48,18 @@ error:
     return -1;
 }
 
-/* static inline */
-void __rbt_node_replace_child(__rbt_node *n,
-                              __rbt_node *old,
-                              __rbt_node *succ)
+static inline
+void __rbt_node_replace_child(__rbt_node *parent,
+                              __rbt_node *old_child,
+                              __rbt_node *new_child)
 {
-    assert(old == n->left || old == n->right);
-    if (old == n->left) { n->left  = succ; }
-    else                { n->right = succ; }
-    succ->parent = n;
+    assert(old_child == parent->left || old_child == parent->right);
+    if (old_child == parent->left) { parent->left  = new_child; }
+    else                           { parent->right = new_child; }
+    new_child->parent = parent;
 }
 
-/* static inline */
+/* static */
 int __rbt_node_rotate_left(__rbt_node *n, __rbt_node **node_out)
 {
     check_ptr(n);
@@ -79,7 +79,7 @@ error:
     return -1;
 }
 
-/* static inline */
+/* static */
 int __rbt_node_rotate_right(__rbt_node *n, __rbt_node **node_out)
 {
     check_ptr(n);
