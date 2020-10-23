@@ -1,6 +1,12 @@
+#include <stdlib.h>
+#include <time.h>
+
 #include "debug.h"
 #include "rbt.h"
+#include "test_utils.h"
 #include "unittest.h"
+
+#define MAX_VALUE 1000
 
 static int rc;
 static __rbt T;
@@ -69,9 +75,49 @@ int test_rotations(void)
     return TEST_OK;
 }
 
+int test_rbt_init(void)
+{
+    rc = __rbt_init(&T, sizeof(int), compint, NULL);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
+    test(T.element_size == sizeof(int), "T.element_size = %lu (%lu)",
+            T.element_size, sizeof(int));
+    test(T.size == 0, "T.size = %lu (%lu)", T.size, 0lu);
+    test((void*)T.compare == (void*)compint, "T.compare != compint");
+    test(T.destroy == NULL, "T.destroy = %p (%p)", T.destroy, NULL);
+
+    return TEST_OK;
+}
+
+int test_rbt_usage(void)
+{
+    for (int i = 0; i < 64; ++i) {
+        rc = __rbt_insert(&T, &i);
+        test(rc == 0, "rc = %d (%d)", rc, 0);
+        test(T.size == (size_t)(i + 1), "T.size = %lu (%d)", T.size, i + 1);
+    }
+
+    for (int i = 0; i < 64; ++i) {
+        int v = (int)rand() % MAX_VALUE;
+        rc = __rbt_insert(&T, &v);
+        test(rc == 0, "rc = %d (%d)", rc, 0);
+    }
+    return TEST_OK;
+}
+
+int test_rbt_clear(void)
+{
+    __rbt_clear(&T);
+    return TEST_OK;
+}
+
 int main(void)
 {
+    srand((unsigned)time(NULL));
     test_suite_start();
     run_test(test_rotations);
+    run_test(test_rbt_init);
+    run_test(test_rbt_usage);
+    run_test(test_rbt_clear);
     test_suite_end();
 }
