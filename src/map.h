@@ -33,7 +33,7 @@ int Map_init(Map *m, const size_t key_size, const size_t value_size,
 void Map_clear(Map *m);
 void Map_destroy(Map *m);
 
-// These functions return 1 if found, 0 if not found, -1 on error
+// These functions return 1 if found, 0 if not found, -1 on error.
 int Map_set(Map *m, const void *key, const void *value);
 int Map_delete(Map *m, const void *key);
 int Map_has(const Map *m, const void *key);

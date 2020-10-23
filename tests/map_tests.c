@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "hash.h"
 #include "map.h"
+#include "str.h"
 #include "test_utils.h"
 #include "unittest.h"
 
