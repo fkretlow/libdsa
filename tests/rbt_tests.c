@@ -27,7 +27,7 @@ int test_rotations(void)
     r->right = rr, rr->parent = r;
 
     // rotate right and check
-    test(!__rbt_node_rotate_right(n, &res), "__rbt_node_rotate_right failed.");
+    test(!__rbt_node_rotate_right(&T, n, &res), "__rbt_node_rotate_right failed.");
     test(res == l, "res != l");
     test(p->left == l, "p->left != l");
     test(l->parent == p, "l->parent != p");
@@ -47,7 +47,7 @@ int test_rotations(void)
     r->right = rr, rr->parent = r;
 
     // rotate left and check
-    test(!__rbt_node_rotate_left(n, &res), "__rbt_node_rotate_right failed.");
+    test(!__rbt_node_rotate_left(&T, n, &res), "__rbt_node_rotate_right failed.");
     test(res == r, "res != l");
     test(p->right == r, "p->right != r");
     test(r->parent == p, "r->parent != p");
