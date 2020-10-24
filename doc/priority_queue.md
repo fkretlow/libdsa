@@ -14,13 +14,13 @@ PriorityQueue_init(&q, sizeof(int), NULL, compint);
 
 // Pass pointers to values you want to add.
 for (int i = 0; i < max; ++i) {
-    PriorityQueue_push(&q, &i);
+    PriorityQueue_enqueue(&q, &i);
 }
 
 // Pass an address if you want to store popped values.
 int value;
 while (PriorityQueue_size(&q) > 0) {
-    PriorityQueue_pop(&q, &value); // get the next highest value
+    PriorityQueue_dequeue(&q, &value); // get the next highest value
     // Do stuff with value.
 }
 

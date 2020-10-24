@@ -1,6 +1,6 @@
 #include "debug.h"
 #include "stack.h"
-#include "unittest.h"
+#include "test.h"
 
 static Stack S;
 int rc;

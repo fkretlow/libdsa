@@ -91,7 +91,7 @@ int String_compare(const String *s1, const String *s2)
     check_ptr(s1);
     check_ptr(s2);
     check(s1->data && s2->data, "No string data allocated.");
-    return strncmp(s1->data, s2->data, __max(s1->slen, s2->slen));
+    return strncmp(s1->data, s2->data, _max(s1->slen, s2->slen));
 error:
     return -2;
 }

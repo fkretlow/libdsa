@@ -9,8 +9,8 @@
 
 int PriorityQueue_init(PriorityQueue *q,
                        const size_t element_size,
-                       __destroy_f destroy,
-                       __compare_f compare)
+                       _destroy_f destroy,
+                       _compare_f compare)
 {
     check(!Vector_init(&(q->data), element_size, destroy),
             "Failed to initialize vector for priority queue data.");
@@ -32,7 +32,7 @@ void PriorityQueue_destroy(PriorityQueue *q)
     q->temp = NULL;
 }
 
-int PriorityQueue_push(PriorityQueue *q, const void *in)
+int PriorityQueue_enqueue(PriorityQueue *q, const void *in)
 {
     check_ptr(q);
     check_ptr(in);
@@ -55,7 +55,7 @@ error:
     return -1;
 }
 
-int PriorityQueue_pop(PriorityQueue *q, void *out)
+int PriorityQueue_dequeue(PriorityQueue *q, void *out)
 {
     check_ptr(q);
     check_ptr(out);

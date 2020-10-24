@@ -3,7 +3,7 @@
 #include "debug.h"
 #include "priority_queue.h"
 #include "test_utils.h"
-#include "unittest.h"
+#include "test.h"
 
 #define MAX_VAL 1000
 
@@ -20,16 +20,16 @@ int test_priority_queue_usage(void)
 {
     for (int i = 0; i < 32; ++i) {
         v1 = rand() % MAX_VAL;
-        rc = PriorityQueue_push(&Q, &v1);
-        test(rc == 0, "PriorityQueue_push failed (for-loop i=%d)", i);
+        rc = PriorityQueue_enqueue(&Q, &v1);
+        test(rc == 0, "PriorityQueue_enqueue failed (for-loop i=%d)", i);
     }
 
-    rc = PriorityQueue_pop(&Q, &v1);
-    test(rc == 0, "PriorityQueue_pop failed.");
+    rc = PriorityQueue_dequeue(&Q, &v1);
+    test(rc == 0, "PriorityQueue_dequeue failed.");
 
     for (int i = 0; PriorityQueue_size(&Q) > 0; ++i) {
-        rc = PriorityQueue_pop(&Q, &v2);
-        test(rc == 0, "PriorityQueue_pop failed (for-loop i=%d)", i);
+        rc = PriorityQueue_dequeue(&Q, &v2);
+        test(rc == 0, "PriorityQueue_dequeue failed (for-loop i=%d)", i);
         test(v1 >= v2, "v1=%d, v2=%d, v1<v2", v1, v2);
         v1 = v2;
     }

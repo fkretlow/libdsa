@@ -11,14 +11,14 @@ typedef struct Vector {
     size_t end;
     size_t max;
     size_t element_size;
-    __destroy_f destroy;
+    _destroy_f destroy;
 } Vector;
 
 #define Vector_capacity(v) (v)->max
 #define Vector_size(v) (v)->end
 #define Vector_empty(v) ((v)->end == 0)
 
-int Vector_init(Vector *v, const size_t element_size, __destroy_f destroy);
+int Vector_init(Vector *v, const size_t element_size, _destroy_f destroy);
 void Vector_clear(Vector *v);
 void Vector_destroy(Vector *v);
 

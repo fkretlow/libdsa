@@ -4,10 +4,10 @@
 #include "debug.h"
 #include "sort_tools.h"
 
-static size_t __partition(char *base,
+static size_t _partition(char *base,
                           size_t start, size_t end,
                           size_t size,
-                          __compare_f compare,
+                          _compare_f compare,
                           char *temp)
 {
     // Lomuto partitioning scheme
@@ -18,11 +18,11 @@ static size_t __partition(char *base,
 
     for (size_t i = start; i < pivot; ++i) {
         if (compare(base + i*size, base + pivot*size) < 0) {
-            __swap((base + i*size), (base + first_high*size), size, temp);
+            _swap((base + i*size), (base + first_high*size), size, temp);
             ++first_high;
         }
     }
-    __swap((base + first_high*size), (base + pivot*size), size, temp);
+    _swap((base + first_high*size), (base + pivot*size), size, temp);
 
     return first_high; */
 
@@ -58,15 +58,15 @@ static size_t __partition(char *base,
         if (i >= j) {
             return j;
         } else {
-            __swap(base + i * size, base + j * size, size, temp);
+            _swap(base + i * size, base + j * size, size, temp);
         }
     }
 }
 
-static void __quicksort(char *base,
+static void _quicksort(char *base,
                         size_t start, size_t end,
                         size_t size,
-                        __compare_f compare,
+                        _compare_f compare,
                         char *temp)
 {
     if (end - start <= 1) {
@@ -74,27 +74,27 @@ static void __quicksort(char *base,
     } else if (end - start <= 16) {
         /* Using insertion sort for short ranges gives a significant speed boost of
          * about 10-15%. */
-        __insertionsort(base, start, end, size, compare, temp);
+        _insertionsort(base, start, end, size, compare, temp);
     } else {
-        size_t p = __partition(base, start, end, size, compare, temp);
+        size_t p = _partition(base, start, end, size, compare, temp);
         // Lomuto partitioning scheme
-        /* __quicksort(base, start, p, size, compare, temp);
-        __quicksort(base, p + 1, end, size, compare, temp); */
+        /* _quicksort(base, start, p, size, compare, temp);
+        _quicksort(base, p + 1, end, size, compare, temp); */
 
         // Hoare partitioning scheme
-        __quicksort(base, start, p + 1, size, compare, temp);
-        __quicksort(base, p + 1, end, size, compare, temp);
+        _quicksort(base, start, p + 1, size, compare, temp);
+        _quicksort(base, p + 1, end, size, compare, temp);
     }
 }
 
-void quicksort(void *base, size_t nmemb, size_t size, __compare_f compare) {
+void quicksort(void *base, size_t nmemb, size_t size, _compare_f compare) {
     // Allocate workspace for swaps and the pivot value.
     char *temp = malloc(2 * size);
-    __quicksort((char*)base, 0, nmemb, size, compare, temp);
+    _quicksort((char*)base, 0, nmemb, size, compare, temp);
     free(temp);
 }
 
-int is_sorted(void *base, size_t nmemb, size_t size, __compare_f compare)
+int is_sorted(void *base, size_t nmemb, size_t size, _compare_f compare)
 {
     for (size_t i = 0; i < nmemb - 1; ++i) {
         if (compare(base + i*size, base + (i+1)*size) > 0) return 0;

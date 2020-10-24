@@ -3,9 +3,9 @@
 #include "debug.h"
 #include "map.h"
 
-static inline int __MapNode_new(__MapNode **node_out)
+static inline int MapNode_new(MapNode **node_out)
 {
-    __MapNode *new = calloc(1, sizeof(*new));
+    MapNode *new = calloc(1, sizeof(*new));
     check_alloc(new);
     *node_out = new;
     return 0;
@@ -13,7 +13,7 @@ error:
     return -1;
 }
 
-static inline void __MapNode_delete(const Map *m, __MapNode *n)
+static inline void MapNode_delete(const Map *m, MapNode *n)
 {
     if (n) {
         if (n->key && m && m->destroy_key) {
@@ -28,7 +28,7 @@ static inline void __MapNode_delete(const Map *m, __MapNode *n)
     free(n);
 }
 
-static inline int __MapNode_set_key(const Map *m, __MapNode *n, const void *key)
+static inline int MapNode_set_key(const Map *m, MapNode *n, const void *key)
 {
     check_ptr(m);
     check_ptr(n);
@@ -46,7 +46,7 @@ error:
     return -1;
 }
 
-static inline int __MapNode_set_value(const Map *m, __MapNode *n, const void *value)
+static inline int MapNode_set_value(const Map *m, MapNode *n, const void *value)
 {
     check_ptr(m);
     check_ptr(n);
@@ -69,8 +69,8 @@ error:
 }
 
 int Map_init(Map *m, const size_t key_size, const size_t value_size,
-             __hash_f hash, __compare_f compare,
-             __destroy_f destroy_key, __destroy_f destroy_value)
+             _hash_f hash, _compare_f compare,
+             _destroy_f destroy_key, _destroy_f destroy_value)
 {
     check_ptr(m);
     check_ptr(hash);
@@ -95,13 +95,13 @@ error:
 
 void Map_clear(Map *m)
 {
-    __MapNode *cur;
-    __MapNode *next;
+    MapNode *cur;
+    MapNode *next;
     for (size_t i = 0; i < m->n_buckets; ++i) {
         cur = m->buckets[i];
         while (cur) {
             next = cur->next;
-            __MapNode_delete(m, cur);
+            MapNode_delete(m, cur);
             cur = next;
         }
         m->buckets[i] = NULL;
@@ -115,13 +115,13 @@ void Map_destroy(Map *m)
 }
 
 int __Map_find_node(const Map *m, const void *key, size_t bucket_index,
-                    __MapNode **node_out)
+                    MapNode **node_out)
 {
     check_ptr(m);
     check_ptr(key);
     check_ptr(node_out);
 
-    __MapNode *n = m->buckets[bucket_index];
+    MapNode *n = m->buckets[bucket_index];
     if (!n) {
         *node_out = NULL;
     } else {
@@ -146,17 +146,17 @@ int Map_set(Map *m, const void *key, const void *value)
     check_ptr(m);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode *node = NULL;
+    MapNode *node = NULL;
 
     check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
 
     if (node) {
-        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
+        check(!MapNode_set_value(m, node, value), "Failed to set value.");
         return 1;
     } else {
-        check(!__MapNode_new(&node), "Failed to create new node.");
-        check(!__MapNode_set_key(m, node, key), "Failed to set key.");
-        check(!__MapNode_set_value(m, node, value), "Failed to set value.");
+        check(!MapNode_new(&node), "Failed to create new node.");
+        check(!MapNode_set_key(m, node, key), "Failed to set key.");
+        check(!MapNode_set_value(m, node, value), "Failed to set value.");
         node->next = m->buckets[bucket_index];
         m->buckets[bucket_index] = node;
         return 0;
@@ -175,7 +175,7 @@ int Map_has(const Map *m, const void *key)
     check_ptr(key);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode *n = NULL;
+    MapNode *n = NULL;
     check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
     return n ? 1 : 0;
@@ -193,7 +193,7 @@ int Map_get(const Map *m, const void *key, void *value_out)
     check_ptr(value_out);
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    __MapNode *n = NULL;
+    MapNode *n = NULL;
     check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
 
     if (n) {
@@ -217,8 +217,8 @@ int Map_delete(Map *m, const void *key)
 
     size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
 
-    __MapNode *node = m->buckets[bucket_index];
-    __MapNode *prev = NULL;
+    MapNode *node = m->buckets[bucket_index];
+    MapNode *prev = NULL;
 
     while (node && m->compare(node->key, key) != 0) {
         prev = node;
@@ -231,7 +231,7 @@ int Map_delete(Map *m, const void *key)
         } else {
             m->buckets[bucket_index] = node->next;
         }
-        __MapNode_delete(m, node);
+        MapNode_delete(m, node);
         return 1;
     } else {
         return 0;

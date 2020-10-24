@@ -7,13 +7,13 @@ understand the code.
 
 The implementations are influenced by the examples in Zed A. Shaw's *Learn C
 the Hard Way*, but each of them was rewritten from scratch. The same goes for
-the testing and debugging macros in `debug.h` and `unittest.h`.
+the testing and debugging macros in `debug.h` and `test.h`.
 
 Suggestions are welcome and appreciated. Keep in mind that this is a study
 project.
 
 
-## Available data structures
+## Data structures
 
 1. [Vector](./doc/vector.md)
 2. [List](./doc/list.md)
@@ -22,3 +22,9 @@ project.
 5. [Priority Queue](./doc/priority_queue.md)
 6. [Heap](./doc/heap.md)
 7. [Map](./doc/map.md)
+
+## Algorithms
+
+1. [Mergesort](./src/mergesort.c)
+2. [Quicksort](./src/quicksort.c)
+3. [Heapsort](./src/heapsort.c)

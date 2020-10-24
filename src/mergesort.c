@@ -4,10 +4,10 @@
 #include "debug.h"
 #include "sort_tools.h"
 
-static void __merge(char *base,
+static void _merge(char *base,
                     size_t start, size_t end, size_t middle,
                     size_t size,
-                    __compare_f compare,
+                    _compare_f compare,
                     char *temp)
 {
     // Move the first half to the workspace.
@@ -32,27 +32,27 @@ static void __merge(char *base,
     // because the values are already at their place.
 }
 
-static void __mergesort(char *base,
+static void _mergesort(char *base,
                         size_t start, size_t end,
                         size_t size,
-                        __compare_f compare,
+                        _compare_f compare,
                         char *temp)
 {
     if (end - start <= 1) {
         return;
     } else if (end - start <= 8) {
-        __insertionsort(base, start, end, size, compare, temp);
+        _insertionsort(base, start, end, size, compare, temp);
     } else {
         size_t middle = (start + end) / 2;
-        __mergesort(base, start, middle, size, compare, temp);
-        __mergesort(base, middle, end, size, compare, temp);
-        __merge(base, start, end, middle, size, compare, temp);
+        _mergesort(base, start, middle, size, compare, temp);
+        _mergesort(base, middle, end, size, compare, temp);
+        _merge(base, start, end, middle, size, compare, temp);
     }
 }
 
-void mergesort(void *base, size_t nmemb, size_t size, __compare_f compare)
+void mergesort(void *base, size_t nmemb, size_t size, _compare_f compare)
 {
     char *temp = malloc(nmemb * size);
-    __mergesort((char*)base, 0, nmemb, size, compare, temp);
+    _mergesort((char*)base, 0, nmemb, size, compare, temp);
     free(temp);
 }

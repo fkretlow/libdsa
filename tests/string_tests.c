@@ -1,5 +1,5 @@
 #include "debug.h"
-#include "unittest.h"
+#include "test.h"
 #include "str.h"
 
 static int rc;

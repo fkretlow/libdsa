@@ -7,17 +7,17 @@
 #include "debug.h"
 #include "container_tools.h"
 
-struct __ListNode;
-typedef struct __ListNode {
-    struct __ListNode *prev;
-    struct __ListNode *next;
+struct ListNode;
+typedef struct ListNode {
+    struct ListNode *prev;
+    struct ListNode *next;
     char *data;
-} __ListNode;
+} ListNode;
 
 typedef struct List {
-    __ListNode *first;
-    __ListNode *last;
-    __destroy_f destroy;
+    ListNode *first;
+    ListNode *last;
+    _destroy_f destroy;
     size_t element_size;
     size_t size;
 } List;
@@ -27,7 +27,7 @@ typedef struct List {
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-int List_init(List *l, const size_t element_size, __destroy_f destroy);
+int List_init(List *l, const size_t element_size, _destroy_f destroy);
 void List_clear(List *l);
 
 int List_get(const List *l, const size_t i, void *out);
@@ -39,7 +39,7 @@ int List_push_back(List *l, const void *in);
 int List_pop_front(List *l, void *out);
 int List_pop_back(List *l, void *out);
 
-__ListNode* __N;
+ListNode* __N;
 #define List_foreach(L, D) \
     for (__N = (L)->first, D = (void*)(__N->data); \
             __N != NULL; __N = __N->next, D = __N ? (void*)(__N->data) : NULL)

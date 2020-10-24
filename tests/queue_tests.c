@@ -1,6 +1,6 @@
 #include "debug.h"
 #include "queue.h"
-#include "unittest.h"
+#include "test.h"
 
 static Queue Q;
 static int rc;

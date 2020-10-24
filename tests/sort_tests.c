@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "sort.h"
 #include "test_utils.h"
-#include "unittest.h"
+#include "test.h"
 
 #define N_ELEMENTS 1024
 #define MAX_VALUE 100

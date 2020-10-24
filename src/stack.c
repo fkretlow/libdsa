@@ -9,9 +9,9 @@ error:
     return -1;
 }
 
-static int __StackNode_new(__StackNode **node_out)
+static int StackNode_new(StackNode **node_out)
 {
-    __StackNode *new = calloc(1, sizeof(*new));
+    StackNode *new = calloc(1, sizeof(*new));
     check_alloc(new);
     *node_out = new;
     return 0;
@@ -19,7 +19,7 @@ error:
     return -1;
 }
 
-static void __StackNode_delete(const Stack *s, __StackNode *n)
+static void StackNode_delete(const Stack *s, StackNode *n)
 {
     if (n) {
         if (n->data && s && s->destroy) {
@@ -30,7 +30,7 @@ static void __StackNode_delete(const Stack *s, __StackNode *n)
     free(n);
 }
 
-static int __StackNode_set(const Stack *s, __StackNode *n, const void *in)
+static int StackNode_set(const Stack *s, StackNode *n, const void *in)
 {
     check_ptr(s);
     check_ptr(n);
@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-int Stack_init(Stack *s, const size_t element_size, __destroy_f destroy)
+int Stack_init(Stack *s, const size_t element_size, _destroy_f destroy)
 {
     check_ptr(s);
 
@@ -70,12 +70,12 @@ void Stack_clear(Stack *s)
 {
     assert(!__Stack_invariant(s));
 
-    __StackNode *cur;
-    __StackNode *next;
+    StackNode *cur;
+    StackNode *next;
 
     for (cur = s->top; cur != NULL; cur = next) {
         next = cur->next;
-        __StackNode_delete(s, cur);
+        StackNode_delete(s, cur);
     }
     s->size = 0;
 }
@@ -86,9 +86,9 @@ int Stack_push(Stack *s, const void *in)
     assert(!__Stack_invariant(s));
     check_ptr(in);
 
-    __StackNode *n;
-    check(!__StackNode_new(&n), "Failed to make new node.");
-    check(!__StackNode_set(s, n, in), "Failed to write data to new node.");
+    StackNode *n;
+    check(!StackNode_new(&n), "Failed to make new node.");
+    check(!StackNode_set(s, n, in), "Failed to write data to new node.");
 
     n->next = s->top;
     s->top = n;
@@ -107,14 +107,14 @@ int Stack_pop(Stack *s, void *out)
     check_ptr(out);
     check(s->size > 0, "Attempt to pop from empty stack.");
 
-    __StackNode *n = s->top;
+    StackNode *n = s->top;
 
     memmove(out, n->data, s->element_size);
 
     s->top = n->next;
     --s->size;
 
-    __StackNode_delete(s, n);
+    StackNode_delete(s, n);
 
     assert(!__Stack_invariant(s));
     return 0;

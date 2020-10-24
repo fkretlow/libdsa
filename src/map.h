@@ -9,27 +9,27 @@
 
 #define MAP_N_BUCKETS 512
 
-struct __MapNode;
-typedef struct __MapNode {
-    struct __MapNode *next;
+struct MapNode;
+typedef struct MapNode {
+    struct MapNode *next;
     char *key;
     char *value;
-} __MapNode;
+} MapNode;
 
 typedef struct Map {
     size_t key_size;
     size_t value_size;
-    __MapNode **buckets;
+    MapNode **buckets;
     size_t n_buckets;
-    __hash_f hash;
-    __compare_f compare;
-    __destroy_f destroy_key;
-    __destroy_f destroy_value;
+    _hash_f hash;
+    _compare_f compare;
+    _destroy_f destroy_key;
+    _destroy_f destroy_value;
 } Map;
 
 int Map_init(Map *m, const size_t key_size, const size_t value_size,
-             __hash_f hash, __compare_f compare,
-             __destroy_f destroy_key, __destroy_f destroy_value);
+             _hash_f hash, _compare_f compare,
+             _destroy_f destroy_key, _destroy_f destroy_value);
 void Map_clear(Map *m);
 void Map_destroy(Map *m);
 

@@ -3,7 +3,7 @@
 #include "map.h"
 #include "str.h"
 #include "test_utils.h"
-#include "unittest.h"
+#include "test.h"
 
 static Map M;
 static int rc, key, value;

@@ -19,32 +19,32 @@
 #define KRED "\x1B[31m"
 #define KRESET "\x1B[0m"
 
-static int __tests_run = 0;
-static int __tests_failed = 0;
-static int __tests_ok = 0;
-static int __rc = TEST_ERR;
+static int _tests_run = 0;
+static int _tests_failed = 0;
+static int _tests_ok = 0;
+static int _rc = TEST_ERR;
 
-extern int __suppress_errors;
+extern int _suppress_errors;
 
 #define test_suite_start() printf("\n%s\n" \
         "-------------------------------------------------\n", \
         __FILE__); \
-        __suppress_errors = 0;
+        _suppress_errors = 0;
 
-#define test_suite_end() if (__tests_failed == 0) { \
+#define test_suite_end() if (_tests_failed == 0) { \
     return 0; \
 } else { \
     return 1; \
 }
 
 #define run_test(T) fprintf(stderr, #T "\n"); \
-    __rc = (T)(); \
-    if (__rc != TEST_ERR) { \
-        __tests_ok++; \
+    _rc = (T)(); \
+    if (_rc != TEST_ERR) { \
+        _tests_ok++; \
     } else { \
-        __tests_failed++; \
+        _tests_failed++; \
     } \
-    __tests_run++;
+    _tests_run++;
 
 #define test(T, M, ...) if (!(T)) { \
     fprintf(stderr, KRED "   Fail: " KRESET M " [%d]\n", \
@@ -52,13 +52,13 @@ extern int __suppress_errors;
     return TEST_ERR; \
 }
 
-#define test_fail(T, M, ...) __suppress_errors = 1; \
+#define test_fail(T, M, ...) _suppress_errors = 1; \
     if (!(T)) { \
         fprintf(stderr, KRED "   Fail: " KRESET M " [%d]\n", \
                 ##__VA_ARGS__, __LINE__); \
-        __suppress_errors = 0; \
+        _suppress_errors = 0; \
         return TEST_ERR; \
     } \
-    __suppress_errors = 0;
+    _suppress_errors = 0;
 
 #endif // _unittest_h
