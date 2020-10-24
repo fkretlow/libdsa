@@ -1,5 +1,6 @@
 CFLAGS= -g -Wall -Wextra -I./src
 LDFLAGS= -L./build
+LDLIBS= -lm
 
 LIB_SOURCES=$(wildcard ./src/*.c)
 LIB_OBJECTS=$(patsubst %.c,%.o,$(LIB_SOURCES))

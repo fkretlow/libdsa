@@ -21,26 +21,39 @@ void String_delete(String *s)
     free(s);
 }
 
-static int String_resize(String *s, size_t size)
+int String_resize(String *s, size_t mlen)
 {
     check_ptr(s);
 
-    if (size < STRING_DEFAULT_SIZE) size = STRING_DEFAULT_SIZE;
+    if (mlen < STRING_DEFAULT_SIZE) mlen = STRING_DEFAULT_SIZE;
 
-    char *data;
-    if (s->data) {
-        data = realloc(s->data, size);
-    } else {
-        data = malloc(size);
+    if (mlen != s->mlen) {
+        char *data;
+        if (s->data) {
+            data = realloc(s->data, mlen);
+        } else {
+            data = malloc(mlen);
+        }
+        check_alloc(data);
+        s->data = data;
+        s->mlen = mlen;
+        if (s->slen > s->mlen) {
+            s->slen = s->mlen - 1;
+            s->data[s->slen] = '\0';
+        }
     }
-    check_alloc(data);
-    s->data = data;
-    s->mlen = size;
-    if (s->slen > s->mlen) s->slen = s->mlen;
 
     return 0;
 error:
     return -1;
+}
+
+void String_destroy(String *s)
+{
+    if (s->data) {
+        free(s->data);
+    }
+    s->mlen = s->slen = 0;
 }
 
 void String_clear(String *s)
@@ -69,6 +82,20 @@ int String_set(String *s, const char *cstr, size_t len)
     memmove(s->data, cstr, len);
     s->data[len] = '\0';
     s->slen = len;
+
+    return 0;
+error:
+    return -1;
+}
+
+int String_assign(String *dest, const String *src)
+{
+    check_ptr(dest);
+    check_ptr(src);
+    check(src->data, "No string data allocated in source string.");
+
+    check(!String_resize(dest, src->mlen), "String_resize failed.");
+    check(!String_set(dest, src->data, src->slen), "String_set failed.");
 
     return 0;
 error:

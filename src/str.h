@@ -22,6 +22,10 @@ int String_new(String **s);
 void String_delete(String *s);
 int String_set(String *s, const char *cstr, size_t len);
 void String_clear(String *s);
+void String_destroy(String *s);
+int String_resize(String *s, size_t size);
+
+int String_assign(String *dest, const String *src);
 int String_copy(const String *src, String **copy_out);
 
 int String_compare(const String *s1, const String *s2);

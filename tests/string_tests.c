@@ -33,6 +33,27 @@ int test_string_compare(void)
     return TEST_OK;
 }
 
+int test_string_assign(void)
+{
+    String *s1 = make_string("Cesar");
+    String *s2 = make_string("Augustus");
+    String *s3 = make_string("");
+
+    rc = String_assign(s3, s2);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(String_compare(s3, s2) == 0, "s3 != s2");
+
+    rc = String_assign(s3, s1);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(String_compare(s3, s1) == 0, "s3 != s1");
+
+    String_delete(s1);
+    String_delete(s2);
+    String_delete(s3);
+
+    return TEST_OK;
+}
+
 int test_string_copy(void)
 {
     String *s1 = make_string("Chopin");
@@ -92,6 +113,7 @@ int main(void)
     test_suite_start();
     run_test(test_make_string);
     run_test(test_string_compare);
+    run_test(test_string_assign);
     run_test(test_string_copy);
     run_test(test_string_append);
     run_test(test_string_concat);
