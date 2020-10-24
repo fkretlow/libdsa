@@ -13,20 +13,32 @@ int compint(const int *a, const int *b)
     return *a < *b ? -1 : *a > *b ? 1 : 0;
 }
 
-void serialize_int(const int *i, String *out)
+String serialize_int(const int *i)
 {
-    size_t slen = 1 * sizeof(char);
-    if (*i) slen = (size_t)(floor(log10(*i)) + 1) * sizeof(char);
-    String_resize(out, slen + 1);
-    sprintf(out->data, "%d\0", *i);
-    out->slen = slen;
+    String s = String_new();
+    check(s != NULL, "Failed to create String for serialized int.");
+    size_t size = 1 * sizeof(char);
+    if (*i) size = (size_t)(floor(log10(*i)) + 1) * sizeof(char);
+    check(!String_reserve(s, size + 1), "Failed to reserve memory in String.");
+    sprintf(s->data, "%d\0", *i);
+    s->size = size;
+    return s;
+error:
+    if (s) String_delete(s);
+    return NULL;
 }
 
-void serialize_string(const String *s, String *out)
+String serialize_string(const String s)
 {
-    String_set(out, "'", 1);
-    String_append(out, s);
-    String_append_cstr(out, "'");
+    // debug("%s, s='%s'", __func__, s->data);
+    String out = String_from_cstr("'");
+    check(out != NULL, "Failed to create String for serialized string.");
+    check(!String_append(out, s), "Failed to append string to result string.");
+    check(!String_append_cstr(out, "'"), "Failed to append trailing ' to result string.");
+    return out;
+error:
+    if (out) String_delete(out);
+    return NULL;
 }
 
 void make_random(int* A, size_t n_members, unsigned max_value)

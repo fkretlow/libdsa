@@ -6,35 +6,32 @@
 
 #include "hash.h"
 
-#define STRING_DEFAULT_SIZE 32
-#define STRING_MAX_CSTR_LEN 1024
+#define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))
+#define STRING_MAX_SIZE 1024lu
 
-typedef struct String {
+typedef struct _string {
+    size_t size;
+    size_t capacity;
     char *data;
-    size_t slen;
-    size_t mlen;
-} String;
+} _string;
 
-#define String_size(S) ((S)->end)
-#define String_empty(S) ((S)->end == 0)
+typedef _string *String;
 
-int String_new(String **s);
-void String_delete(String *s);
-int String_set(String *s, const char *cstr, size_t len);
-void String_clear(String *s);
-void String_destroy(String *s);
-int String_resize(String *s, size_t size);
+#define String_size(S) ((S)->slen)
+#define String_empty(S) ((S)->slen == 0)
 
-int String_assign(String *dest, const String *src);
-int String_copy(const String *src, String **copy_out);
-
-int String_compare(const String *s1, const String *s2);
-uint32_t String_hash(const String *s);
-
-int String_append(String *s1, const String *s2);
-int String_append_cstr(String *s, const char *cstr);
-int String_concat(const String *s1, const String *s2, String **result_out);
-
-String *make_string(const char *cstr);
+String String_new(void);
+void String_delete(String s);
+int String_reserve(String s, size_t mlen);
+int String_shrink_to_fit(String s);
+void String_clear(String s);
+String String_copy(const String src);
+int String_assign(String dest, const String src);
+String String_from_cstr(const char *cstr);
+int String_compare(const String s1, const String s2);
+int String_append(String s1, const String s2);
+int String_append_cstr(String s, const char *cstr);
+String String_concat(const String s1, const String s2);
+uint32_t String_hash(const String s);
 
 #endif // _str_h

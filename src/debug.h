@@ -10,8 +10,8 @@ int _suppress_errors;
 
 #define check(T, M, ...) if (!(T)) { \
     if (!_suppress_errors) { \
-        fprintf(stderr, KRED "Error: " KRESET M " [%s:%d]" "\n", \
-                ##__VA_ARGS__, __FILE__, __LINE__); \
+        fprintf(stderr, KRED "Error: " KRESET M " [%s %s:%d]" "\n", \
+                ##__VA_ARGS__, __func__, __FILE__, __LINE__); \
     } \
     goto error; \
 }

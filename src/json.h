@@ -6,6 +6,6 @@
 #include "str.h"
 
 // The address of a new string is stored in json_out.
-int List_to_json(const List *l, _serialize_f serialize, String **json_out);
+String List_to_json(const List *l, _serialize_f serialize);
 
 #endif // _json_h

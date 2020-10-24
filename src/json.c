@@ -1,33 +1,37 @@
 #include "json.h"
 
-int List_to_json(const List *l, _serialize_f serialize, String **json_out)
+String List_to_json(const List *l, _serialize_f serialize)
 {
-    String *temp = NULL;
+    String temp = NULL;
+    String json = NULL;
 
     check_ptr(l);
     check_ptr(serialize);
-    check_ptr(json_out);
 
-    check(!String_new(json_out), "String_new failed.");
-    check(!String_set(*json_out, "[", 1), "String_set failed.");
-    check(!String_new(&temp), "String_new failed.");
+    json = String_from_cstr("[");
+    check(json != NULL, "Failed to create String for serialized data.");
 
     size_t count = 0;
     void *element;
 
     List_foreach(l, element) {
-        ++count;
-        serialize(element, temp);
-        check(!String_append(*json_out, temp), "String_append failed.");
-        if (count < List_size(l)) {
-            check(!String_append_cstr(*json_out, ", "), "String_append_cstr failed");
+        String temp = serialize(element);
+        /* debug("%s, json='%s', temp='%s'", __func__, json->data, temp->data); */
+        check(temp != NULL,
+                "Failed to serialize element at index %lu.", count);
+        check(!String_append(json, temp),
+                "Failed to append serialized element to result string.");
+        /* debug("%s, after appending json='%s'", __func__, json->data); */
+        if (++count < List_size(l)) {
+            check(!String_append_cstr(json, ", "), "Failed to append comma.");
         }
+        String_delete(temp);
     }
-    check(!String_append_cstr(*json_out, "]"), "String_append_cstr failed.");
+    check(!String_append_cstr(json, "]"), "Failed to append trailing ].");
 
-    String_delete(temp);
-    return 0;
+    return json;
 error:
     if (temp) String_delete(temp);
-    return -1;
+    if (json) String_delete(json);
+    return NULL;
 }

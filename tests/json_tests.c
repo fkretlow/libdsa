@@ -15,31 +15,14 @@ int test_serialize_list(void)
         List_push_back(&L, &i);
     }
 
-    String *json;
-    rc = List_to_json(&L, serialize_int, &json);
-    test(rc == 0, "rc = %d (%d)", rc, 0);
-    debug("%s", json->data);
+    String expected = String_from_cstr("[0, 1, 2, 3, 4, 5, 6, 7]");
+    String json = List_to_json(&L, serialize_int);
+    test(json != NULL, "Failed to serialize list of ints.");
+    test(String_compare(expected, json) == 0,
+            "json is not what we expect: '%s'", json->data);
 
     List_clear(&L);
-    String_delete(json);
-    List_init(&L, sizeof(String), NULL);
-
-    String *s1 = make_string("waltz");
-    String *s2 = make_string("mazurka");
-    List_push_back(&L, s1);
-    List_push_back(&L, s2);
-
-    /* TODO: We need copy callbacks for the containers after all. Adding
-    Strings (or any nested object with stuff on the heap) to a list doesn't
-    work.*/
-
-    rc = List_to_json(&L, serialize_string, &json);
-    test(rc == 0, "rc = %d (%d)", rc, 0);
-    debug("%s", json->data);
-
-    List_clear(&L);
-    String_delete(s1);
-    String_delete(s2);
+    String_delete(expected);
     String_delete(json);
     return TEST_OK;
 }
