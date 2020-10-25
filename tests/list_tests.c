@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "list.h"
+#include "str.h"
 #include "test.h"
 
 static List L;
@@ -7,7 +8,7 @@ int rc;
 
 int test_list_init(void)
 {
-    rc = List_init(&L, sizeof(int), NULL);
+    rc = List_init(&L, sizeof(int), NULL, NULL);
     test(rc == 0, "List_init failed.");
     test(L.first == NULL && L.last == NULL, "L.first != NULL or L.last != NULL");
     test(L.element_size == sizeof(int),
@@ -96,11 +97,27 @@ int test_list_clear(void)
     return TEST_OK;
 }
 
+/* int test_list_of_strings(void)
+{
+    rc = List_init(&L, sizeof(String), String_copy, String_delete);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+
+    String s = String_new();
+    String_assign_cstr(s, "test");
+    debug("s='%s' at %p", s->data, s);
+
+    List_push_back(&L, &s);
+
+    List_clear(&L);
+    return TEST_OK;
+} */
+
 int main(void)
 {
     test_suite_start();
     run_test(test_list_init);
     run_test(test_list_usage);
     run_test(test_list_clear);
+    /* run_test(test_list_of_strings); */
     test_suite_end();
 }

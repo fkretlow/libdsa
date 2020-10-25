@@ -10,7 +10,7 @@ static int rc;
 int test_serialize_list(void)
 {
     List L;
-    List_init(&L, sizeof(int), NULL);
+    List_init(&L, sizeof(int), NULL, NULL);
     for (int i = 0; i < 8; ++i) {
         List_push_back(&L, &i);
     }

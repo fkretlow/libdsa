@@ -16,6 +16,7 @@ error:
 
 void String_delete(String s)
 {
+    debug("%s: s at %p", __func__, s);
     if (s->data) free(s->data);
     free(s);
 }
@@ -47,6 +48,8 @@ error:
     return -1;
 }
 
+/* Shrink the internal storage if and as possible. Does not necessarily shrink
+ * it to the exact size needed. */
 int String_shrink_to_fit(String s)
 {
     check_ptr(s);
@@ -94,6 +97,16 @@ error:
     return NULL;
 }
 
+/* For containers: Take two pointers to String (i.e. pointers to pointers to
+ * _string), make a copy of the source string and store it at dest. */
+void String_copy_to(String *dest, const String *src)
+{
+    debug("%s: src='%s' at %p", __func__, (*src)->data, *src);
+    String s = String_copy(*src);
+    *dest = s;
+    debug("%s: inside container: s='%s' at %p", __func__, (*dest)->data, (*dest));
+}
+
 int String_assign(String dest, const String src)
 {
     check_ptr(dest);
@@ -110,6 +123,21 @@ error:
     return -1;
 }
 
+int String_assign_cstr(String dest, const char *cstr)
+{
+    check_ptr(dest);
+    check_ptr(cstr);
+
+    size_t cstrlen = strnlen(cstr, STRING_MAX_SIZE);
+    check(!String_reserve(dest, cstrlen + 1), "Failed to allocate internal storage.");
+    memmove(dest->data, cstr, cstrlen + 1);
+    dest->size = cstrlen;
+
+    return 0;
+error:
+    return -1;
+}
+
 String String_from_cstr(const char *cstr)
 {
     String s = NULL;
@@ -118,10 +146,7 @@ String String_from_cstr(const char *cstr)
     s = String_new();
     check(s != NULL, "Failed to make new String.");
 
-    size_t cstrlen = strnlen(cstr, STRING_MAX_SIZE);
-    check(!String_reserve(s, cstrlen + 1), "Failed to allocate internal storage.");
-    memmove(s->data, cstr, cstrlen + 1);
-    s->size = cstrlen;
+    check(!String_assign_cstr(s, cstr), "Failed to assign to new string.");
 
     return s;
 error:
@@ -189,9 +214,7 @@ String String_concat(const String s1, const String s2)
 
     s = String_copy(s1);
     check(s != NULL, "Failed to copy the first String.");
-    debug("%s", s->data);
     check(!String_append(s, s2), "Failed to append the second String.");
-    debug("%s", s->data);
 
     return s;
 error:

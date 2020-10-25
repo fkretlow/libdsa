@@ -7,7 +7,7 @@ static int rc;
 
 int test_queue_init(void)
 {
-    rc = Queue_init(&Q, sizeof(int), NULL);
+    rc = Queue_init(&Q, sizeof(int), NULL, NULL);
     test(rc == 0, "Queue_init failed.");
     test(Q.first == NULL && Q.last == NULL, "Q.first != NULL or Q.last != NULL");
     test(Q.element_size == sizeof(int),

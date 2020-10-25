@@ -9,7 +9,7 @@ typedef List Queue;
 #define Queue_size(Q) List_size(Q)
 #define Queue_empty(Q) List_empty(Q)
 
-#define Queue_init(Q, size, destroy) List_init(Q, size, destroy)
+#define Queue_init(Q, size, copy, destroy) List_init(Q, size, copy, destroy)
 #define Queue_clear(Q) List_clear(Q)
 
 #define Queue_push(Q, in) List_push_front(Q, in)

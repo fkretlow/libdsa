@@ -17,6 +17,7 @@ typedef struct ListNode {
 typedef struct List {
     ListNode *first;
     ListNode *last;
+    _copy_f copy;
     _destroy_f destroy;
     size_t element_size;
     size_t size;
@@ -27,7 +28,7 @@ typedef struct List {
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-int List_init(List *l, const size_t element_size, _destroy_f destroy);
+int List_init(List *l, const size_t element_size, _copy_f copy, _destroy_f destroy);
 void List_clear(List *l);
 
 int List_get(const List *l, const size_t i, void *out);
