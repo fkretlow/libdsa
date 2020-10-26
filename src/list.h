@@ -7,42 +7,45 @@
 #include "debug.h"
 #include "container_tools.h"
 
-struct ListNode;
-typedef struct ListNode {
-    struct ListNode *prev;
-    struct ListNode *next;
+struct _list_node;
+typedef struct _list_node {
+    struct _list_node *prev;
+    struct _list_node *next;
     char *data;
-} ListNode;
+} _list_node;
 
-typedef struct List {
-    ListNode *first;
-    ListNode *last;
+typedef struct _list {
+    _list_node *first;
+    _list_node *last;
     copy_f copy;
     destroy_f destroy;
     size_t element_size;
     size_t size;
-} List;
+} _list;
+
+typedef _list *List;
 
 #define List_first(L) ((L)->first ? (L)->first->data : NULL)
 #define List_last(L) ((L)->last ? (void*)((L)->last->data) : NULL)
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-int List_init(List *l, const size_t element_size, copy_f copy, destroy_f destroy);
-void List_clear(List *l);
+List List_new(const size_t element_size, copy_f copy, destroy_f destroy);
+void List_delete(List L);
+void List_clear(List L);
 
-int List_get(const List *l, const size_t i, void *out);
-int List_set(List *l, const size_t i, const void *in);
-int List_insert(List *l, const size_t i, const void *in);
-int List_delete(List *l, const size_t i);
+int List_get(const List L, const size_t i, void *out);
+int List_set(List L, const size_t i, const void *in);
+int List_insert(List L, const size_t i, const void *in);
+int List_remove(List L, const size_t i);
 #define List_push_front(l, in) List_insert((l), 0, (in))
-int List_push_back(List *l, const void *in);
-int List_pop_front(List *l, void *out);
-int List_pop_back(List *l, void *out);
+int List_push_back(List L, const void *in);
+int List_pop_front(List L, void *out);
+int List_pop_back(List L, void *out);
 
-ListNode* __N;
+_list_node* __N;
 #define List_foreach(L, D) \
     for (__N = (L)->first, D = (void*)(__N->data); \
             __N != NULL; __N = __N->next, D = __N ? (void*)(__N->data) : NULL)
 
-#endif // _list_h
+#endif // _list_ha

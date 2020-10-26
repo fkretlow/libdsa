@@ -5,15 +5,15 @@
 static Queue Q;
 static int rc;
 
-int test_queue_init(void)
+int test_queue_new(void)
 {
-    rc = Queue_init(&Q, sizeof(int), NULL, NULL);
-    test(rc == 0, "Queue_init failed.");
-    test(Q.first == NULL && Q.last == NULL, "Q.first != NULL or Q.last != NULL");
-    test(Q.element_size == sizeof(int),
-            "Q.element_size = %lu (%lu)", Q.element_size, sizeof(int));
-    test(Q.size == 0, "Q.size = %lu (%lu)", Q.size, 0lu);
-    test(Q.destroy == NULL, "Q.destroy = %p (%p)", Q.destroy, NULL);
+    Q = Queue_new(sizeof(int), NULL, NULL);
+    test(Q != NULL, "Q = NULL");
+    test(Q->first == NULL && Q->last == NULL, "Q->first != NULL or Q->last != NULL");
+    test(Q->element_size == sizeof(int),
+            "Q->element_size = %lu (%lu)", Q->element_size, sizeof(int));
+    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    test(Q->destroy == NULL, "Q->destroy = %p (%p)", Q->destroy, NULL);
     return TEST_OK;
 }
 
@@ -22,34 +22,35 @@ int test_queue_usage(void)
     int val;
 
     for (int i = 0; i < 8; ++i) {
-        rc = Queue_push(&Q, &i);
-        test(rc == 0, "Queue_push failed (loop iteration i=%d)", i);
+        rc = Queue_enqueue(Q, &i);
+        test(rc == 0, "Queue_enqueue failed (loop iteration i=%d)", i);
     }
-    test(Q.size == 8, "Q.size = %lu (%lu)", Q.size, 8lu);
+    test(Q->size == 8, "Q->size = %lu (%lu)", Q->size, 8lu);
 
     for (int i = 0; i < 8; ++i) {
-        rc = Queue_pop(&Q, &val);
-        test(rc == 0, "Queue_pop failed (loop iteration i=%d)", i);
+        rc = Queue_dequeue(Q, &val);
+        test(rc == 0, "Queue_dequeue failed (loop iteration i=%d)", i);
         test(val == i, "val = %d (%d) (loop iteration i=%d)", val, i, i);
     }
-    test(Q.size == 0, "Q.size = %lu (%lu)", Q.size, 0lu);
+    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
 
     return TEST_OK;
 }
 
-int test_queue_clear(void)
+int test_queue_clear_delete(void)
 {
 
-    Queue_clear(&Q);
-    test(Q.size == 0, "Q.size = %lu (%lu)", Q.size, 0lu);
+    Queue_clear(Q);
+    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    Queue_delete(Q);
     return TEST_OK;
 }
 
 int main(void)
 {
     test_suite_start();
-    run_test(test_queue_init);
+    run_test(test_queue_new);
     run_test(test_queue_usage);
-    run_test(test_queue_clear);
+    run_test(test_queue_clear_delete);
     test_suite_end();
 }

@@ -1,11 +1,11 @@
 #include "json.h"
 
-String List_to_json(const List *l, serialize_f serialize)
+String List_to_json(const List L, serialize_f serialize)
 {
     String temp = NULL;
     String json = NULL;
 
-    check_ptr(l);
+    check_ptr(L);
     check_ptr(serialize);
 
     json = String_from_cstr("[");
@@ -14,7 +14,7 @@ String List_to_json(const List *l, serialize_f serialize)
     size_t count = 0;
     void *element;
 
-    List_foreach(l, element) {
+    List_foreach(L, element) {
         String temp = serialize(element);
         /* debug("%s, json='%s', temp='%s'", __func__, json->data, temp->data); */
         check(temp != NULL,
@@ -22,12 +22,13 @@ String List_to_json(const List *l, serialize_f serialize)
         check(!String_append(json, temp),
                 "Failed to append serialized element to result string.");
         /* debug("%s, after appending json='%s'", __func__, json->data); */
-        if (++count < List_size(l)) {
+        if (++count < List_size(L)) {
             check(!String_append_cstr(json, ", "), "Failed to append comma.");
         }
         String_delete(temp);
+        temp = NULL;
     }
-    check(!String_append_cstr(json, "]"), "Failed to append trailing ].");
+    check(!String_push_back(json, ']'), "Failed to push back trailing ].");
 
     return json;
 error:
