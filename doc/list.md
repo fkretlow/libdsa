@@ -9,23 +9,21 @@
 - Small chunks of memory all over the place.
 
 ```C
-// Initialize with the element size and an optional callback for element destruction.
-List l;
-List_init(&l, sizeof(int), NULL);
+// Pass the element size and, optionally, a copy constructor and a destructor for initialization.
+List L = List_new(sizeof(int), NULL, NULL);
 
 // Pass pointers to values you want to add.
 for (int i = 0; i < max; ++i) {
-    List_push_back(&l, &i); // or push_front
+    List_push_back(L, &i);
 }
 
 // Pass an address if you want to store popped values.
-int value;
-while (List_size(&l) > 0) {
-    List_pop_back(&d, &value); // or pop_front
-    // Do stuff with value.
+int out;
+while (!List_empty(L)) {
+    List_pop_back(L, &out);
+    do_stuff_with(out);
 }
 
-// There's no memory block allocated anywhere, but all elements are on the heap.
-// Clear a non-empty list when you're done to return the memory.
-List_clear(&l);
+// Return the memory when you're done.
+List_delete(L);
 ```
