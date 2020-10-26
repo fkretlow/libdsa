@@ -7,7 +7,7 @@
 
 static int rc;
 
-int test_serialize_list(void)
+int test_serialize_list_of_ints(void)
 {
     List L;
     List_init(&L, sizeof(int), NULL, NULL);
@@ -27,9 +27,37 @@ int test_serialize_list(void)
     return TEST_OK;
 }
 
+int test_serialize_list_of_strings(void)
+{
+    List L;
+    String s, json, expected;
+
+    List_init(&L, sizeof(String), String_copy_to, String_delete);
+
+    s = String_new();
+    char *composers[3] = { "Haydn", "Mozart", "Beethoven" };
+    for (int i = 0; i < 3; ++i) {
+        String_assign_cstr(s, composers[i]);
+        List_push_back(&L, &s);
+    }
+
+    expected = String_from_cstr("['Haydn', 'Mozart', 'Beethoven']");
+
+    json = List_to_json(&L, serialize_string);
+    test(json != NULL, "Failed to serialize list of strings.");
+    test(String_compare(json, expected) == 0, "expected != json = '%s'", json->data);
+
+    List_clear(&L);
+    String_delete(s);
+    String_delete(json);
+    String_delete(expected);
+    return TEST_OK;
+}
+
 int main(void)
 {
     test_suite_start();
-    run_test(test_serialize_list);
+    run_test(test_serialize_list_of_ints);
+    run_test(test_serialize_list_of_strings);
     test_suite_end();
 }

@@ -19,6 +19,7 @@ all: clean $(LIB) test
 clean:
 	rm -rf ./build ./bin ./**/*.o
 	rm -rf `find ./tests/ -type f ! -name "*.*"`
+	ctags -R .
 
 build:
 	mkdir -p ./build

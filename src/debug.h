@@ -25,7 +25,8 @@ int _suppress_errors;
 #ifdef NDEBUG
     #define debug(M, ...)
 #else
-    #define debug(M, ...) fprintf(stderr, "Debug: " M "\n", ##__VA_ARGS__);
+    #define debug(M, ...) fprintf(stderr, "Debug: " M " [%s %s:%d]" "\n", \
+                                  ##__VA_ARGS__, __func__, __FILE__, __LINE__);
 #endif
 
 #define debug_array(M, A, n, ...) \

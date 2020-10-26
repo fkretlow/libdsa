@@ -20,7 +20,8 @@ String serialize_int(const int *i)
     size_t size = 1 * sizeof(char);
     if (*i) size = (size_t)(floor(log10(*i)) + 1) * sizeof(char);
     check(!String_reserve(s, size + 1), "Failed to reserve memory in String.");
-    sprintf(s->data, "%d\0", *i);
+    sprintf(s->data, "%d", *i);
+    s->data[size] = '\0';
     s->size = size;
     return s;
 error:
@@ -28,13 +29,12 @@ error:
     return NULL;
 }
 
-String serialize_string(const String s)
+String serialize_string(const String *s)
 {
-    // debug("%s, s='%s'", __func__, s->data);
     String out = String_from_cstr("'");
     check(out != NULL, "Failed to create String for serialized string.");
-    check(!String_append(out, s), "Failed to append string to result string.");
-    check(!String_append_cstr(out, "'"), "Failed to append trailing ' to result string.");
+    check(!String_append(out, *s), "Failed to append string to result string.");
+    check(!String_push_back(out, '\''), "Failed to append trailing ' to result string.");
     return out;
 error:
     if (out) String_delete(out);

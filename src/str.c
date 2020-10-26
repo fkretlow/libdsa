@@ -16,7 +16,6 @@ error:
 
 void String_delete(String s)
 {
-    debug("%s: s at %p", __func__, s);
     if (s->data) free(s->data);
     free(s);
 }
@@ -101,10 +100,7 @@ error:
  * _string), make a copy of the source string and store it at dest. */
 void String_copy_to(String *dest, const String *src)
 {
-    debug("%s: src='%s' at %p", __func__, (*src)->data, *src);
-    String s = String_copy(*src);
-    *dest = s;
-    debug("%s: inside container: s='%s' at %p", __func__, (*dest)->data, (*dest));
+    *dest = String_copy(*src);
 }
 
 int String_assign(String dest, const String src)
@@ -199,6 +195,37 @@ int String_append_cstr(String s1, const char *cstr)
     memmove(s1->data + s1->size, cstr, cstrlen);
     s1->size = size;
     s1->data[size] = '\0';
+
+    return 0;
+error:
+    return -1;
+}
+
+int String_push_back(String s, const char c)
+{
+    check_ptr(s);
+
+    if (s->capacity <= s->size + 1) {
+        check(!String_reserve(s, s->size + 2), "Failed to allocate internal storage.");
+    }
+
+    s->data[s->size] = c;
+    ++s->size;
+    s->data[s->size] = '\0';
+
+    return 0;
+error:
+    return -1;
+}
+
+int String_pop_back(String s, char *out)
+{
+    check_ptr(s);
+    check(s->size > 0, "Attempt to pop_back from empty string.");
+
+    --s->size;
+    if (out) *out = s->data[s->size];
+    s->data[s->size] = '\0';
 
     return 0;
 error:

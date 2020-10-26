@@ -97,20 +97,30 @@ int test_list_clear(void)
     return TEST_OK;
 }
 
-/* int test_list_of_strings(void)
+int test_list_of_strings(void)
 {
-    rc = List_init(&L, sizeof(String), String_copy, String_delete);
+    rc = List_init(&L, sizeof(String), String_copy_to, String_delete);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
     String s = String_new();
-    String_assign_cstr(s, "test");
-    debug("s='%s' at %p", s->data, s);
-
+    String_assign_cstr(s, "Haydn");
     List_push_back(&L, &s);
 
+    String_assign_cstr(s, "Mozart");
+    List_push_back(&L, &s);
+
+    String_assign_cstr(s, "Beethoven");
+    List_push_back(&L, &s);
+
+    String out;
+    List_pop_back(&L, &out);
+    test(String_compare(s, out) == 0, "s != out (out = \"%s\")", out->data);
+    String_delete(out);
+
     List_clear(&L);
+    String_delete(s);
     return TEST_OK;
-} */
+}
 
 int main(void)
 {
@@ -118,6 +128,6 @@ int main(void)
     run_test(test_list_init);
     run_test(test_list_usage);
     run_test(test_list_clear);
-    /* run_test(test_list_of_strings); */
+    run_test(test_list_of_strings);
     test_suite_end();
 }

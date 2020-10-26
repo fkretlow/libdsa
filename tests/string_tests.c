@@ -86,6 +86,7 @@ int test_string_append(void)
 
     String_delete(s1);
     String_delete(s2);
+    return TEST_OK;
 }
 
 int test_string_concat(void)
@@ -103,6 +104,24 @@ int test_string_concat(void)
     return TEST_OK;
 }
 
+int test_string_push_pop_back(void)
+{
+    String s = String_new();
+    char out;
+
+    rc = String_push_back(s, 'a');
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(s->data[0] == 'a', "s->data[0] = '%c' ('%c')", s->data[0], 'a');
+    test(s->size == 1, "s->size = %lu (%lu)", s->size, 1lu);
+
+    rc = String_pop_back(s, &out);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(out == 'a', "out = '%c', ('%c')", out, 'a');
+
+    String_delete(s);
+    return TEST_OK;
+}
+
 int main(void)
 {
     test_suite_start();
@@ -112,5 +131,6 @@ int main(void)
     run_test(test_string_copy);
     run_test(test_string_append);
     run_test(test_string_concat);
+    run_test(test_string_push_pop_back);
     test_suite_end();
 }

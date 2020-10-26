@@ -25,7 +25,7 @@ static inline void ListNode_delete(const List *l, ListNode *n)
 {
     if (n) {
         if (n->data && l && l->destroy) {
-            l->destroy(n->data);
+            l->destroy(*(void**)(n->data));
         }
     }
     free(n->data);
@@ -48,10 +48,7 @@ static int ListNode_set(const List *l, ListNode *n, const void *in)
     }
 
     if (l->copy) {
-        // TODO This is a mess. :(
-        /* char *temp = malloc(l->element_size);
-        *temp = l->copy(in);
-        debug("%s: temp=%p", __func__, *(void**)temp); */
+        l->copy(n->data, in);
     } else {
         memmove(n->data, in, l->element_size);
     }
@@ -237,7 +234,11 @@ int List_pop_front(List *l, void *out)
     check_ptr(out);
     check(l->size > 0, "Attempt to pop from empty list.");
 
-    memmove(out, l->first->data, l->element_size);
+    if (l->copy) {
+        l->copy(out, l->first->data);
+    } else {
+        memmove(out, l->first->data, l->element_size);
+    }
     check(!List_delete(l, 0), "Failed to delete first node.");
 
     assert(!List_invariant(l));
@@ -253,7 +254,11 @@ int List_pop_back(List *l, void *out)
     check_ptr(out);
     check(l->size > 0, "Attempt to pop from empty list.");
 
-    memmove(out, l->last->data, l->element_size);
+    if (l->copy) {
+        l->copy(out, l->last->data);
+    } else {
+        memmove(out, l->last->data, l->element_size);
+    }
     check(!List_delete(l, l->size - 1), "Failed to delete last node.");
 
     assert(!List_invariant(l));

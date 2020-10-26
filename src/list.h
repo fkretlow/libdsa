@@ -24,7 +24,7 @@ typedef struct List {
 } List;
 
 #define List_first(L) ((L)->first ? (L)->first->data : NULL)
-#define List_last(L) ((L)->last ? (L)->last->data : NULL)
+#define List_last(L) ((L)->last ? (void*)((L)->last->data) : NULL)
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
