@@ -91,7 +91,7 @@ int test_list_usage(void)
     return TEST_OK;
 }
 
-int test_list_clear_delete(void)
+int test_list_teardown(void)
 {
     List_clear(L);
     test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
@@ -102,7 +102,7 @@ int test_list_clear_delete(void)
 int test_list_of_strings(void)
 {
     L = List_new(sizeof(String), String_copy_to, String_delete);
-    test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(L != NULL, "L = NULL");
 
     String s = String_new();
     String_assign_cstr(s, "Haydn");
@@ -129,7 +129,7 @@ int main(void)
     test_suite_start();
     run_test(test_list_new);
     run_test(test_list_usage);
-    run_test(test_list_clear_delete);
+    run_test(test_list_teardown);
     run_test(test_list_of_strings);
     test_suite_end();
 }

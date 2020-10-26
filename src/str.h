@@ -22,7 +22,7 @@ typedef _string *String;
 
 String String_new(void);
 void String_delete(String s);
-int String_reserve(String s, size_t mlen);
+int String_reserve(String s, const size_t capacity);
 int String_shrink_to_fit(String s);
 void String_clear(String s);
 String String_copy(const String src);

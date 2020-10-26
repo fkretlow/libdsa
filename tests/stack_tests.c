@@ -41,7 +41,7 @@ int test_stack_usage(void)
     return TEST_OK;
 }
 
-int test_stack_clear_delete(void)
+int test_stack_teardown(void)
 {
     Stack_clear(S);
     test(S->size == 0, "S->size = %lu (%lu)", S->size, 0lu);
@@ -54,6 +54,6 @@ int main(void)
     test_suite_start();
     run_test(test_stack_new);
     run_test(test_stack_usage);
-    run_test(test_stack_clear_delete);
+    run_test(test_stack_teardown);
     test_suite_end();
 }

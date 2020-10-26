@@ -6,27 +6,39 @@
 
 #define VECTOR_MIN_CAPACITY 8lu
 
-typedef struct Vector {
+typedef struct _vector {
     char *data;
-    size_t end;
-    size_t max;
+    size_t size;
+    size_t capacity;
     size_t element_size;
-    destroy_f destroy;
-} Vector;
+    copy_f copy_element;
+    destroy_f destroy_element;
+} _vector;
 
-#define Vector_capacity(v) (v)->max
-#define Vector_size(v) (v)->end
-#define Vector_empty(v) ((v)->end == 0)
+typedef _vector *Vector;
 
-int Vector_init(Vector *v, const size_t element_size, destroy_f destroy);
-void Vector_clear(Vector *v);
-void Vector_destroy(Vector *v);
+#define Vector_capacity(V) (V)->capacity
+#define Vector_size(V) (V)->size
+#define Vector_empty(V) ((V)->size == 0)
 
-int Vector_get(const Vector *v, const size_t i, void *out);
-int Vector_set(Vector *v, const size_t i, const void *in);
-int Vector_insert(Vector *v, const size_t i, const void *in);
-int Vector_delete(Vector *v, const size_t i);
-int Vector_push_back(Vector *v, const void *in);
-int Vector_pop_back(Vector *v, void *out);
+int _vector_init(_vector *V,
+                 const size_t element_size,
+                 copy_f copy_element,
+                 destroy_f destroy_element);
+void _vector_dealloc(_vector *V);
+
+Vector Vector_new(const size_t element_size,
+                  copy_f copy_element,
+                  destroy_f destroy_element);
+void Vector_delete(Vector V);
+int Vector_reserve(Vector V, const size_t capacity);
+int Vector_shrink_to_fit(Vector V);
+void Vector_clear(Vector V);
+int Vector_get(const Vector V, const size_t i, void *out);
+int Vector_set(Vector V, const size_t i, const void *in);
+int Vector_insert(Vector V, const size_t i, const void *in);
+int Vector_remove(Vector V, const size_t i);
+int Vector_push_back(Vector V, const void *in);
+int Vector_pop_back(Vector V, void *out);
 
 #endif // _vector_h

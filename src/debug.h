@@ -34,5 +34,4 @@ int _suppress_errors;
     for (size_t i = 0; i < (n); ++i) fprintf(stderr, "%d ", (A)[i]); \
     fprintf(stderr, "\n");
 
-
 #endif // _debug_h

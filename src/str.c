@@ -22,7 +22,7 @@ void String_delete(String s)
 
 /* Allocate memory for at least `capacity` characters.
  * Does not shrink the internal storage. */
-int String_reserve(String s, size_t capacity)
+int String_reserve(String s, const size_t capacity)
 {
     check_ptr(s);
 
@@ -30,17 +30,16 @@ int String_reserve(String s, size_t capacity)
 
     size_t c = STRING_ALLOC_THRESHOLD;
     while (c < capacity) c <<= 1;
-    capacity = c;
 
     char *data;
     if (s->data) {
-        data = realloc(s->data, capacity * sizeof(char));
+        data = realloc(s->data, c * sizeof(char));
     } else {
-        data = malloc(capacity * sizeof(char));
+        data = malloc(c * sizeof(char));
     }
     check_alloc(data);
     s->data = data;
-    s->capacity = capacity;
+    s->capacity = c;
 
     return 0;
 error:

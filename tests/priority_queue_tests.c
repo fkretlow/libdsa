@@ -10,9 +10,9 @@
 static PriorityQueue Q;
 static int rc, v1, v2;
 
-int test_priority_queue_init(void)
+int test_priority_queue_new(void)
 {
-    rc = PriorityQueue_init(&Q, sizeof(int), NULL, compint);
+    Q = PriorityQueue_new(sizeof(int), NULL, NULL, compint);
     return TEST_OK;
 }
 
@@ -20,15 +20,15 @@ int test_priority_queue_usage(void)
 {
     for (int i = 0; i < 32; ++i) {
         v1 = rand() % MAX_VAL;
-        rc = PriorityQueue_enqueue(&Q, &v1);
+        rc = PriorityQueue_enqueue(Q, &v1);
         test(rc == 0, "PriorityQueue_enqueue failed (for-loop i=%d)", i);
     }
 
-    rc = PriorityQueue_dequeue(&Q, &v1);
+    rc = PriorityQueue_dequeue(Q, &v1);
     test(rc == 0, "PriorityQueue_dequeue failed.");
 
-    for (int i = 0; PriorityQueue_size(&Q) > 0; ++i) {
-        rc = PriorityQueue_dequeue(&Q, &v2);
+    for (int i = 0; PriorityQueue_size(Q) > 0; ++i) {
+        rc = PriorityQueue_dequeue(Q, &v2);
         test(rc == 0, "PriorityQueue_dequeue failed (for-loop i=%d)", i);
         test(v1 >= v2, "v1=%d, v2=%d, v1<v2", v1, v2);
         v1 = v2;
@@ -37,16 +37,11 @@ int test_priority_queue_usage(void)
     return TEST_OK;
 }
 
-int test_priority_queue_clear(void)
+int test_priority_queue_teardown(void)
 {
-    PriorityQueue_clear(&Q);
-    test(Q.data.end == 0, "Q.data.end = %lu (%lu)", Q.data.end, 0lu);
-    return TEST_OK;
-}
-
-int test_priority_queue_destroy(void)
-{
-    PriorityQueue_destroy(&Q);
+    PriorityQueue_clear(Q);
+    test(Q->vector.size == 0, "Q->vector.size = %lu (%lu)", Q->vector.size, 0lu);
+    PriorityQueue_delete(Q);
     return TEST_OK;
 }
 
@@ -55,9 +50,8 @@ int main(void)
     srand(1);
 
     test_suite_start();
-    run_test(test_priority_queue_init);
+    run_test(test_priority_queue_new);
     run_test(test_priority_queue_usage);
-    run_test(test_priority_queue_clear);
-    run_test(test_priority_queue_destroy);
+    run_test(test_priority_queue_teardown);
     test_suite_end();
 }

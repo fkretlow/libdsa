@@ -38,7 +38,7 @@ int test_queue_usage(void)
     return TEST_OK;
 }
 
-int test_queue_clear_delete(void)
+int test_queue_teardown(void)
 {
 
     Queue_clear(Q);
@@ -52,6 +52,6 @@ int main(void)
     test_suite_start();
     run_test(test_queue_new);
     run_test(test_queue_usage);
-    run_test(test_queue_clear_delete);
+    run_test(test_queue_teardown);
     test_suite_end();
 }

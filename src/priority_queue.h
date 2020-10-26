@@ -5,24 +5,26 @@
 #include "sort_tools.h"
 #include "vector.h"
 
-typedef struct PriorityQueue {
-    Vector data;
+typedef struct _pqueue {
+    _vector vector;
     compare_f compare;
     char *temp;
-} PriorityQueue;
+} _pqueue;
 
-#define PriorityQueue_size(Q) Vector_size( &((Q)->data) )
-#define PriorityQueue_empty(Q) Vector_empty( &((Q)->data) )
-#define PriorityQueue_next(Q) ( (Q)->size ? (void*)((Q)->data.data[0]) : NULL )
+typedef _pqueue *PriorityQueue;
 
-int PriorityQueue_init(PriorityQueue *q,
-                       const size_t element_size,
-                       destroy_f destroy,
-                       compare_f compare);
-#define PriorityQueue_clear(Q) Vector_clear( &((Q)->data) )
-void PriorityQueue_destroy(PriorityQueue *q);
+#define PriorityQueue_size(Q) Vector_size( &((Q)->vector) )
+#define PriorityQueue_empty(Q) Vector_empty( &((Q)->vector) )
+#define PriorityQueue_next(Q) ( (Q)->size ? (void*)((Q)->vector.data[0]) : NULL )
 
-int PriorityQueue_enqueue(PriorityQueue *q, const void *in);
-int PriorityQueue_dequeue(PriorityQueue *q, void *out);
+PriorityQueue PriorityQueue_new(const size_t element_size,
+                      copy_f copy_element,
+                      destroy_f destroy_element,
+                      compare_f compare);
+void PriorityQueue_delete(PriorityQueue Q);
+#define PriorityQueue_clear(Q) Vector_clear( &((Q)->vector) )
+
+int PriorityQueue_enqueue(PriorityQueue Q, const void *in);
+int PriorityQueue_dequeue(PriorityQueue Q, void *out);
 
 #endif // _priority_queue_h

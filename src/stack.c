@@ -77,6 +77,8 @@ Stack Stack_new(const size_t element_size,
                 destroy_f destroy_element)
 {
     _stack *S = malloc(sizeof(*S));
+    check_alloc(S);
+
     S->top = NULL;
     S->element_size = element_size;
     S->size = 0;

@@ -8,22 +8,21 @@ The term vector is borrowed from the STL. It’s a dynamic array that expands an
 - Fast random access in O(1).
 
 ```C
-// Initialize with the element size and an optional callback for element destruction.
-Vector v;
-Vector_init(&v, sizeof(int), NULL);
+// Pass the element size and, optionally, a copy constructor and a destructor for initialization.
+Vector V = Vector_new(sizeof(int), NULL, NULL);
 
 // Pass pointers to values you want to add.
 for (int i = 0; i < max; ++i) {
-    Vector_push_back(&v, &i);
+    Vector_push_back(V, &i);
 }
 
 // Pass an address if you want to store popped values.
-int value;
-while (Vector_size(&d) > 0) {
-    Vector_pop_back(&v, &value);
-    // Have fun with value.
+int out;
+while (!Vector_empty(V)) {
+    Vector_pop_back(V, &out);
+    do_stuff_with(out);
 }
 
-// Don't forget to return the data storage when you're done.
-Vector_destroy(&v);
+// Return the memory when you're done.
+Vector_delete(V);
 ```
