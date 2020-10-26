@@ -13,7 +13,8 @@ int test_queue_new(void)
     test(Q->element_size == sizeof(int),
             "Q->element_size = %lu (%lu)", Q->element_size, sizeof(int));
     test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
-    test(Q->destroy == NULL, "Q->destroy = %p (%p)", Q->destroy, NULL);
+    test(Q->destroy_element == NULL,
+            "Q->destroy_element = %p (%p)", Q->destroy_element, NULL);
     return TEST_OK;
 }
 

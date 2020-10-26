@@ -23,8 +23,8 @@ error:
 static inline void _list_node_delete(const List L, _list_node *n)
 {
     if (n) {
-        if (n->data && L && L->destroy) {
-                L->destroy(*(void**)n->data);
+        if (n->data && L && L->destroy_element) {
+                L->destroy_element(*(void**)n->data);
         }
         free(n->data);
         free(n);
@@ -38,18 +38,35 @@ static int _list_node_set(const List L, _list_node *n, const void *in)
     check_ptr(in);
 
     if (n->data) {
-        if (L->destroy) {
-            L->destroy(*(void**)n->data);
+        if (L->destroy_element) {
+            L->destroy_element(*(void**)n->data);
         }
     } else {
         n->data = malloc(L->element_size);
         check_alloc(n->data);
     }
 
-    if (L->copy) {
-        L->copy(n->data, in);
+    if (L->copy_element) {
+        L->copy_element(n->data, in);
     } else {
         memmove(n->data, in, L->element_size);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static inline int _list_node_get(const List L, _list_node *n, void *out)
+{
+    check_ptr(L);
+    check_ptr(n);
+    check_ptr(out);
+
+    if (L->copy_element) {
+        L->copy_element(out, n->data);
+    } else {
+        memmove(out, n->data, L->element_size);
     }
 
     return 0;
@@ -65,8 +82,8 @@ List List_new(const size_t element_size, copy_f copy, destroy_f destroy)
     L->first = L->last = NULL;
     L->element_size = element_size;
     L->size = 0;
-    L->copy = copy;
-    L->destroy = destroy;
+    L->copy_element = copy;
+    L->destroy_element = destroy;
 
     assert(!_list_invariant(L));
     return L;
@@ -121,7 +138,7 @@ int List_get(const List L, const size_t i, void *out)
 
     _list_node *n = _list_get_node(L, i);
     check(n != NULL, "Failed to get node at index %lu.", i);
-    memmove(out, n->data, L->element_size);
+    check(!_list_node_get(L, n, out), "Failed to hand out data.");
 
     return 0;
 error:
@@ -243,11 +260,8 @@ int List_pop_front(List L, void *out)
     check_ptr(out);
     check(L->size > 0, "Attempt to pop from empty list.");
 
-    if (L->copy) {
-        L->copy(out, L->first->data);
-    } else {
-        memmove(out, L->first->data, L->element_size);
-    }
+    _list_node *n = L->first;
+    check(!_list_node_get(L, n, out), "Failed to hand out data.");
     check(!List_remove(L, 0), "Failed to remove first node.");
 
     assert(!_list_invariant(L));
@@ -263,11 +277,8 @@ int List_pop_back(List L, void *out)
     check_ptr(out);
     check(L->size > 0, "Attempt to pop from empty list.");
 
-    if (L->copy) {
-        L->copy(out, L->last->data);
-    } else {
-        memmove(out, L->last->data, L->element_size);
-    }
+    _list_node *n = L->last;
+    check(!_list_node_get(L, n, out), "Failed to hand out data.");
     check(!List_remove(L, L->size - 1), "Failed to remove last node.");
 
     assert(!_list_invariant(L));

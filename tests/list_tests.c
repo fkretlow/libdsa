@@ -14,7 +14,8 @@ int test_list_new(void)
     test(L->element_size == sizeof(int),
             "L->element_size = %lu (%lu)", L->element_size, sizeof(int));
     test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
-    test(L->destroy == NULL, "L->destroy = %p (%p)", L->destroy, NULL);
+    test(L->destroy_element == NULL,
+            "L->destroy_element = %p (%p)", L->destroy_element, NULL);
     return TEST_OK;
 }
 

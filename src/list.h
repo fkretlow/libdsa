@@ -17,10 +17,10 @@ typedef struct _list_node {
 typedef struct _list {
     _list_node *first;
     _list_node *last;
-    copy_f copy;
-    destroy_f destroy;
     size_t element_size;
     size_t size;
+    copy_f copy_element;
+    destroy_f destroy_element;
 } _list;
 
 typedef _list *List;
@@ -30,7 +30,9 @@ typedef _list *List;
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-List List_new(const size_t element_size, copy_f copy, destroy_f destroy);
+List List_new(const size_t element_size,
+              copy_f copy_element,
+              destroy_f destroy_element);
 void List_delete(List L);
 void List_clear(List L);
 

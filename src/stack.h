@@ -7,27 +7,33 @@
 #include "debug.h"
 #include "container_tools.h"
 
-struct StackNode;
-typedef struct StackNode {
-    struct StackNode *next;
+struct _stack_node;
+typedef struct _stack_node {
+    struct _stack_node *next;
     char *data;
-} StackNode;
+} _stack_node;
 
-typedef struct Stack {
-    StackNode *top;
-    destroy_f destroy;
+typedef struct _stack {
+    _stack_node *top;
     size_t element_size;
     size_t size;
-} Stack;
+    copy_f copy_element;
+    destroy_f destroy_element;
+} _stack;
 
-#define Stack_top(S) ((S)->top ? (S)->top->data : NULL)
+typedef _stack *Stack;
+
+#define Stack_top(S) ((S)->top ? (void*)(S)->top->data : NULL)
 #define Stack_size(S) (S)->size
 #define Stack_empty(S) ((S)->size == 0)
 
-int Stack_init(Stack *s, const size_t element_size, destroy_f destroy);
-void Stack_clear(Stack *s);
+Stack Stack_new(const size_t element_size,
+                copy_f copy_element,
+                destroy_f destroy_element);
+void Stack_delete(Stack S);
+void Stack_clear(Stack S);
 
-int Stack_push(Stack *s, const void *in);
-int Stack_pop(Stack *s, void *out);
+int Stack_push(Stack S, const void *in);
+int Stack_pop(Stack S, void *out);
 
 #endif // _stack_h
