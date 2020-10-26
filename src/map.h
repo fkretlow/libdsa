@@ -21,15 +21,15 @@ typedef struct Map {
     size_t value_size;
     MapNode **buckets;
     size_t n_buckets;
-    _hash_f hash;
-    _compare_f compare;
-    _destroy_f destroy_key;
-    _destroy_f destroy_value;
+    hash_f hash;
+    compare_f compare;
+    destroy_f destroy_key;
+    destroy_f destroy_value;
 } Map;
 
 int Map_init(Map *m, const size_t key_size, const size_t value_size,
-             _hash_f hash, _compare_f compare,
-             _destroy_f destroy_key, _destroy_f destroy_value);
+             hash_f hash, compare_f compare,
+             destroy_f destroy_key, destroy_f destroy_value);
 void Map_clear(Map *m);
 void Map_destroy(Map *m);
 

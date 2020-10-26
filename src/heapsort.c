@@ -5,7 +5,7 @@
 #include "heap.h"
 #include "sort_tools.h"
 
-void heapsort(char *base, size_t n, size_t size, _compare_f compare)
+void heapsort(char *base, size_t n, size_t size, compare_f compare)
 {
     char *temp = malloc(size);
 

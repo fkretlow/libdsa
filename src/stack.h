@@ -15,7 +15,7 @@ typedef struct StackNode {
 
 typedef struct Stack {
     StackNode *top;
-    _destroy_f destroy;
+    destroy_f destroy;
     size_t element_size;
     size_t size;
 } Stack;
@@ -24,7 +24,7 @@ typedef struct Stack {
 #define Stack_size(S) (S)->size
 #define Stack_empty(S) ((S)->size == 0)
 
-int Stack_init(Stack *s, const size_t element_size, _destroy_f destroy);
+int Stack_init(Stack *s, const size_t element_size, destroy_f destroy);
 void Stack_clear(Stack *s);
 
 int Stack_push(Stack *s, const void *in);

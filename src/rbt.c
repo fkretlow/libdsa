@@ -124,8 +124,8 @@ error:
 
 int _rbt_init(_rbt *T,
                const size_t element_size,
-               _compare_f compare,
-               _destroy_f destroy)
+               compare_f compare,
+               destroy_f destroy)
 {
     check_ptr(T);
 

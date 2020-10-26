@@ -58,7 +58,7 @@ error:
     return -1;
 }
 
-int List_init(List *l, const size_t element_size, _copy_f copy, _destroy_f destroy)
+int List_init(List *l, const size_t element_size, copy_f copy, destroy_f destroy)
 {
     check_ptr(l);
 

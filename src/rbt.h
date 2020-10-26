@@ -23,14 +23,14 @@ typedef struct _rbt {
     _rbt_node *root;
     size_t element_size;
     size_t size;
-    _compare_f compare;
-    _destroy_f destroy;
+    compare_f compare;
+    destroy_f destroy;
 } _rbt;
 
 int _rbt_init(_rbt *T,
                const size_t element_size,
-               _compare_f compare,
-               _destroy_f destroy);
+               compare_f compare,
+               destroy_f destroy);
 void _rbt_clear(_rbt *T);
 
 // These functions return 1 if found, 0 if not found, -1 on error.
@@ -38,7 +38,7 @@ int _rbt_insert(_rbt *T, const void *value);
 int _rbt_delete(_rbt *T, const void *value);
 int _rbt_has(_rbt *T, const void *value);
 
-int _rbt_traverse(_rbt *T, _traverse_f f);
+int _rbt_traverse(_rbt *T, traverse_f f);
 
 int _rbt_node_new(_rbt_node **node_out);
 void _rbt_node_delete(const _rbt *T, _rbt_node *n);

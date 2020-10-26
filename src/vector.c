@@ -33,7 +33,7 @@ error:
     return -1;
 }
 
-int Vector_init(Vector *v, const size_t element_size, _destroy_f destroy)
+int Vector_init(Vector *v, const size_t element_size, destroy_f destroy)
 {
     check_ptr(v);
 

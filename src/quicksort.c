@@ -7,7 +7,7 @@
 static size_t _partition(char *base,
                           size_t start, size_t end,
                           size_t size,
-                          _compare_f compare,
+                          compare_f compare,
                           char *temp)
 {
     // Lomuto partitioning scheme
@@ -66,7 +66,7 @@ static size_t _partition(char *base,
 static void _quicksort(char *base,
                         size_t start, size_t end,
                         size_t size,
-                        _compare_f compare,
+                        compare_f compare,
                         char *temp)
 {
     if (end - start <= 1) {
@@ -87,14 +87,14 @@ static void _quicksort(char *base,
     }
 }
 
-void quicksort(void *base, size_t nmemb, size_t size, _compare_f compare) {
+void quicksort(void *base, size_t nmemb, size_t size, compare_f compare) {
     // Allocate workspace for swaps and the pivot value.
     char *temp = malloc(2 * size);
     _quicksort((char*)base, 0, nmemb, size, compare, temp);
     free(temp);
 }
 
-int is_sorted(void *base, size_t nmemb, size_t size, _compare_f compare)
+int is_sorted(void *base, size_t nmemb, size_t size, compare_f compare)
 {
     for (size_t i = 0; i < nmemb - 1; ++i) {
         if (compare(base + i*size, base + (i+1)*size) > 0) return 0;

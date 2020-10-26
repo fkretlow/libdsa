@@ -9,7 +9,7 @@
 #define _rchild(i) (2 * (i) + 2)
 #define _parent(i) (((i) - 1) / 2)
 
-int is_heap(char *base, const size_t n, const size_t size, _compare_f compare)
+int is_heap(char *base, const size_t n, const size_t size, compare_f compare)
 {
     if (n > 1) {
         for (size_t i = 0; i <= _parent(n - 1); ++i) {
@@ -23,7 +23,7 @@ int is_heap(char *base, const size_t n, const size_t size, _compare_f compare)
 }
 
 void make_heap(char *base, const size_t n, const size_t size,
-               _compare_f compare,
+               compare_f compare,
                char *temp)
 {
     for (int i = _parent((int)n - 1); i >= 0; --i) {
@@ -34,7 +34,7 @@ void make_heap(char *base, const size_t n, const size_t size,
 
 void Heap_bubble_up(char *base, const size_t size,
                     size_t i,
-                    _compare_f compare,
+                    compare_f compare,
                     char *temp)
 {
     size_t p = _parent(i);
@@ -47,7 +47,7 @@ void Heap_bubble_up(char *base, const size_t size,
 
 void Heap_sift_down(char *base, const size_t n, const size_t size,
                     size_t i,
-                    _compare_f compare,
+                    compare_f compare,
                     char *temp)
 {
     if (n == 1) return;

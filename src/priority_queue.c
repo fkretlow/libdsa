@@ -9,8 +9,8 @@
 
 int PriorityQueue_init(PriorityQueue *q,
                        const size_t element_size,
-                       _destroy_f destroy,
-                       _compare_f compare)
+                       destroy_f destroy,
+                       compare_f compare)
 {
     check(!Vector_init(&(q->data), element_size, destroy),
             "Failed to initialize vector for priority queue data.");

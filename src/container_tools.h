@@ -3,10 +3,10 @@
 
 #include "str.h"
 
-typedef void (*_destroy_f)(void *element);
-typedef void (*_copy_f)(void *dest, const void *src);
-typedef String (*_serialize_f)(const void *element);
-typedef int (*_traverse_f)(const void *element);
+typedef void (*destroy_f)(void *element);
+typedef void (*copy_f)(void *dest, const void *src);
+typedef String (*serialize_f)(const void *element);
+typedef int (*traverse_f)(const void *element);
 #define _max(A, B) (A > B ? A : B)
 
 #endif // _container_tools_h

@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-int Stack_init(Stack *s, const size_t element_size, _destroy_f destroy)
+int Stack_init(Stack *s, const size_t element_size, destroy_f destroy)
 {
     check_ptr(s);
 
