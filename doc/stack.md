@@ -7,23 +7,21 @@ Simple stack (LIFO queue), implemented in terms of a singly-linked list.
 - Fast adding and removing of elements at one side in O(1).
 
 ```C
-// Initialize with the element size and an optional callback for element destruction.
-Stack s;
-Stack_init(&s, sizeof(int), NULL);
+// Pass the element size and, optionally, a copy constructor and a destructor for initialization.
+Stack S = Stack_new(sizeof(int), NULL, NULL);
 
 // Pass pointers to values you want to add.
 for (int i = 0; i < max; ++i) {
-    Stack_push(&s, &i);
+    Stack_push(S, &i);
 }
 
 // Pass an address if you want to store popped values.
-int value;
-while (Stack_size(&s) > 0) {
-    Stack_pop(&s, &value);
-    // Do stuff with value.
+int out;
+while (!Stack_empty(S)) {
+    Stack_pop(S, &out);
+    do_stuff_with(out);
 }
 
-// There's no memory block allocated anywhere, but all elements are on the heap.
-// Clear non-empty stacks when you're done to return the memory.
-Stack_clear(&s);
+// Return the memory when you're done.
+Stack_delete(S);
 ```
