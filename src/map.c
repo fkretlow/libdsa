@@ -1,26 +1,26 @@
+#include <assert.h>
 #include <string.h>
 
 #include "debug.h"
 #include "map.h"
 
-static inline int MapNode_new(MapNode **node_out)
+static inline _map_node *_map_node_new(void)
 {
-    MapNode *new = calloc(1, sizeof(*new));
-    check_alloc(new);
-    *node_out = new;
-    return 0;
+    _map_node *n = calloc(1, sizeof(*n));
+    check_alloc(n);
+    return n;
 error:
-    return -1;
+    return NULL;
 }
 
-static inline void MapNode_delete(const Map *m, MapNode *n)
+static inline void _map_node_delete(const Map M, _map_node *n)
 {
     if (n) {
-        if (n->key && m && m->destroy_key) {
-            m->destroy_key(n->key);
+        if (n->key && M && M->destroy_key) {
+            M->destroy_key(*(void**)n->key);
         }
-        if (n->value && m && m->destroy_value) {
-            m->destroy_value(n->value);
+        if (n->value && M && M->destroy_value) {
+            M->destroy_value(*(void**)n->value);
         }
     }
     free(n->key);
@@ -28,137 +28,179 @@ static inline void MapNode_delete(const Map *m, MapNode *n)
     free(n);
 }
 
-static inline int MapNode_set_key(const Map *m, MapNode *n, const void *key)
+static int _map_node_set_key(const Map M, _map_node *n, const void *key)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(n);
     check_ptr(key);
 
-    if (!n->key) {
-        n->key = malloc(m->key_size);
-        check_alloc(n->key);
-    }
+    /* Why would we ever overwrite an existing key? */
+    assert(!n->key);
 
-    memmove(n->key, key, m->key_size);
+    n->key = malloc(M->key_size);
+    check_alloc(n->key);
+
+    if (M->copy_key) {
+        M->copy_key(n->key, key);
+    } else {
+        memmove(n->key, key, M->key_size);
+    }
 
     return 0;
 error:
     return -1;
 }
 
-static inline int MapNode_set_value(const Map *m, MapNode *n, const void *value)
+static int _map_node_set_value(const Map M, _map_node *n, const void *value)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(n);
     check_ptr(value);
 
+    /* If we set a value, we must have a key. */
+    assert(n->key);
+
     if (!n->value) {
-        n->value = malloc(m->value_size);
+        n->value = malloc(M->value_size);
         check_alloc(n->value);
     } else {
-        if (m->destroy_value) {
-            m->destroy_value(n->value);
+        if (M->destroy_value) {
+            M->destroy_value(n->value);
         }
     }
 
-    memmove(n->value, value, m->value_size);
+    if (M->copy_value) {
+        M->copy_value(n->value, value);
+    } else {
+        memmove(n->value, value, M->value_size);
+    }
 
     return 0;
 error:
     return -1;
 }
 
-int Map_init(Map *m, const size_t key_size, const size_t value_size,
-             hash_f hash, compare_f compare,
-             destroy_f destroy_key, destroy_f destroy_value)
+static int _map_node_get_value(const Map M, _map_node *n, const void *out)
 {
-    check_ptr(m);
+    check_ptr(M);
+    check_ptr(n);
+    check_ptr(out);
+
+    assert(n->value);
+
+    if (M->copy_value) {
+        M->copy_value(out, n->value);
+    } else {
+        memmove(out, n->value, M->value_size);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+Map Map_new(const size_t key_size, const size_t value_size,
+            hash_f hash, compare_f compare,
+            copy_f copy_key, destroy_f destroy_key,
+            copy_f copy_value, destroy_f destroy_value)
+{
     check_ptr(hash);
     check_ptr(compare);
 
-    m->key_size = key_size;
-    m->value_size = value_size;
-    m->hash = hash;
-    m->compare = compare;
-    m->destroy_key = destroy_key;
-    m->destroy_value = destroy_value;
+    _map *M = malloc(sizeof(*M));
 
-    m->n_buckets = MAP_N_BUCKETS;
-    m->buckets = calloc(m->n_buckets, sizeof(*m->buckets));
-    check_alloc(m->buckets);
+    M->key_size = key_size;
+    M->value_size = value_size;
+    M->hash = hash;
+    M->compare = compare;
+    M->copy_key = copy_key;
+    M->destroy_key = destroy_key;
+    M->copy_value = copy_value;
+    M->destroy_value = destroy_value;
 
-    return 0;
+    M->n_buckets = MAP_N_BUCKETS;
+    M->buckets = calloc(M->n_buckets, sizeof(*M->buckets));
+    check_alloc(M->buckets);
+
+    return M;
 error:
-    if (m->buckets) free(m->buckets);
-    return -1;
+    if (M) {
+        if (M->buckets) free(M->buckets);
+        free(M);
+    }
+    return NULL;
 }
 
-void Map_clear(Map *m)
+void Map_delete(Map M)
 {
-    MapNode *cur;
-    MapNode *next;
-    for (size_t i = 0; i < m->n_buckets; ++i) {
-        cur = m->buckets[i];
-        while (cur) {
-            next = cur->next;
-            MapNode_delete(m, cur);
-            cur = next;
+    if (M) {
+        if (M->buckets) {
+            Map_clear(M);
+            free(M->buckets);
         }
-        m->buckets[i] = NULL;
+        free(M);
     }
 }
 
-void Map_destroy(Map *m)
+void Map_clear(Map M)
 {
-    Map_clear(m);
-    free(m->buckets);
+    if (M && M->buckets) {
+        _map_node *cur;
+        _map_node *next;
+        for (size_t i = 0; i < M->n_buckets; ++i) {
+            cur = M->buckets[i];
+            while (cur != NULL) {
+                next = cur->next;
+                _map_node_delete(M, cur);
+                cur = next;
+            }
+            M->buckets[i] = NULL;
+        }
+    }
 }
 
-int __Map_find_node(const Map *m, const void *key, size_t bucket_index,
-                    MapNode **node_out)
+_map_node *_map_find_node(const Map M, const void *key, size_t bucket_index)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(key);
-    check_ptr(node_out);
 
-    MapNode *n = m->buckets[bucket_index];
+    _map_node *n = M->buckets[bucket_index];
     if (!n) {
-        *node_out = NULL;
+        return NULL;
     } else {
         while (n != NULL) {
-            if (m->compare(n->key, key) == 0) {
-                *node_out = n;
-                break;
+            if (M->compare(n->key, key) == 0) {
+                return n;
             }
+            n = n->next;
         }
     }
 
-    return 0;
 error:
-    return -1;
+    return NULL;
 }
 
 // Return values: 1 if the key already exists
 //                0 if a new entry was created
 //               -1 on error
-int Map_set(Map *m, const void *key, const void *value)
+int Map_set(Map M, const void *key, const void *value)
 {
-    check_ptr(m);
+    check_ptr(M);
 
-    size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    MapNode *node = NULL;
-
-    check(!__Map_find_node(m, key, bucket_index, &node), "Failed to find node.");
+    // TODO: generic hash needs element size, but String_hash doesn't...
+    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    _map_node *node = _map_find_node(M, key, bucket_index);
 
     if (node) {
-        check(!MapNode_set_value(m, node, value), "Failed to set value.");
+        check(!_map_node_set_value(M, node, value), "Failed to set value.");
         return 1;
     } else {
-        check(!MapNode_new(&node), "Failed to create new node.");
-        check(!MapNode_set_key(m, node, key), "Failed to set key.");
-        check(!MapNode_set_value(m, node, value), "Failed to set value.");
-        node->next = m->buckets[bucket_index];
-        m->buckets[bucket_index] = node;
+        node = _map_node_new();
+        check(node != NULL, "Failed to create new node.");
+        check(!_map_node_set_key(M, node, key), "Failed to set key.");
+        check(!_map_node_set_value(M, node, value), "Failed to set value.");
+        node->next = M->buckets[bucket_index];
+        M->buckets[bucket_index] = node;
         return 0;
     }
 
@@ -169,14 +211,13 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Map_has(const Map *m, const void *key)
+int Map_has(const Map M, const void *key)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    MapNode *n = NULL;
-    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
+    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    _map_node *n = _map_find_node(M, key, bucket_index);
 
     return n ? 1 : 0;
 error:
@@ -186,18 +227,21 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Map_get(const Map *m, const void *key, void *value_out)
+int Map_get(const Map M, const void *key, void *value_out)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(key);
     check_ptr(value_out);
 
-    size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
-    MapNode *n = NULL;
-    check(!__Map_find_node(m, key, bucket_index, &n), "Failed to find node.");
+    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    _map_node *n = _map_find_node(M, key, bucket_index);
 
     if (n) {
-        memmove(value_out, n->value, m->value_size);
+        if (M->copy_value) {
+            M->copy_value(value_out, n->value);
+        } else {
+            memmove(value_out, n->value, M->value_size);
+        }
         return 1;
     } else {
         return 0;
@@ -210,17 +254,17 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Map_delete(Map *m, const void *key)
+int Map_remove(Map M, const void *key)
 {
-    check_ptr(m);
+    check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = m->hash(key, m->key_size) % MAP_N_BUCKETS;
+    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
 
-    MapNode *node = m->buckets[bucket_index];
-    MapNode *prev = NULL;
+    _map_node *node = M->buckets[bucket_index];
+    _map_node *prev = NULL;
 
-    while (node && m->compare(node->key, key) != 0) {
+    while (node && M->compare(node->key, key) != 0) {
         prev = node;
         node = node->next;
     }
@@ -229,9 +273,9 @@ int Map_delete(Map *m, const void *key)
         if (prev) {
             prev->next = node->next;
         } else {
-            m->buckets[bucket_index] = node->next;
+            M->buckets[bucket_index] = node->next;
         }
-        MapNode_delete(m, node);
+        _map_node_delete(M, node);
         return 1;
     } else {
         return 0;

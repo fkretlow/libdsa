@@ -9,34 +9,39 @@
 
 #define MAP_N_BUCKETS 512
 
-struct MapNode;
-typedef struct MapNode {
-    struct MapNode *next;
+struct _map_node;
+typedef struct _map_node {
+    struct _map_node *next;
     char *key;
     char *value;
-} MapNode;
+} _map_node;
 
-typedef struct Map {
+typedef struct _map {
+    _map_node **buckets;
+    size_t n_buckets;
     size_t key_size;
     size_t value_size;
-    MapNode **buckets;
-    size_t n_buckets;
     hash_f hash;
     compare_f compare;
+    copy_f copy_key;
     destroy_f destroy_key;
+    copy_f copy_value;
     destroy_f destroy_value;
-} Map;
+} _map;
 
-int Map_init(Map *m, const size_t key_size, const size_t value_size,
-             hash_f hash, compare_f compare,
-             destroy_f destroy_key, destroy_f destroy_value);
-void Map_clear(Map *m);
-void Map_destroy(Map *m);
+typedef _map *Map;
+
+Map Map_new(const size_t key_size, const size_t value_size,
+            hash_f hash, compare_f compare,
+            copy_f copy_key, destroy_f destroy_key,
+            copy_f copy_value, destroy_f destroy_value);
+void Map_delete(Map M);
+void Map_clear(Map M);
 
 // These functions return 1 if found, 0 if not found, -1 on error.
-int Map_set(Map *m, const void *key, const void *value);
-int Map_delete(Map *m, const void *key);
-int Map_has(const Map *m, const void *key);
-int Map_get(const Map *m, const void *key, void *value_out);
+int Map_set(Map M, const void *key, const void *value);
+int Map_remove(Map M, const void *key);
+int Map_has(const Map M, const void *key);
+int Map_get(const Map M, const void *key, void *value_out);
 
 #endif // _map_h
