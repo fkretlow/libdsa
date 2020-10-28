@@ -6,6 +6,7 @@
 #include "container_tools.h"
 #include "hash.h"
 #include "sort_tools.h"
+#include "type_interface.h"
 
 #define MAP_N_BUCKETS 512
 
@@ -19,22 +20,13 @@ typedef struct _map_node {
 typedef struct _map {
     _map_node **buckets;
     size_t n_buckets;
-    size_t key_size;
-    size_t value_size;
-    hash_f hash;
-    compare_f compare;
-    copy_f copy_key;
-    destroy_f destroy_key;
-    copy_f copy_value;
-    destroy_f destroy_value;
+    TypeInterface *key_type;
+    TypeInterface *value_type;
 } _map;
 
 typedef _map *Map;
 
-Map Map_new(const size_t key_size, const size_t value_size,
-            hash_f hash, compare_f compare,
-            copy_f copy_key, destroy_f destroy_key,
-            copy_f copy_value, destroy_f destroy_value);
+Map Map_new(TypeInterface *key_type, TypeInterface *value_type);
 void Map_delete(Map M);
 void Map_clear(Map M);
 

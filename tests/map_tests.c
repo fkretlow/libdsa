@@ -2,22 +2,35 @@
 #include "hash.h"
 #include "map.h"
 #include "str.h"
-#include "test_utils.h"
 #include "test.h"
+#include "test_utils.h"
+#include "type_interface.h"
 
 static Map M;
 static int rc, key, value;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    compint,
+    NULL
+};
+
+static TypeInterface string_type = {
+    sizeof(String),
+    String_copy_to,
+    String_delete,
+    String_compare,
+    String_hash
+};
+
 int test_map_new(void)
 {
-    M = Map_new(sizeof(int), sizeof(int),
-                jenkins_hash, compint,
-                NULL, NULL, NULL, NULL);
+    M = Map_new(&int_type, &int_type);
     test(M != NULL,"M = NULL");
-    test (M->key_size == sizeof(int),
-            "M->key_size = %lu (%lu)", M->key_size, sizeof(int));
-    test (M->value_size == sizeof(int),
-            "M->value_size = %lu (%lu)", M->value_size, sizeof(int));
+    test(M->key_type == &int_type, "M->key_type != &int_type");
+    test(M->value_type == &int_type, "M->value_type != &int_type");
     test(M->buckets != NULL, "M->buckets = NULL");
 
     return TEST_OK;
@@ -75,10 +88,7 @@ int test_map_teardown(void)
 
 int test_map_with_strings(void)
 {
-    M = Map_new(sizeof(String), sizeof(String),
-                String_hash, String_compare,
-                String_copy_to, String_delete,
-                String_copy_to, String_delete);
+    M = Map_new(&string_type, &string_type);
     test(M != NULL, "M = NULL");
 
     String k = String_from_cstr("name");
@@ -86,7 +96,8 @@ int test_map_with_strings(void)
     String v_out = NULL;
     rc = Map_set(M, &k, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
-    test(!Map_get(M, &k, &v_out), "Failed to get value mapped to string.");
+    rc = Map_get(M, &k, &v_out);
+    test(rc == 1, "rc = %d (%d)", rc, 1);
     test(v_out != NULL, "v_out = NULL");
     test(String_compare(v, v_out) == 0, "v != v_out");
 

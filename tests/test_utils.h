@@ -8,9 +8,9 @@
 #include "debug.h"
 #include "str.h"
 
-int compint(const int *a, const int *b)
+int compint(const void *a, const void *b)
 {
-    return *a < *b ? -1 : *a > *b ? 1 : 0;
+    return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
 }
 
 String serialize_int(const int *i)

@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
 #include "container_tools.h"
+#include "debug.h"
 
 struct _list_node;
 typedef struct _list_node {

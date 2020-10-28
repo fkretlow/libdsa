@@ -36,6 +36,6 @@ int String_append_cstr(String s, const char *cstr);
 int String_push_back(String s, const char c);
 int String_pop_back(String s, char *out);
 String String_concat(const String s1, const String s2);
-uint32_t String_hash(const String s);
+unsigned long String_hash(const String *s);
 
 #endif // _str_h

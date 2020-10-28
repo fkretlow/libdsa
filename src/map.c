@@ -4,6 +4,13 @@
 #include "debug.h"
 #include "map.h"
 
+
+extern void *TypeInterface_allocate(TypeInterface *T, size_t n);
+extern void TypeInterface_copy(TypeInterface *T, void *dest, const void *src);
+extern void TypeInterface_destroy(TypeInterface *T, void *obj);
+extern int TypeInterface_compare(TypeInterface *T, const void *a, const void *b);
+extern unsigned long TypeInterface_hash(TypeInterface *T, const void *obj);
+
 static inline _map_node *_map_node_new(void)
 {
     _map_node *n = calloc(1, sizeof(*n));
@@ -16,16 +23,12 @@ error:
 static inline void _map_node_delete(const Map M, _map_node *n)
 {
     if (n) {
-        if (n->key && M && M->destroy_key) {
-            M->destroy_key(*(void**)n->key);
-        }
-        if (n->value && M && M->destroy_value) {
-            M->destroy_value(*(void**)n->value);
-        }
+        if (n->key && M)   TypeInterface_destroy(M->key_type,   *(void**)n->key);
+        free(n->key);
+        if (n->value && M) TypeInterface_destroy(M->value_type, *(void**)n->value);
+        free(n->value);
+        free(n);
     }
-    free(n->key);
-    free(n->value);
-    free(n);
 }
 
 static int _map_node_set_key(const Map M, _map_node *n, const void *key)
@@ -37,14 +40,9 @@ static int _map_node_set_key(const Map M, _map_node *n, const void *key)
     /* Why would we ever overwrite an existing key? */
     assert(!n->key);
 
-    n->key = malloc(M->key_size);
-    check_alloc(n->key);
-
-    if (M->copy_key) {
-        M->copy_key(n->key, key);
-    } else {
-        memmove(n->key, key, M->key_size);
-    }
+    n->key = TypeInterface_allocate(M->key_type, 1);
+    check(n->key != NULL, "Failed to allocate memory for key.");
+    TypeInterface_copy(M->key_type, (void*)n->key, key);
 
     return 0;
 error:
@@ -61,26 +59,20 @@ static int _map_node_set_value(const Map M, _map_node *n, const void *value)
     assert(n->key);
 
     if (!n->value) {
-        n->value = malloc(M->value_size);
-        check_alloc(n->value);
+        n->value = TypeInterface_allocate(M->value_type, 1);
+        check(n->value != NULL, "Failed to allocate memory for value.");
     } else {
-        if (M->destroy_value) {
-            M->destroy_value(n->value);
-        }
+        TypeInterface_destroy(M->value_type, *(void**)n->value);
     }
 
-    if (M->copy_value) {
-        M->copy_value(n->value, value);
-    } else {
-        memmove(n->value, value, M->value_size);
-    }
+    TypeInterface_copy(M->value_type, (void*)n->value, value);
 
     return 0;
 error:
     return -1;
 }
 
-static int _map_node_get_value(const Map M, _map_node *n, const void *out)
+static int _map_node_get_value(const Map M, _map_node *n, void *out)
 {
     check_ptr(M);
     check_ptr(n);
@@ -88,35 +80,24 @@ static int _map_node_get_value(const Map M, _map_node *n, const void *out)
 
     assert(n->value);
 
-    if (M->copy_value) {
-        M->copy_value(out, n->value);
-    } else {
-        memmove(out, n->value, M->value_size);
-    }
+    TypeInterface_copy(M->value_type, out, (void*)n->value);
 
     return 0;
 error:
     return -1;
 }
 
-Map Map_new(const size_t key_size, const size_t value_size,
-            hash_f hash, compare_f compare,
-            copy_f copy_key, destroy_f destroy_key,
-            copy_f copy_value, destroy_f destroy_value)
+Map Map_new(TypeInterface *key_type, TypeInterface *value_type)
 {
-    check_ptr(hash);
-    check_ptr(compare);
+    check_ptr(key_type);
+    check_ptr(value_type);
+    check(key_type->compare != NULL, "No comparison function provided for key type.");
 
     _map *M = malloc(sizeof(*M));
+    check_alloc(M);
 
-    M->key_size = key_size;
-    M->value_size = value_size;
-    M->hash = hash;
-    M->compare = compare;
-    M->copy_key = copy_key;
-    M->destroy_key = destroy_key;
-    M->copy_value = copy_value;
-    M->destroy_value = destroy_value;
+    M->key_type = key_type;
+    M->value_type = value_type;
 
     M->n_buckets = MAP_N_BUCKETS;
     M->buckets = calloc(M->n_buckets, sizeof(*M->buckets));
@@ -169,7 +150,7 @@ _map_node *_map_find_node(const Map M, const void *key, size_t bucket_index)
         return NULL;
     } else {
         while (n != NULL) {
-            if (M->compare(n->key, key) == 0) {
+            if (TypeInterface_compare(M->key_type, n->key, key) == 0) {
                 return n;
             }
             n = n->next;
@@ -187,8 +168,7 @@ int Map_set(Map M, const void *key, const void *value)
 {
     check_ptr(M);
 
-    // TODO: generic hash needs element size, but String_hash doesn't...
-    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
     _map_node *node = _map_find_node(M, key, bucket_index);
 
     if (node) {
@@ -216,7 +196,7 @@ int Map_has(const Map M, const void *key)
     check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
     _map_node *n = _map_find_node(M, key, bucket_index);
 
     return n ? 1 : 0;
@@ -233,15 +213,11 @@ int Map_get(const Map M, const void *key, void *value_out)
     check_ptr(key);
     check_ptr(value_out);
 
-    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
     _map_node *n = _map_find_node(M, key, bucket_index);
 
     if (n) {
-        if (M->copy_value) {
-            M->copy_value(value_out, n->value);
-        } else {
-            memmove(value_out, n->value, M->value_size);
-        }
+        check(!_map_node_get_value(M, n, value_out), "Failed to hand out value.");
         return 1;
     } else {
         return 0;
@@ -259,12 +235,12 @@ int Map_remove(Map M, const void *key)
     check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = M->hash(key, M->key_size) % MAP_N_BUCKETS;
+    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
 
     _map_node *node = M->buckets[bucket_index];
     _map_node *prev = NULL;
 
-    while (node && M->compare(node->key, key) != 0) {
+    while (node && TypeInterface_compare(M->key_type, node->key, key) != 0) {
         prev = node;
         node = node->next;
     }

@@ -122,6 +122,15 @@ int test_string_push_pop_back(void)
     return TEST_OK;
 }
 
+int test_string_hash(void)
+{
+    String s = String_from_cstr("Maurice Ravel");
+    unsigned long hash = String_hash(&s);
+    test(hash != 0, "hash = 0");
+    String_delete(s);
+    return TEST_OK;
+}
+
 int main(void)
 {
     test_suite_start();
@@ -132,5 +141,6 @@ int main(void)
     run_test(test_string_append);
     run_test(test_string_concat);
     run_test(test_string_push_pop_back);
+    run_test(test_string_hash);
     test_suite_end();
 }

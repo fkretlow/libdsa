@@ -247,7 +247,7 @@ error:
     return NULL;
 }
 
-uint32_t String_hash(const String s)
+unsigned long String_hash(const String *s)
 {
-    return jenkins_hash(s->data, s->size);
+    return jenkins_hash((*s)->data, (*s)->size);
 }

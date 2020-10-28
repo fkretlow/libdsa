@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "container_tools.h"
 #include "debug.h"
 #include "heap.h"
 #include "priority_queue.h"

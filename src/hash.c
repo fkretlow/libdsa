@@ -1,12 +1,11 @@
 #include "hash.h"
 
-uint32_t jenkins_hash(const void *data, const size_t size)
+unsigned long jenkins_hash(const void *obj, const size_t size)
 {
-    uint32_t hash = 0;
-    uint32_t i = 0;
+    unsigned long hash = 0;
 
-    for (hash = i = 0; i < size; ++i) {
-        hash += ((char *)data)[i];
+    for (unsigned long i = 0; i < size; ++i) {
+        hash += ((char *)obj)[i];
         hash += (hash << 10);
         hash ^= (hash >>  6);
     }

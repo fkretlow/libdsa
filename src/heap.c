@@ -1,9 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "container_tools.h"
 #include "heap.h"
-#include "sort_tools.h"
+#include "container_tools.h"
 
 #define _lchild(i) (2 * (i) + 1)
 #define _rchild(i) (2 * (i) + 2)
