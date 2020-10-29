@@ -23,8 +23,8 @@ error:
 static inline void _list_node_delete(const List L, _list_node *n)
 {
     if (n) {
-        if (n->data && L && L->destroy_element) {
-                L->destroy_element(*(void**)n->data);
+        if (n->data && L) {
+            TypeInterface_destroy(L->element_type, n->data);
         }
         free(n->data);
         free(n);
@@ -38,19 +38,13 @@ static int _list_node_set(const List L, _list_node *n, const void *in)
     check_ptr(in);
 
     if (n->data) {
-        if (L->destroy_element) {
-            L->destroy_element(*(void**)n->data);
-        }
+        TypeInterface_destroy(L->element_type, n->data);
     } else {
-        n->data = malloc(L->element_size);
-        check_alloc(n->data);
+        n->data = TypeInterface_allocate(L->element_type, 1);
+        check(n->data != NULL, "Failed to allocate memory for new element.");
     }
 
-    if (L->copy_element) {
-        L->copy_element(n->data, in);
-    } else {
-        memmove(n->data, in, L->element_size);
-    }
+    TypeInterface_copy(L->element_type, n->data, in);
 
     return 0;
 error:
@@ -63,27 +57,23 @@ static inline int _list_node_get(const List L, _list_node *n, void *out)
     check_ptr(n);
     check_ptr(out);
 
-    if (L->copy_element) {
-        L->copy_element(out, n->data);
-    } else {
-        memmove(out, n->data, L->element_size);
-    }
+    TypeInterface_copy(L->element_type, out, n->data);
 
     return 0;
 error:
     return -1;
 }
 
-List List_new(const size_t element_size, copy_f copy, destroy_f destroy)
+List List_new(TypeInterface *element_type)
 {
+    check_ptr(element_type);
+
     List L = malloc(sizeof(*L));
     check_ptr(L);
 
     L->first = L->last = NULL;
-    L->element_size = element_size;
     L->size = 0;
-    L->copy_element = copy;
-    L->destroy_element = destroy;
+    L->element_type = element_type;
 
     assert(!_list_invariant(L));
     return L;

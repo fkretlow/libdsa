@@ -4,12 +4,20 @@
 #include "str.h"
 #include "test.h"
 #include "test_utils.h"
+#include "type_interface.h"
 
 /* static int rc; */
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
 
 int test_serialize_list_of_ints(void)
 {
-    List L = List_new(sizeof(int), NULL, NULL);
+    List L = List_new(&int_type);
     for (int i = 0; i < 8; ++i) {
         List_push_back(L, &i);
     }

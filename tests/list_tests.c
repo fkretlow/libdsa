@@ -2,20 +2,28 @@
 #include "list.h"
 #include "str.h"
 #include "test.h"
+#include "test_utils.h"
+#include "type_interface.h"
 
 static List L;
 int rc;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
+
 int test_list_new(void)
 {
-    L = List_new(sizeof(int), NULL, NULL);
+    L = List_new(&int_type);
     test(L != NULL, "L = NULL");
     test(L->first == NULL && L->last == NULL, "L->first != NULL or L->last != NULL");
-    test(L->element_size == sizeof(int),
-            "L->element_size = %lu (%lu)", L->element_size, sizeof(int));
+    test(L->element_type->size == sizeof(int),
+            "L->element_size = %lu (%lu)", L->element_type->size, sizeof(int));
     test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
-    test(L->destroy_element == NULL,
-            "L->destroy_element = %p (%p)", L->destroy_element, NULL);
     return TEST_OK;
 }
 
@@ -99,9 +107,9 @@ int test_list_teardown(void)
     return TEST_OK;
 }
 
-/* int test_list_of_strings(void)
+int test_list_of_strings(void)
 {
-    L = List_new(sizeof(String), String_copy_to, String_delete);
+    L = List_new(&String_type);
     test(L != NULL, "L = NULL");
 
     String s = String_new();
@@ -122,7 +130,7 @@ int test_list_teardown(void)
     List_delete(L);
     String_delete(s);
     return TEST_OK;
-} */
+}
 
 int main(void)
 {
@@ -130,6 +138,6 @@ int main(void)
     run_test(test_list_new);
     run_test(test_list_usage);
     run_test(test_list_teardown);
-    /* run_test(test_list_of_strings); */
+    run_test(test_list_of_strings);
     test_suite_end();
 }

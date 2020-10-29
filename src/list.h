@@ -6,6 +6,7 @@
 
 #include "container_tools.h"
 #include "debug.h"
+#include "type_interface.h"
 
 struct _list_node;
 typedef struct _list_node {
@@ -17,10 +18,8 @@ typedef struct _list_node {
 typedef struct _list {
     _list_node *first;
     _list_node *last;
-    size_t element_size;
     size_t size;
-    copy_f copy_element;
-    destroy_f destroy_element;
+    TypeInterface *element_type;
 } _list;
 
 typedef _list *List;
@@ -30,9 +29,7 @@ typedef _list *List;
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-List List_new(const size_t element_size,
-              copy_f copy_element,
-              destroy_f destroy_element);
+List List_new(TypeInterface *element_type);
 void List_delete(List L);
 void List_clear(List L);
 

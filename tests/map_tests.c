@@ -13,7 +13,7 @@ static TypeInterface int_type = {
     sizeof(int),
     NULL,
     NULL,
-    compint,
+    int_compare,
     NULL
 };
 

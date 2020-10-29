@@ -13,6 +13,11 @@ int compint(const void *a, const void *b)
     return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
 }
 
+int int_compare(const void *a, const void *b)
+{
+    return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
+}
+
 String serialize_int(const void *ip)
 {
     int i = *(int *)ip;

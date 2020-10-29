@@ -1,20 +1,28 @@
 #include "debug.h"
 #include "queue.h"
 #include "test.h"
+#include "test_utils.h"
+#include "type_interface.h"
 
 static Queue Q;
 static int rc;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
+
 int test_queue_new(void)
 {
-    Q = Queue_new(sizeof(int), NULL, NULL);
+    Q = Queue_new(&int_type);
     test(Q != NULL, "Q = NULL");
     test(Q->first == NULL && Q->last == NULL, "Q->first != NULL or Q->last != NULL");
-    test(Q->element_size == sizeof(int),
-            "Q->element_size = %lu (%lu)", Q->element_size, sizeof(int));
+    test(Q->element_type->size == sizeof(int),
+            "Q->element_size = %lu (%lu)", Q->element_type->size, sizeof(int));
     test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
-    test(Q->destroy_element == NULL,
-            "Q->destroy_element = %p (%p)", Q->destroy_element, NULL);
     return TEST_OK;
 }
 
