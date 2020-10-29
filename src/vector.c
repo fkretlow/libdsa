@@ -1,38 +1,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "container_tools.h"
 #include "debug.h"
 #include "vector.h"
 
-int _vector_init(_vector *V,
-                 const size_t element_size,
-                 copy_f copy_element,
-                 destroy_f destroy_element)
+int _vector_init(_vector *V, TypeInterface *element_type)
 {
-    V->data = malloc(VECTOR_MIN_CAPACITY * element_size);
+    check_ptr(V);
+    check_ptr(element_type);
+
+    V->data = malloc(VECTOR_MIN_CAPACITY * element_type->size);
     check_alloc(V->data);
 
     V->size = 0;
     V->capacity = VECTOR_MIN_CAPACITY;
-    V->element_size = element_size;
-    V->destroy_element = destroy_element;
-    V->copy_element = copy_element;
+    V->element_type = element_type;
 
     return 0;
 error:
     return -1;
 }
 
-Vector Vector_new(const size_t element_size,
-                  copy_f copy_element,
-                  destroy_f destroy_element)
+Vector Vector_new(TypeInterface *element_type)
 {
     _vector *V = malloc(sizeof(*V));
     check_alloc(V);
 
-    check(!_vector_init(V, element_size, copy_element, destroy_element),
-            "Failed to initialize new vector.");
+    check(!_vector_init(V, element_type), "Failed to initialize new vector.");
 
     return V;
 error:
@@ -70,16 +64,16 @@ int Vector_reserve(Vector V, const size_t capacity)
 
     /* If we have an element destructor, we need to make sure that all elements
      * that we are going to cut off are properly destroyed. */
-    if (c < V->size && V->destroy_element) {
+    if (c < V->size) {
         for (size_t i = c; i < V->size; ++i) {
-            V->destroy_element(*(void**)(V->data + i * V->element_size));
+            _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
         }
     }
 
     /* Assume that reallocarray doesn't touch the original array if it fails.
      * Also assume that nested types remain intact when only the top level data
      * is moved. */
-    char *new_data = reallocarray(V->data, c, V->element_size);
+    char *new_data = reallocarray(V->data, c, _ti_size(V->element_type));
     check(new_data != NULL, "Failed to reserve the requested amonut of memory.");
     V->data = new_data;
     V->capacity = c;
@@ -103,7 +97,7 @@ int Vector_shrink_to_fit(Vector V)
     while (c > V->size << 1) c >>= 1;
 
     /* Assumptions as above. */
-    char *new_data = reallocarray(V->data, c, V->element_size);
+    char *new_data = reallocarray(V->data, c, _ti_size(V->element_type));
     check(new_data != NULL, "Failed to reduce the internal memory.");
     V->data = new_data;
     V->capacity = c;
@@ -116,10 +110,8 @@ error:
 void Vector_clear(Vector V)
 {
     if (V && V->data) {
-        if (V->destroy_element) {
-            for (size_t i = 0; i < V->size; ++i) {
-                V->destroy_element(*(void**)(V->data + i * V->element_size));
-            }
+        for (size_t i = 0; i < V->size; ++i) {
+            _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
         }
         V->size = 0;
         Vector_reserve(V, VECTOR_MIN_CAPACITY);
@@ -132,11 +124,7 @@ int Vector_get(const Vector V, const size_t i, void *out)
     check_ptr(out);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    if (V->copy_element) {
-        V->copy_element(out, V->data + i * V->element_size);
-    } else {
-        memmove(out, V->data + i * V->element_size, V->element_size);
-    }
+    _ti_copy(V->element_type, out, V->data + i * _ti_size(V->element_type));
     return 0;
 error:
     return -1;
@@ -153,15 +141,11 @@ int Vector_set(Vector V, const size_t i, const void *in)
             check(!Vector_reserve(V, V->capacity << 1), "Failed to expand.");
         }
         ++V->size;
-    } else if (i < V->size && V->destroy_element) {
-        V->destroy_element(*(void**)(V->data + i * V->element_size));
+    } else if (i < V->size) {
+        _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
     }
 
-    if (V->copy_element) {
-        V->copy_element(V->data + i * V->element_size, in);
-    } else {
-        memmove(V->data + i * V->element_size, in, V->element_size);
-    }
+    _ti_copy(V->element_type, V->data + i * _ti_size(V->element_type), in);
 
     return 0;
 error:
@@ -181,17 +165,12 @@ int Vector_insert(Vector V, const size_t i, const void *in)
     if (i < V->size) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + (i + 1) * V->element_size,
-                V->data + i * V->element_size,
-                (V->size - i) * V->element_size);
+        memmove(V->data + (i + 1) * _ti_size(V->element_type),
+                V->data + i * _ti_size(V->element_type),
+                (V->size - i) * _ti_size(V->element_type));
     }
 
-    if (V->copy_element) {
-        V->copy_element(V->data + i * V->element_size, in);
-    } else {
-        memmove(V->data + i * V->element_size, in, V->element_size);
-    }
-
+    _ti_copy(V->element_type, V->data + i * _ti_size(V->element_type), in);
     ++V->size;
 
     return 0;
@@ -206,16 +185,14 @@ int Vector_remove(Vector V, const size_t i)
     check_ptr(V);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    if (V->destroy_element) {
-        V->destroy_element(*(void**)(V->data + i * V->element_size));
-    }
+    _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
 
     if (i < V->size - 1) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + i * V->element_size,
-                V->data + (i + 1) * V->element_size,
-                (V->size - (i + 1)) * V->element_size);
+        memmove(V->data + i * _ti_size(V->element_type),
+                V->data + (i + 1) * _ti_size(V->element_type),
+                (V->size - (i + 1)) * _ti_size(V->element_type));
     }
 
     --V->size;

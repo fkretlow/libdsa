@@ -1,8 +1,7 @@
 #ifndef _priority_queue_h
 #define _priority_queue_h
 
-#include "container_tools.h"
-#include "sort_tools.h"
+#include "type_interface.h"
 #include "vector.h"
 
 typedef struct _pqueue {
@@ -17,10 +16,7 @@ typedef _pqueue *PriorityQueue;
 #define PriorityQueue_empty(Q) Vector_empty( &((Q)->vector) )
 #define PriorityQueue_next(Q) ( (Q)->size ? (void*)((Q)->vector.data[0]) : NULL )
 
-PriorityQueue PriorityQueue_new(const size_t element_size,
-                      copy_f copy_element,
-                      destroy_f destroy_element,
-                      compare_f compare);
+PriorityQueue PriorityQueue_new(TypeInterface *element_type);
 void PriorityQueue_delete(PriorityQueue Q);
 #define PriorityQueue_clear(Q) Vector_clear( &((Q)->vector) )
 

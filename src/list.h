@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "container_tools.h"
 #include "debug.h"
 #include "type_interface.h"
 

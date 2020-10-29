@@ -2,7 +2,7 @@
 #define _vector_h
 
 #include <stdlib.h>
-#include "container_tools.h"
+#include "type_interface.h"
 
 #define VECTOR_MIN_CAPACITY 8lu
 
@@ -10,9 +10,7 @@ typedef struct _vector {
     char *data;
     size_t size;
     size_t capacity;
-    size_t element_size;
-    copy_f copy_element;
-    destroy_f destroy_element;
+    TypeInterface *element_type;
 } _vector;
 
 typedef _vector *Vector;
@@ -21,15 +19,10 @@ typedef _vector *Vector;
 #define Vector_size(V) (V)->size
 #define Vector_empty(V) ((V)->size == 0)
 
-int _vector_init(_vector *V,
-                 const size_t element_size,
-                 copy_f copy_element,
-                 destroy_f destroy_element);
+int _vector_init(_vector *V, TypeInterface *element_type);
 void _vector_dealloc(_vector *V);
 
-Vector Vector_new(const size_t element_size,
-                  copy_f copy_element,
-                  destroy_f destroy_element);
+Vector Vector_new(TypeInterface *element_type);
 void Vector_delete(Vector V);
 int Vector_reserve(Vector V, const size_t capacity);
 int Vector_shrink_to_fit(Vector V);

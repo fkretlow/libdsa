@@ -4,15 +4,24 @@
 #include "priority_queue.h"
 #include "test_utils.h"
 #include "test.h"
+#include "type_interface.h"
 
 #define MAX_VAL 1000
 
 static PriorityQueue Q;
 static int rc, v1, v2;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
+
 int test_priority_queue_new(void)
 {
-    Q = PriorityQueue_new(sizeof(int), NULL, NULL, compint);
+    Q = PriorityQueue_new(&int_type);
     return TEST_OK;
 }
 

@@ -1,21 +1,30 @@
 #include "debug.h"
 #include "str.h"
 #include "test.h"
+#include "test_utils.h"
+#include "type_interface.h"
 #include "vector.h"
 
 static Vector V;
 static int rc;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
+
 int test_vector_new(void)
 {
-    V = Vector_new(sizeof(int), NULL, NULL);
+    V = Vector_new(&int_type);
     test(V->data != NULL, "V->data = NULL");
     test(V->size == 0, "V->size = %lu (%lu)", V->size, 0lu);
     test(V->capacity == VECTOR_MIN_CAPACITY,
             "V->capacity = %lu (%lu)", V->capacity, VECTOR_MIN_CAPACITY);
-    test(V->element_size == sizeof(int),
-            "V->element_size = %lu (%lu)", V->element_size, sizeof(int));
-    test(V->destroy_element == NULL, "V->destroy_element != NULL");
+    test(V->element_type->size == sizeof(int),
+            "V->element_type->size = %lu (%lu)", V->element_type->size, sizeof(int));
     return TEST_OK;
 }
 
@@ -72,9 +81,9 @@ int test_vector_teardown(void)
     return TEST_OK;
 }
 
-/* int test_vector_of_strings(void)
+int test_vector_of_strings(void)
 {
-    V = Vector_new(sizeof(String), String_copy_to, String_delete);
+    V = Vector_new(&String_type);
     test(V != NULL, "V = NULL");
 
     String s = String_new();
@@ -95,7 +104,7 @@ int test_vector_teardown(void)
     Vector_delete(V);
     String_delete(s);
     return TEST_OK;
-} */
+}
 
 int main(void)
 {
@@ -103,6 +112,6 @@ int main(void)
     run_test(test_vector_new);
     run_test(test_vector_usage);
     run_test(test_vector_teardown);
-    /* run_test(test_vector_of_strings); */
+    run_test(test_vector_of_strings);
     test_suite_end();
 }

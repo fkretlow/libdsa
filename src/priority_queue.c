@@ -2,24 +2,21 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "container_tools.h"
 #include "debug.h"
 #include "heap.h"
 #include "priority_queue.h"
-#include "sort_tools.h"
 
-PriorityQueue PriorityQueue_new(const size_t element_size,
-                      copy_f copy_element,
-                      destroy_f destroy_element,
-                      compare_f compare)
+PriorityQueue PriorityQueue_new(TypeInterface *element_type)
 {
+    check_ptr(element_type);
+    check(element_type->compare != NULL, "Need a comparison function.")
+
     _pqueue *Q = malloc(sizeof(*Q));
     check_alloc(Q);
 
-    check(!_vector_init(&(Q->vector), element_size, copy_element, destroy_element),
+    check(!_vector_init(&(Q->vector), element_type),
             "Failed to initialize vector for priority queue data.");
-    Q->compare = compare;
-    Q->temp = malloc(element_size);
+    Q->temp = malloc(element_type->size);
     check_alloc(Q->temp);
 
     return Q;
@@ -50,11 +47,11 @@ int PriorityQueue_enqueue(PriorityQueue Q, const void *in)
 
     /* Move it upwards until the heap property is satisfied. */
     if (Vector_size(&(Q->vector)) > 1) {
-        Heap_bubble_up(Q->vector.data, Q->vector.element_size,
+        Heap_bubble_up(Q->vector.data, _ti_size(Q->vector.element_type),
                        Vector_size(&(Q->vector)) - 1,
-                       Q->compare, Q->temp);
-        assert(is_heap(Q->vector.data, Q->vector.size, Q->vector.element_size,
-                       Q->compare));
+                       Q->vector.element_type->compare, Q->temp);
+        assert(is_heap(Q->vector.data, Q->vector.size, _ti_size(Q->vector.element_type),
+                       Q->vector.element_type->compare));
     }
 
     return 0;
@@ -72,18 +69,20 @@ int PriorityQueue_dequeue(PriorityQueue Q, void *out)
     /* Copy the last element to the top, assuming that nested types remain
      * intact when only the top level data is moved. */
     memmove(Q->vector.data,
-            Q->vector.data + (Q->vector.size - 1) * Q->vector.element_size,
-            Q->vector.element_size);
+            Q->vector.data + (Q->vector.size - 1) * _ti_size(Q->vector.element_type),
+            _ti_size(Q->vector.element_type));
 
     /* Remove the now obsolete duplicate at the end. */
     check(!Vector_pop_back(&(Q->vector), NULL), "Failed to remove value.");
 
     /* Repair the heap. */
     if (Vector_size(&(Q->vector)) > 1) {
-        Heap_sift_down(Q->vector.data, Q->vector.size, Q->vector.element_size, 0,
-                       Q->compare, Q->temp);
-        assert(is_heap(Q->vector.data, Q->vector.size, Q->vector.element_size,
-                       Q->compare));
+        Heap_sift_down(Q->vector.data, Q->vector.size,
+                       _ti_size(Q->vector.element_type), 0,
+                       Q->vector.element_type->compare, Q->temp);
+        assert(is_heap(Q->vector.data, Q->vector.size,
+                       _ti_size(Q->vector.element_type),
+                       Q->vector.element_type->compare));
     }
 
 
