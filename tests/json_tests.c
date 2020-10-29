@@ -6,7 +6,6 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-/* static int rc; */
 static TypeInterface int_type = {
     sizeof(int),
     NULL,
@@ -34,9 +33,9 @@ int test_serialize_list_of_ints(void)
     return TEST_OK;
 }
 
-/* int test_serialize_list_of_strings(void)
+int test_serialize_list_of_strings(void)
 {
-    List L = List_new(sizeof(String), String_copy_to, String_delete);
+    List L = List_new(&String_type);
     String s, json, expected;
 
 
@@ -58,12 +57,12 @@ int test_serialize_list_of_ints(void)
     String_delete(json);
     String_delete(expected);
     return TEST_OK;
-} */
+}
 
 int main(void)
 {
     test_suite_start();
     run_test(test_serialize_list_of_ints);
-    /* run_test(test_serialize_list_of_strings); */
+    run_test(test_serialize_list_of_strings);
     test_suite_end();
 }
