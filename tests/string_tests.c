@@ -1,8 +1,10 @@
 #include "debug.h"
 #include "test.h"
 #include "str.h"
+#include "type_interface.h"
 
 static int rc;
+extern TypeInterface String_type;
 
 int test_string_from_cstr(void)
 {
@@ -125,9 +127,34 @@ int test_string_push_pop_back(void)
 int test_string_hash(void)
 {
     String s = String_from_cstr("Maurice Ravel");
-    unsigned long hash = String_hash(&s);
+    unsigned long hash = String_hash(s);
     test(hash != 0, "hash = 0");
     String_delete(s);
+    return TEST_OK;
+}
+
+int test_string_type_interface(void)
+{
+    String s1 = String_from_cstr("Debussy");
+    String s2 = String_from_cstr("Debussy");
+
+    rc = TypeInterface_compare(&String_type, &s1, &s2);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+
+    unsigned long h1, h2;
+    h1 = TypeInterface_hash(&String_type, &s1);
+    h2 = TypeInterface_hash(&String_type, &s2);
+    test(h1 == h2, "h1 != h2");
+
+    String dest;
+    TypeInterface_copy(&String_type, &dest, &s1);
+    rc = String_compare(dest, s1);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+
+    TypeInterface_destroy(&String_type, &dest);
+
+    String_delete(s1);
+    String_delete(s2);
     return TEST_OK;
 }
 
@@ -142,5 +169,6 @@ int main(void)
     run_test(test_string_concat);
     run_test(test_string_push_pop_back);
     run_test(test_string_hash);
+    run_test(test_string_type_interface);
     test_suite_end();
 }

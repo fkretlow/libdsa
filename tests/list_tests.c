@@ -99,7 +99,7 @@ int test_list_teardown(void)
     return TEST_OK;
 }
 
-int test_list_of_strings(void)
+/* int test_list_of_strings(void)
 {
     L = List_new(sizeof(String), String_copy_to, String_delete);
     test(L != NULL, "L = NULL");
@@ -122,7 +122,7 @@ int test_list_of_strings(void)
     List_delete(L);
     String_delete(s);
     return TEST_OK;
-}
+} */
 
 int main(void)
 {
@@ -130,6 +130,6 @@ int main(void)
     run_test(test_list_new);
     run_test(test_list_usage);
     run_test(test_list_teardown);
-    run_test(test_list_of_strings);
+    /* run_test(test_list_of_strings); */
     test_suite_end();
 }

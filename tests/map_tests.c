@@ -17,13 +17,7 @@ static TypeInterface int_type = {
     NULL
 };
 
-static TypeInterface string_type = {
-    sizeof(String),
-    String_copy_to,
-    String_delete,
-    String_compare,
-    String_hash
-};
+extern TypeInterface String_type;
 
 int test_map_new(void)
 {
@@ -88,7 +82,7 @@ int test_map_teardown(void)
 
 int test_map_with_strings(void)
 {
-    M = Map_new(&string_type, &string_type);
+    M = Map_new(&String_type, &String_type);
     test(M != NULL, "M = NULL");
 
     String k = String_from_cstr("name");

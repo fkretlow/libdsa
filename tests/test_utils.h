@@ -13,14 +13,15 @@ int compint(const void *a, const void *b)
     return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
 }
 
-String serialize_int(const int *i)
+String serialize_int(const void *ip)
 {
+    int i = *(int *)ip;
     String s = String_new();
     check(s != NULL, "Failed to create String for serialized int.");
     size_t size = 1 * sizeof(char);
-    if (*i) size = (size_t)(floor(log10(*i)) + 1) * sizeof(char);
+    if (i) size = (size_t)(floor(log10(i)) + 1) * sizeof(char);
     check(!String_reserve(s, size + 1), "Failed to reserve memory in String.");
-    sprintf(s->data, "%d", *i);
+    sprintf(s->data, "%d", i);
     s->data[size] = '\0';
     s->size = size;
     return s;
@@ -29,11 +30,11 @@ error:
     return NULL;
 }
 
-String serialize_string(const String *s)
+String serialize_string(const void *s)
 {
     String out = String_from_cstr("'");
     check(out != NULL, "Failed to create String for serialized string.");
-    check(!String_append(out, *s), "Failed to append string to result string.");
+    check(!String_append(out, *(String *)s), "Failed to append string to result string.");
     check(!String_push_back(out, '\''), "Failed to append trailing ' to result string.");
     return out;
 error:

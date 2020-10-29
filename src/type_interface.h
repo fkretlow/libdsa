@@ -21,7 +21,7 @@ typedef struct TypeInterface {
     hash_f hash;
 } TypeInterface;
 
-static inline void *TypeInterface_allocate(TypeInterface *T, size_t n)
+inline void *TypeInterface_allocate(TypeInterface *T, size_t n)
 {
     void *obj = malloc(n * T->size);
     check_alloc(obj);
@@ -30,7 +30,7 @@ error:
     return NULL;
 }
 
-static inline void TypeInterface_copy(TypeInterface *T, void *dest, const void *src)
+inline void TypeInterface_copy(TypeInterface *T, void *dest, const void *src)
 {
     if (T->copy) {
         T->copy(dest, src);
@@ -39,12 +39,12 @@ static inline void TypeInterface_copy(TypeInterface *T, void *dest, const void *
     }
 }
 
-static inline void TypeInterface_destroy(TypeInterface *T, void *obj)
+inline void TypeInterface_destroy(TypeInterface *T, void *obj)
 {
     if (T->destroy) T->destroy(obj);
 }
 
-static inline int TypeInterface_compare(TypeInterface *T, const void *a, const void *b)
+inline int TypeInterface_compare(TypeInterface *T, const void *a, const void *b)
 {
     return T->compare(a, b);
 }

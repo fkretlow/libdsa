@@ -4,7 +4,6 @@
 #include "debug.h"
 #include "map.h"
 
-
 extern void *TypeInterface_allocate(TypeInterface *T, size_t n);
 extern void TypeInterface_copy(TypeInterface *T, void *dest, const void *src);
 extern void TypeInterface_destroy(TypeInterface *T, void *obj);
@@ -23,9 +22,9 @@ error:
 static inline void _map_node_delete(const Map M, _map_node *n)
 {
     if (n) {
-        if (n->key && M)   TypeInterface_destroy(M->key_type,   *(void**)n->key);
+        if (n->key && M) TypeInterface_destroy(M->key_type, n->key);
         free(n->key);
-        if (n->value && M) TypeInterface_destroy(M->value_type, *(void**)n->value);
+        if (n->value && M) TypeInterface_destroy(M->value_type, n->value);
         free(n->value);
         free(n);
     }
@@ -62,7 +61,7 @@ static int _map_node_set_value(const Map M, _map_node *n, const void *value)
         n->value = TypeInterface_allocate(M->value_type, 1);
         check(n->value != NULL, "Failed to allocate memory for value.");
     } else {
-        TypeInterface_destroy(M->value_type, *(void**)n->value);
+        TypeInterface_destroy(M->value_type, n->value);
     }
 
     TypeInterface_copy(M->value_type, (void*)n->value, value);

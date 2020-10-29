@@ -5,7 +5,7 @@
 #include "test.h"
 #include "test_utils.h"
 
-static int rc;
+/* static int rc; */
 
 int test_serialize_list_of_ints(void)
 {
@@ -26,7 +26,7 @@ int test_serialize_list_of_ints(void)
     return TEST_OK;
 }
 
-int test_serialize_list_of_strings(void)
+/* int test_serialize_list_of_strings(void)
 {
     List L = List_new(sizeof(String), String_copy_to, String_delete);
     String s, json, expected;
@@ -50,12 +50,12 @@ int test_serialize_list_of_strings(void)
     String_delete(json);
     String_delete(expected);
     return TEST_OK;
-}
+} */
 
 int main(void)
 {
     test_suite_start();
     run_test(test_serialize_list_of_ints);
-    run_test(test_serialize_list_of_strings);
+    /* run_test(test_serialize_list_of_strings); */
     test_suite_end();
 }

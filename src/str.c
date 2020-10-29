@@ -3,6 +3,7 @@
 #include "container_tools.h"
 #include "debug.h"
 #include "str.h"
+#include "type_interface.h"
 
 String String_new(void)
 {
@@ -93,13 +94,6 @@ String String_copy(const String src)
 error:
     if (s) String_delete(s);
     return NULL;
-}
-
-/* For containers: Take two pointers to String (i.e. pointers to pointers to
- * _string), make a copy of the source string and store it at dest. */
-void String_copy_to(String *dest, const String *src)
-{
-    *dest = String_copy(*src);
 }
 
 int String_assign(String dest, const String src)
@@ -247,7 +241,32 @@ error:
     return NULL;
 }
 
-unsigned long String_hash(const String *s)
+unsigned long String_hash(const String s)
 {
-    return jenkins_hash((*s)->data, (*s)->size);
+    return jenkins_hash((s)->data, (s)->size);
 }
+
+void _string_ptr_copy(void *dest, const void *src)
+{
+    *(String *)dest = String_copy(*(String *)src);
+}
+
+void _string_ptr_delete(void *s) { String_delete(*(String *)s); }
+
+int _string_ptr_compare(const void *s1, const void *s2)
+{
+    return String_compare(*(String *)s1, *(String *)s2);
+}
+
+unsigned long _string_ptr_hash(const void *s)
+{
+    return jenkins_hash((*(String *)s)->data, (*(String *)s)->size);
+}
+
+TypeInterface String_type = {
+    sizeof(String),
+    _string_ptr_copy,
+    _string_ptr_delete,
+    _string_ptr_compare,
+    _string_ptr_hash
+};

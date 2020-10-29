@@ -72,7 +72,7 @@ int test_vector_teardown(void)
     return TEST_OK;
 }
 
-int test_vector_of_strings(void)
+/* int test_vector_of_strings(void)
 {
     V = Vector_new(sizeof(String), String_copy_to, String_delete);
     test(V != NULL, "V = NULL");
@@ -95,7 +95,7 @@ int test_vector_of_strings(void)
     Vector_delete(V);
     String_delete(s);
     return TEST_OK;
-}
+} */
 
 int main(void)
 {
@@ -103,6 +103,6 @@ int main(void)
     run_test(test_vector_new);
     run_test(test_vector_usage);
     run_test(test_vector_teardown);
-    run_test(test_vector_of_strings);
+    /* run_test(test_vector_of_strings); */
     test_suite_end();
 }
