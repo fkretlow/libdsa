@@ -6,7 +6,6 @@
 
 typedef struct _pqueue {
     _vector vector;
-    compare_f compare;
     char *temp;
 } _pqueue;
 
