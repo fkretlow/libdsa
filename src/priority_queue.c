@@ -47,10 +47,11 @@ int PriorityQueue_enqueue(PriorityQueue Q, const void *in)
 
     /* Move it upwards until the heap property is satisfied. */
     if (Vector_size(&(Q->vector)) > 1) {
-        Heap_bubble_up(Q->vector.data, _ti_size(Q->vector.element_type),
+        Heap_bubble_up(Q->vector.data, TypeInterface_size(Q->vector.element_type),
                        Vector_size(&(Q->vector)) - 1,
                        Q->vector.element_type->compare, Q->temp);
-        assert(is_heap(Q->vector.data, Q->vector.size, _ti_size(Q->vector.element_type),
+        assert(is_heap(Q->vector.data, Q->vector.size,
+                       TypeInterface_size(Q->vector.element_type),
                        Q->vector.element_type->compare));
     }
 
@@ -69,8 +70,8 @@ int PriorityQueue_dequeue(PriorityQueue Q, void *out)
     /* Copy the last element to the top, assuming that nested types remain
      * intact when only the top level data is moved. */
     memmove(Q->vector.data,
-            Q->vector.data + (Q->vector.size - 1) * _ti_size(Q->vector.element_type),
-            _ti_size(Q->vector.element_type));
+            Q->vector.data + (Q->vector.size - 1) * TypeInterface_size(Q->vector.element_type),
+            TypeInterface_size(Q->vector.element_type));
 
     /* Remove the now obsolete duplicate at the end. */
     check(!Vector_pop_back(&(Q->vector), NULL), "Failed to remove value.");
@@ -78,10 +79,10 @@ int PriorityQueue_dequeue(PriorityQueue Q, void *out)
     /* Repair the heap. */
     if (Vector_size(&(Q->vector)) > 1) {
         Heap_sift_down(Q->vector.data, Q->vector.size,
-                       _ti_size(Q->vector.element_type), 0,
+                       TypeInterface_size(Q->vector.element_type), 0,
                        Q->vector.element_type->compare, Q->temp);
         assert(is_heap(Q->vector.data, Q->vector.size,
-                       _ti_size(Q->vector.element_type),
+                       TypeInterface_size(Q->vector.element_type),
                        Q->vector.element_type->compare));
     }
 

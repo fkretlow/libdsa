@@ -66,14 +66,14 @@ int Vector_reserve(Vector V, const size_t capacity)
      * that we are going to cut off are properly destroyed. */
     if (c < V->size) {
         for (size_t i = c; i < V->size; ++i) {
-            _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
+            TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
         }
     }
 
     /* Assume that reallocarray doesn't touch the original array if it fails.
      * Also assume that nested types remain intact when only the top level data
      * is moved. */
-    char *new_data = reallocarray(V->data, c, _ti_size(V->element_type));
+    char *new_data = reallocarray(V->data, c, TypeInterface_size(V->element_type));
     check(new_data != NULL, "Failed to reserve the requested amonut of memory.");
     V->data = new_data;
     V->capacity = c;
@@ -97,7 +97,7 @@ int Vector_shrink_to_fit(Vector V)
     while (c > V->size << 1) c >>= 1;
 
     /* Assumptions as above. */
-    char *new_data = reallocarray(V->data, c, _ti_size(V->element_type));
+    char *new_data = reallocarray(V->data, c, TypeInterface_size(V->element_type));
     check(new_data != NULL, "Failed to reduce the internal memory.");
     V->data = new_data;
     V->capacity = c;
@@ -111,7 +111,7 @@ void Vector_clear(Vector V)
 {
     if (V && V->data) {
         for (size_t i = 0; i < V->size; ++i) {
-            _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
+            TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
         }
         V->size = 0;
         Vector_reserve(V, VECTOR_MIN_CAPACITY);
@@ -124,7 +124,7 @@ int Vector_get(const Vector V, const size_t i, void *out)
     check_ptr(out);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    _ti_copy(V->element_type, out, V->data + i * _ti_size(V->element_type));
+    TypeInterface_copy(V->element_type, out, V->data + i * TypeInterface_size(V->element_type));
     return 0;
 error:
     return -1;
@@ -142,10 +142,10 @@ int Vector_set(Vector V, const size_t i, const void *in)
         }
         ++V->size;
     } else if (i < V->size) {
-        _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
+        TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
     }
 
-    _ti_copy(V->element_type, V->data + i * _ti_size(V->element_type), in);
+    TypeInterface_copy(V->element_type, V->data + i * TypeInterface_size(V->element_type), in);
 
     return 0;
 error:
@@ -165,12 +165,12 @@ int Vector_insert(Vector V, const size_t i, const void *in)
     if (i < V->size) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + (i + 1) * _ti_size(V->element_type),
-                V->data + i * _ti_size(V->element_type),
-                (V->size - i) * _ti_size(V->element_type));
+        memmove(V->data + (i + 1) * TypeInterface_size(V->element_type),
+                V->data + i * TypeInterface_size(V->element_type),
+                (V->size - i) * TypeInterface_size(V->element_type));
     }
 
-    _ti_copy(V->element_type, V->data + i * _ti_size(V->element_type), in);
+    TypeInterface_copy(V->element_type, V->data + i * TypeInterface_size(V->element_type), in);
     ++V->size;
 
     return 0;
@@ -185,14 +185,14 @@ int Vector_remove(Vector V, const size_t i)
     check_ptr(V);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    _ti_destroy(V->element_type, V->data + i * _ti_size(V->element_type));
+    TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
 
     if (i < V->size - 1) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + i * _ti_size(V->element_type),
-                V->data + (i + 1) * _ti_size(V->element_type),
-                (V->size - (i + 1)) * _ti_size(V->element_type));
+        memmove(V->data + i * TypeInterface_size(V->element_type),
+                V->data + (i + 1) * TypeInterface_size(V->element_type),
+                (V->size - (i + 1)) * TypeInterface_size(V->element_type));
     }
 
     --V->size;

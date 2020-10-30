@@ -59,10 +59,5 @@ inline unsigned long TypeInterface_hash(TypeInterface *T, const void *obj)
 }
 
 #define TypeInterface_size(T) (T)->size
-#define _ti_size(T) TypeInterface_size(T)
-#define _ti_allocate(T, n) TypeInterface_allocate(T, n)
-#define _ti_copy(T, dest, src) TypeInterface_copy(T, dest, src)
-#define _ti_destroy(T, obj) TypeInterface_destroy(T, obj)
-#define _ti_hash(T, obj) TypeInterface_hash(T, obj)
 
 #endif // _type_interface_h
