@@ -1,20 +1,28 @@
 #include "debug.h"
 #include "stack.h"
 #include "test.h"
+#include "test_utils.h"
+#include "type_interface.h"
 
 static Stack S;
 int rc;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
+
 int test_stack_new(void)
 {
-    S = Stack_new(sizeof(int), NULL, NULL);
+    S = Stack_new(&int_type);
     test(S != NULL, "S = NULL");
     test(S->top == NULL, "S->top != NULL");
-    test(S->element_size == sizeof(int),
-            "S->element_size = %lu (%lu)", S->element_size, sizeof(int));
+    test(S->element_type->size == sizeof(int),
+            "S->element_type->size = %lu (%lu)", S->element_type->size, sizeof(int));
     test(S->size == 0, "S->size = %lu (%lu)", S->size, 0lu);
-    test(S->destroy_element == NULL,
-            "S->destroy_element = %p (%p)", S->destroy_element, NULL);
     return TEST_OK;
 }
 

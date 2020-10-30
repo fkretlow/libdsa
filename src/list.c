@@ -69,7 +69,7 @@ List List_new(TypeInterface *element_type)
     check_ptr(element_type);
 
     List L = malloc(sizeof(*L));
-    check_ptr(L);
+    check_alloc(L);
 
     L->first = L->last = NULL;
     L->size = 0;

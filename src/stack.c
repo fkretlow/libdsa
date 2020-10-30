@@ -1,5 +1,7 @@
-#include "stack.h"
 #include <assert.h>
+
+#include "debug.h"
+#include "stack.h"
 
 static inline int _stack_invariant(const Stack S)
 {
@@ -21,8 +23,8 @@ error:
 static inline void _stack_node_delete(const Stack S, _stack_node *n)
 {
     if (n) {
-        if (n->data && S && S->destroy_element) {
-            S->destroy_element(*(void**)n->data);
+        if (n->data && S) {
+            TypeInterface_destroy(S->element_type, n->data);
         }
     }
     free(n->data);
@@ -36,19 +38,13 @@ static int _stack_node_set(const Stack S, _stack_node *n, const void *in)
     check_ptr(in);
 
     if (n->data) {
-        if (S->destroy_element) {
-            S->destroy_element(*(void**)n->data);
-        }
+        TypeInterface_destroy(S->element_type, n->data);
     } else {
-        n->data = malloc(S->element_size);
-        check_alloc(n->data);
+        n->data = TypeInterface_allocate(S->element_type, 1);
+        check(n->data != NULL, "Failed to allocate memory for new element.");
     }
 
-    if (S->copy_element) {
-        S->copy_element(n->data, in);
-    } else {
-        memmove(n->data, in, S->element_size);
-    }
+    TypeInterface_copy(S->element_type, n->data, in);
 
     return 0;
 error:
@@ -61,29 +57,23 @@ static inline int _stack_node_get(const Stack S, _stack_node *n, void *out)
     check_ptr(n);
     check_ptr(out);
 
-    if (S->copy_element) {
-        S->copy_element(out, n->data);
-    } else {
-        memmove(out, n->data, S->element_size);
-    }
+    TypeInterface_copy(S->element_type, out, n->data);
 
     return 0;
 error:
     return -1;
 }
 
-Stack Stack_new(const size_t element_size,
-                copy_f copy_element,
-                destroy_f destroy_element)
+Stack Stack_new(TypeInterface *element_type)
 {
-    _stack *S = malloc(sizeof(*S));
+    check_ptr(element_type);
+
+    Stack S = malloc(sizeof(*S));
     check_alloc(S);
 
     S->top = NULL;
-    S->element_size = element_size;
     S->size = 0;
-    S->copy_element = copy_element;
-    S->destroy_element = destroy_element;
+    S->element_type = element_type;
 
     assert(!_stack_invariant(S));
     return S;
