@@ -97,17 +97,24 @@ int test_rbt_init(void)
 
 int test_rbt_usage(void)
 {
-    for (int i = 0; i < 64; ++i) {
+    /* for (int i = 0; i < 64; ++i) {
         rc = _rbt_insert(&T, &i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
         test(T.size == (size_t)(i + 1), "T.size = %lu (%d)", T.size, i + 1);
-    }
+    } */
 
-    for (int i = 0; i < 64; ++i) {
-        int v = (int)rand() % MAX_VALUE;
-        rc = _rbt_insert(&T, &v);
+    int test_case[3] = { 925, 393, 741 };
+    for (int i = 0; i < 3; ++i) {
+        rc = _rbt_insert(&T, test_case + i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
     }
+
+    /* for (int i = 0; i < 64; ++i) { */
+        /* int v = (int)rand() % MAX_VALUE; */
+        /* debug("v = %d", v); */
+        /* rc = _rbt_insert(&T, &v); */
+        /* test(rc == 0, "rc = %d (%d)", rc, 0); */
+    /* } */
     return TEST_OK;
 }
 
@@ -119,11 +126,15 @@ int test_rbt_clear(void)
 
 int main(void)
 {
-    srand((unsigned)time(NULL));
     test_suite_start();
     run_test(test_rotations);
     run_test(test_rbt_init);
-    /* run_test(test_rbt_usage); */
+
+    /* unsigned seed = (unsigned)time(NULL); */
+    /* srand(seed); */
+    /* debug("random seed was %u", seed); */
+
+    run_test(test_rbt_usage);
     run_test(test_rbt_clear);
     test_suite_end();
 }

@@ -3,6 +3,66 @@
 #include "debug.h"
 #include "rbt.h"
 
+/* Walk through all the nodes of the tree in ascending order. If at any point
+ * the callback returns a non-zero integer, abort and return it. */
+static int _rbt_traverse_node(_rbt_node *n,
+                              int (*f)(_rbt_node *n, void *p),
+                              void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = _rbt_traverse_node(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = _rbt_traverse_node(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int _rbt_invariant_node(_rbt_node *n, void *black_count)
+{
+    // Check for adjacent red nodes.
+    if (n->color == RED) {
+        if ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)) {
+            debug("Invariant violated: Two adjacent red nodes.")
+            return -1;
+        }
+    }
+    if (!n->left && !n->right) {
+        // We are a leaf node. Count black nodes on the path to the root.
+        int count = 0;
+        while (n != NULL) {
+            if (n->color == BLACK) ++count;
+            n = n->parent;
+        }
+        if (*(int*)black_count == -1) {
+            *(int*)black_count = count;
+        } else if (count != *(int*)black_count) {
+            debug("Invariant violated: Unequal numbers of black nodes per path.");
+            return -2;
+        }
+    }
+
+    return 0;
+}
+
+int _rbt_invariant(const _rbt *T)
+{
+    int black_count = -1;
+    int rc = _rbt_traverse_node(T->root, _rbt_invariant_node, &black_count);
+    return rc;
+}
+
 /* static inline */
 int _rbt_node_new(_rbt_node **node_out)
 {
@@ -49,19 +109,17 @@ error:
 
 static inline
 void _rbt_node_replace_child(_rbt *T,
-                              _rbt_node *parent,
-                              _rbt_node *old_child,
-                              _rbt_node *new_child)
+                             _rbt_node *parent,
+                             _rbt_node *old_child,
+                             _rbt_node *new_child)
 {
     if (parent && parent->data) {
-        debug("%s: parent = %d, old_child = %d, new_child = %d",
-                __func__, *(int*)parent->data,
+        debug("parent = %d, old_child = %d, new_child = %d",
+                *(int*)parent->data,
                 *(int*)old_child->data, *(int*)new_child->data);
     } else if (old_child->data) {
-        debug("%s: parent = NULL, old_child = %d, new_child = %d",
-                __func__, *(int*)old_child->data, *(int*)new_child->data);
-    } else {
-        debug("%s", __func__);
+        debug("parent = NULL, old_child = %d, new_child = %d",
+                *(int*)old_child->data, *(int*)new_child->data);
     }
 
     if (!parent) {
@@ -80,7 +138,7 @@ void _rbt_node_replace_child(_rbt *T,
 /* static */
 int _rbt_node_rotate_left(_rbt *T, _rbt_node *n, _rbt_node **node_out)
 {
-    if (n->data) debug("%s: n = %d", __func__, *(int*)n->data);
+    if (n->data) debug("n = %d", *(int*)n->data);
     check_ptr(n);
     assert(n->right);
 
@@ -102,7 +160,7 @@ error:
 /* static */
 int _rbt_node_rotate_right(_rbt *T, _rbt_node *n, _rbt_node **node_out)
 {
-    if (n->data) debug("%s: n = %d", __func__, *(int*)n->data);
+    if (n->data) debug("n = %d", *(int*)n->data);
     check_ptr(n);
     assert(n->left);
 
@@ -153,7 +211,7 @@ void _rbt_clear(_rbt *T)
 
 int _rbt_node_color_red(_rbt *T, _rbt_node *n)
 {
-    debug("_rbt_node_color_red: n = %d", *(int*)n->data);
+    debug("n = %d", *(int*)n->data);
     assert(n->color == BLACK && n->left->color == RED && n->right->color == RED);
 
     _rbt_node *p = n->parent;
@@ -221,67 +279,97 @@ static inline int _rbt_node_is_four_node(_rbt_node *n)
 
 int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 {
-    debug("_rbt_node_insert: n = %d, value = %d", *(int*)n->data, *(int*)value);
+    debug("n = %d, value = %d", *(int*)n->data, *(int*)value);
     check_ptr(T);
     check_ptr(n);
     check_ptr(value);
+
+    assert(n->parent || n == T->root);
 
     if (_rbt_node_is_four_node(n)) {
         check(!_rbt_node_color_red(T, n), "_rbt_node_color_red failed.");
     }
 
     int comp = TypeInterface_compare(T->element_type, value, n->data);
-    debug("_rbt_node_insert: comp = %d", comp);
+    debug("comp = %d", comp);
 
     if (comp < 0) {
         if (n->left) {
-            debug("_rbt_node_insert: handing off to left child node");
             check(!_rbt_node_insert(T, n->left, value), "_rbt_node_insert failed.");
         } else {
             if (n->color == BLACK) {
+                debug("n is BLACK");
                 check(!_rbt_node_new(&n->left), "_rbt_node_new failed.");
                 check(!_rbt_node_set(T, n->left, value), "_rbt_node_set failed.");
                 n->left->parent = n;
                 n->left->color = RED;
                 ++T->size;
             } else {
+                debug("n is RED");
                 assert(!n->right);
-                check(!_rbt_node_rotate_right(T, n->parent, NULL),
-                        "_rbt_node_rotate_right failed.");
-                n->color = BLACK;
-                n->right->color = RED;
-                check(!_rbt_node_new(&n->left), "_rbt_node_new failed.");
-                check(!_rbt_node_set(T, n->left, value), "_rbt_node_set failed.");
-                n->left->parent = n;
-                n->left->color = RED;
-                ++T->size;
+                if (n == n->parent->left) {
+                    debug("n is a left child");
+                    check(!_rbt_node_rotate_right(T, n->parent, &n),
+                          "_rbt_node_rotate_right failed.");
+                    check(_rbt_node_new(&n->left), "_rbt_node_new failed.");
+                    check(_rbt_node_set(T, n->left, value), "_rbt_node_set failed.");
+                    n->left->parent = n;
+                    n->color = BLACK;
+                    n->left->color = RED;
+                    n->right->color = RED;
+                    ++T->size;
+                } else if (n == n->parent->right) {
+                    debug("n is a right child");
+                    check(!_rbt_node_new(&n->parent->left), "_rbt_node_new failed.");
+                    check(!_rbt_node_set(T, n->parent->left, n->parent->data),
+                          "_rbt_node_set failed.");
+                    check(!_rbt_node_set(T, n->parent, value), "_rbt_node_set failed.");
+                    n->parent->left->parent = n->parent;
+                    n->parent->left->color = RED;
+                    ++T->size;
+                } else {
+                    sentinel("n has no parent");
+                }
             }
         }
     } else if (comp > 0) {
         if (n->right) {
-            debug("_rbt_node_insert: handing off to right child node");
             check(!_rbt_node_insert(T, n->right, value), "_rbt_node_insert failed.");
         } else {
-            debug("_rbt_node_insert: no right child");
+            debug("no right child");
             if (n->color == BLACK) {
-                debug("%s: n is BLACK", __func__);
+                debug("n is BLACK");
                 check(!_rbt_node_new(&n->right), "_rbt_node_new failed.");
                 check(!_rbt_node_set(T, n->right, value), "_rbt_node_set failed.");
                 n->right->parent = n;
                 n->right->color = RED;
                 ++T->size;
             } else {
-                debug("%s: n is RED", __func__);
-                assert(!n->left);
-                check(!_rbt_node_rotate_left(T, n->parent, NULL),
-                        "_rbt_node_rotate_left failed.");
-                n->color = BLACK;
-                n->left->color = RED;
-                check(!_rbt_node_new(&n->right), "_rbt_node_new failed.");
-                check(!_rbt_node_set(T, n->right, value), "_rbt_node_set failed.");
-                n->right->parent = n;
-                n->right->color = RED;
-                ++T->size;
+                debug("n is RED");
+                assert(!n->right);
+                if (n == n->parent->right) {
+                    debug("n is a right child");
+                    check(!_rbt_node_rotate_left(T, n->parent, &n),
+                          "_rbt_node_rotate_left failed.");
+                    check(_rbt_node_new(&n->right), "_rbt_node_new failed.");
+                    check(_rbt_node_set(T, n->right, value), "_rbt_node_set failed.");
+                    n->right->parent = n;
+                    n->color = BLACK;
+                    n->right->color = RED;
+                    n->left->color = RED;
+                    ++T->size;
+                } else if (n == n->parent->left) {
+                    debug("n is a left child");
+                    check(!_rbt_node_new(&n->parent->right), "_rbt_node_new failed.");
+                    check(!_rbt_node_set(T, n->parent->right, n->parent->data),
+                          "_rbt_node_set failed.");
+                    check(!_rbt_node_set(T, n->parent, value), "_rbt_node_set failed.");
+                    n->parent->right->parent = n->parent;
+                    n->parent->right->color = RED;
+                    ++T->size;
+                } else {
+                    sentinel("n has no parent");
+                }
             }
         }
     } else {
@@ -295,9 +383,10 @@ error:
 
 int _rbt_insert(_rbt *T, const void *value)
 {
-    debug("_rbt_insert: value = %d", *(int*)value);
+    debug("value = %d", *(int*)value);
     check_ptr(T);
     check_ptr(value);
+    assert (!_rbt_invariant(T));
 
     if (!T->root) {
         check(!_rbt_node_new(&T->root), "_rbt_node_new failed.");
@@ -308,6 +397,7 @@ int _rbt_insert(_rbt *T, const void *value)
         check(!_rbt_node_insert(T, T->root, value), "_rbt_node_insert failed.");
     }
 
+    assert (!_rbt_invariant(T));
     return 0;
 error:
     return -1;

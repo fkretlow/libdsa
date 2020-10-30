@@ -34,7 +34,7 @@ int _rbt_insert(_rbt *T, const void *value);
 int _rbt_delete(_rbt *T, const void *value);
 int _rbt_has(_rbt *T, const void *value);
 
-// int _rbt_traverse(_rbt *T, traverse_f f);
+/* int _rbt_traverse(_rbt *T, _rbt_traverse_f f); */
 
 int _rbt_node_new(_rbt_node **node_out);
 void _rbt_node_delete(const _rbt *T, _rbt_node *n);
