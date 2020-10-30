@@ -6,7 +6,7 @@
 #include "type_interface.h"
 
 static List L;
-int rc;
+static int rc;
 
 static TypeInterface int_type = {
     sizeof(int),

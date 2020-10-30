@@ -18,8 +18,8 @@ error:
 void _rbt_node_delete(const _rbt *T, _rbt_node *n)
 {
     if (n) {
-        if (n->data && T && T->destroy) {
-            T->destroy(n->data);
+        if (n->data && T) {
+            TypeInterface_destroy(T->element_type, n->data);
         }
         free(n->data);
         free(n);
@@ -34,14 +34,13 @@ int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *value)
     check_ptr(value);
 
     if (n->data) {
-        if (T->destroy) {
-            T->destroy(n->data);
-        }
+        TypeInterface_destroy(T->element_type, n->data);
     } else {
-        n->data = malloc(T->element_size);
+        n->data = TypeInterface_allocate(T->element_type, 1);
         check_alloc(n->data);
     }
-    memmove(n->data, value, T->element_size);
+
+    TypeInterface_copy(T->element_type, n->data, value);
 
     return 0;
 error:
@@ -122,18 +121,15 @@ error:
     return -1;
 }
 
-int _rbt_init(_rbt *T,
-               const size_t element_size,
-               compare_f compare,
-               destroy_f destroy)
+int _rbt_init(_rbt *T, TypeInterface *element_type)
 {
     check_ptr(T);
+    check_ptr(element_type);
+    check(element_type->compare, "No comparison function.");
 
     T->root = NULL;
-    T->element_size = element_size;
     T->size = 0;
-    T->compare = compare;
-    T->destroy = destroy;
+    T->element_type = element_type;
 
     return 0;
 error:
@@ -218,7 +214,9 @@ error:
 
 static inline int _rbt_node_is_four_node(_rbt_node *n)
 {
-    return n->color == BLACK && n->left && n->left->color == RED && n->right && n->right->color == RED;
+    return n->color == BLACK
+           && n->left && n->left->color == RED
+           && n->right && n->right->color == RED;
 }
 
 int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
@@ -232,7 +230,7 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
         check(!_rbt_node_color_red(T, n), "_rbt_node_color_red failed.");
     }
 
-    int comp = T->compare(value, n->data);
+    int comp = TypeInterface_compare(T->element_type, value, n->data);
     debug("_rbt_node_insert: comp = %d", comp);
 
     if (comp < 0) {

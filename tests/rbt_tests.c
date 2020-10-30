@@ -5,12 +5,20 @@
 #include "rbt.h"
 #include "test_utils.h"
 #include "test.h"
+#include "type_interface.h"
 
 #define MAX_VALUE 1000
 
-static int rc;
 static _rbt T;
+static int rc;
 
+static TypeInterface int_type = {
+    sizeof(int),
+    NULL,
+    NULL,
+    int_compare,
+    NULL
+};
 int test_rotations(void)
 {
     _rbt_node *p, *n, *l, *ll, *lr, *r, *rl, *rr, *res;
@@ -77,14 +85,12 @@ int test_rotations(void)
 
 int test_rbt_init(void)
 {
-    rc = _rbt_init(&T, sizeof(int), compint, NULL);
+    rc = _rbt_init(&T, &int_type);
     test(rc == 0, "rc = %d (%d)", rc, 0);
     test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
-    test(T.element_size == sizeof(int), "T.element_size = %lu (%lu)",
-            T.element_size, sizeof(int));
+    test(T.element_type->size == sizeof(int), "T.element_type->size = %lu (%lu)",
+            T.element_type->size, sizeof(int));
     test(T.size == 0, "T.size = %lu (%lu)", T.size, 0lu);
-    test((void*)T.compare == (void*)compint, "T.compare != compint");
-    test(T.destroy == NULL, "T.destroy = %p (%p)", T.destroy, NULL);
 
     return TEST_OK;
 }

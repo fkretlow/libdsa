@@ -21,16 +21,12 @@ typedef struct _rbt_node {
 
 typedef struct _rbt {
     _rbt_node *root;
-    size_t element_size;
     size_t size;
-    compare_f compare;
-    destroy_f destroy;
+    TypeInterface *element_type;
 } _rbt;
 
-int _rbt_init(_rbt *T,
-               const size_t element_size,
-               compare_f compare,
-               destroy_f destroy);
+
+int _rbt_init(_rbt *T, TypeInterface *element_type);
 void _rbt_clear(_rbt *T);
 
 // These functions return 1 if found, 0 if not found, -1 on error.
