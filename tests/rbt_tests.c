@@ -7,7 +7,8 @@
 #include "test.h"
 #include "type_interface.h"
 
-#define MAX_VALUE 1000
+#define MAX_VALUE 1024
+#define N_VALUES 1024
 
 static _rbt T;
 static int rc;
@@ -97,24 +98,19 @@ int test_rbt_init(void)
 
 int test_rbt_usage(void)
 {
-    /* for (int i = 0; i < 64; ++i) {
+    for (int i = 0; i < N_VALUES; ++i) {
         rc = _rbt_insert(&T, &i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
         test(T.size == (size_t)(i + 1), "T.size = %lu (%d)", T.size, i + 1);
-    } */
-
-    int test_case[3] = { 925, 393, 741 };
-    for (int i = 0; i < 3; ++i) {
-        rc = _rbt_insert(&T, test_case + i);
-        test(rc == 0, "rc = %d (%d)", rc, 0);
     }
 
-    /* for (int i = 0; i < 64; ++i) { */
-        /* int v = (int)rand() % MAX_VALUE; */
-        /* debug("v = %d", v); */
-        /* rc = _rbt_insert(&T, &v); */
-        /* test(rc == 0, "rc = %d (%d)", rc, 0); */
-    /* } */
+    _rbt_clear(&T);
+
+    for (int i = 0; i < N_VALUES; ++i) {
+        int v = (int)rand() % MAX_VALUE;
+        rc = _rbt_insert(&T, &v);
+        test(rc == 0, "rc = %d (%d)", rc, 0);
+    }
     return TEST_OK;
 }
 
@@ -130,9 +126,10 @@ int main(void)
     run_test(test_rotations);
     run_test(test_rbt_init);
 
-    /* unsigned seed = (unsigned)time(NULL); */
-    /* srand(seed); */
-    /* debug("random seed was %u", seed); */
+    unsigned seed = (unsigned)time(NULL);
+    srand(seed);
+    debug("random seed was %u", seed);
+    /* srand(1604071123); */
 
     run_test(test_rbt_usage);
     run_test(test_rbt_clear);
