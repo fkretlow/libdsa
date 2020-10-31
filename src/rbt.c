@@ -3,9 +3,9 @@
 #include "debug.h"
 #include "rbt.h"
 
-/* Walk through all the nodes of the tree in ascending order. If at any point
- * the callback returns a non-zero integer, abort and return it. The parameter p
- * is passed to the callback. */
+/* Walk through all the nodes of the tree in ascending order. If at any point the
+ * callback returns a non-zero integer, abort and return it. The parameter p is passed
+ * to the callback. */
 static int _rbt_traverse_node(_rbt_node *n,
                               int (*f)(_rbt_node *n, void *p),
                               void *p)
@@ -283,15 +283,14 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
     int rc;
 
-    /* On the path down to the insertion position we need to make sure that
-     * every node we walk through has space for the insertion. For lack of
-     * better words we use the terminology of a 2-3-4 tree (an isometry of a
-     * red-black-tree), where a four-node is a node with three values (a black
-     * one in the middle and a red one on either side) and four children.
-     * If the group of nodes with the current node n as its root is such a
-     * four-node, we can push n up into the group of nodes above, because we
-     * know that our direct ancestor group is not a four-node, because we have
-     * just done the same thing to it that we are about to do here. */
+    /* On the path down to the insertion position we need to make sure that every node
+     * we walk through has space for the insertion. For lack of better words we use the
+     * terminology of a 2-3-4 tree (an isometry of a red-black-tree), where a four-node
+     * is a node with three values (a black one in the middle and a red one on either
+     * side) and four children.  If the group of nodes with the current node n as its
+     * root is such a four-node, we can push n up into the group of nodes above, because
+     * we know that our direct ancestor group is not a four-node, because we have just
+     * done the same thing to it that we are about to do here. */
     if (_rbt_node_is_four_node(n)) {
         rc = _rbt_node_move_up_four_node(T, n);
         check(rc == 0, "_rbt_node_move_up_four_node failed.");
@@ -304,8 +303,8 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
             return _rbt_node_insert(T, n->left, value);
         } else {
             if (n->color == BLACK) {
-                /* Case 1 (black-left): The parent is black so we can just insert a
-                 * left child. */
+                /* Case 1 (black-left): The parent is black so we can just insert a left
+                 * child. */
                 /* debug("Insert case 1: black-left") */
                 rc = _rbt_node_new(&n->left);
                 check(rc == 0, "_rbt_node_new failed.");
@@ -318,20 +317,18 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
                 ++T->size;
 
             } else {
-                /* The parent is red and we are at a leaf position. The parent
-                 * cannot have another child, because that child would be
-                 * black, which would violate the same-number-of-black-nodes
-                 * property. */
+                /* The parent is red and we are at a leaf position. The parent cannot
+                 * have another child, because that child would be black, which would
+                 * violate the same-number-of-black-nodes property. */
                 assert(!n->right);
                 if (n == n->parent->left) {
-                    /* Case 2 (red-left-left): The parent is a red left child,
-                     * and we need to insert a left child. We can't just insert
-                     * because the new child would be black and that would
-                     * violate the same-number-of-black-nodes property. But we
-                     * know that our grandfather is not a four-node so it can't
-                     * have another red child. That means we can rotate it.
-                     * Then our parent becomes a black node and we insert the
-                     * value into a left, red child. */
+                    /* Case 2 (red-left-left): The parent is a red left child, and we
+                     * need to insert a left child. We can't just insert because the new
+                     * child would be black and that would violate the same-number-of-
+                     * black-nodes property. But we know that our grandfather is not a
+                     * four-node so it can't have another red child. That means we can
+                     * rotate it.  Then our parent becomes a black node and we insert
+                     * the value into a left, red child. */
                     /* debug("Insert case 2: red-left-left") */
                     rc = _rbt_node_rotate_right(T, n->parent, &n);
                     check(rc == 0, "_rbt_node_rotate_right failed.");
@@ -349,16 +346,15 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
                     ++T->size;
 
                 } else if (n == n->parent->right) {
-                    /* Case 3 (red-right-left): The parent is a red right
-                     * child, and we need to insert a left child. Again, we
-                     * can't just insert for the same reason as above. In this
-                     * case we need to do two rotations successively after
-                     * inserting the new value: First, rotate the parent right,
-                     * then the grandparent left. In order to save calls, we
-                     * cheat and get the same effect by adding a left child to
-                     * the grandfather, which can't have another child (see
-                     * above), set it to the value of the grandfather, and set
-                     * the the grandfather to the new value. */
+                    /* Case 3 (red-right-left): The parent is a red right child, and we
+                     * need to insert a left child. Again, we can't just insert for the
+                     * same reason as above. In this case we need to do two rotations
+                     * successively after inserting the new value: First, rotate the
+                     * parent right, then the grandparent left. In order to save calls,
+                     * we cheat and get the same effect by adding a left child to the
+                     * grandfather, which can't have another child (see above), set it
+                     * to the value of the grandfather, and set the the grandfather to
+                     * the new value. */
                     /* debug("Insert case 3: red-right-left") */
                     rc = _rbt_node_new(&n->parent->left);
                     check(rc == 0, "_rbt_node_new failed.");
@@ -381,8 +377,8 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
         } else {
             if (n->color == BLACK) {
-                /* Case 4 (black-right): The parent is black so we can just
-                 * insert a right child. */
+                /* Case 4 (black-right): The parent is black so we can just insert a
+                 * right child. */
                 /* debug("Insert case 4: black-right"); */
                 rc = _rbt_node_new(&n->right);
                 check(rc == 0, "_rbt_node_new failed.");
@@ -395,14 +391,13 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
                 ++T->size;
 
             } else {
-                /* The parent is red and we are at a leaf position. The parent
-                 * cannot have another child, because that child would be
-                 * black, which would violate the same-number-of-black-nodes
-                 * property. */
+                /* The parent is red and we are at a leaf position. The parent cannot
+                 * have another child, because that child would be black, which would
+                 * violate the same-number-of-black-nodes property. */
                 assert(!n->right);
                 if (n == n->parent->right) {
-                    /* Case 5 (red-right-right): Same procedure as in case 2
-                     * above with opposite directions */
+                    /* Case 5 (red-right-right): Same procedure as in case 2 above with
+                     * opposite directions */
                     /* debug("Insert case 5: red-right-right"); */
                     rc = _rbt_node_rotate_left(T, n->parent, &n);
                     check(rc == 0, "_rbt_node_rotate_left failed.");
@@ -420,8 +415,8 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
                     ++T->size;
 
                 } else if (n == n->parent->left) {
-                    /* Case 6 (red-left-right): Same procedure as in case 3
-                     * above with opposite directions. */
+                    /* Case 6 (red-left-right): Same procedure as in case 3 above with
+                     * opposite directions. */
                     /* debug("Insert case 6: red-left-right"); */
                     rc = _rbt_node_new(&n->parent->right);
                     check(rc == 0, "_rbt_node_new failed.");
