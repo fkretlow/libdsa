@@ -98,18 +98,33 @@ int test_rbt_init(void)
 
 int test_rbt_usage(void)
 {
+    int v;
+
+    size_t size = 0;
     for (int i = 0; i < N_VALUES; ++i) {
         rc = _rbt_insert(&T, &i);
+        ++size;
         test(rc == 0, "rc = %d (%d)", rc, 0);
-        test(T.size == (size_t)(i + 1), "T.size = %lu (%d)", T.size, i + 1);
+        test(T.size == size, "T.size = %lu (%lu)", T.size, size);
+        rc = _rbt_has(&T, &i);
+        test(rc == 1, "rc = %d (%d)", rc, 1);
     }
+
+    v = 5000;
+    rc = _rbt_has(&T, &v);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
 
     _rbt_clear(&T);
 
+    size = 0;
     for (int i = 0; i < N_VALUES; ++i) {
-        int v = (int)rand() % MAX_VALUE;
+        v = (int)rand() % MAX_VALUE;
         rc = _rbt_insert(&T, &v);
-        test(rc == 0, "rc = %d (%d)", rc, 0);
+        if (rc == 0) ++size;
+        test(rc >= 0, "_rbt_insert failed");
+        test(T.size == size, "T.size = %lu (%lu)", T.size, size);
+        rc = _rbt_has(&T, &v);
+        test(rc == 1, "rc = %d (%d)", rc, 1);
     }
     return TEST_OK;
 }
@@ -128,7 +143,7 @@ int main(void)
 
     unsigned seed = (unsigned)time(NULL);
     srand(seed);
-    debug("random seed was %u", seed);
+    /* debug("random seed was %u", seed); */
     /* srand(1604071123); */
 
     run_test(test_rbt_usage);
