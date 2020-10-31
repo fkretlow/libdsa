@@ -32,15 +32,15 @@ static int _rbt_traverse_node(_rbt_node *n,
 
 int _rbt_node_invariant(_rbt_node *n, void *black_count)
 {
-    /* Check for adjacent red nodes. */
     if (n->color == RED) {
+        /* Check for adjacent red nodes. */
         if ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)) {
             debug("Invariant violated: Two adjacent red nodes.")
             return -1;
         }
     }
     if (!n->left || !n->right) {
-        /* We are a leaf node. Count black nodes on the path to the root. */
+        /* This is a leaf node. Count black nodes on the path to the root. */
         int count = 0;
         while (n != NULL) {
             if (n->color == BLACK) ++count;
@@ -128,7 +128,7 @@ void _rbt_node_replace_child(_rbt *T,
 
 }
 
-/* The rotation functions don't recolor the nodes. That is done in the insertion and
+/* The rotation routines don't recolor the nodes. That is done in the insertion and
  * deletion algorithms according to the way different rotations are combined. */
 /* static */
 int _rbt_node_rotate_left(_rbt *T, _rbt_node *n, _rbt_node **node_out)
@@ -256,8 +256,7 @@ int _rbt_node_move_up_four_node(_rbt *T, _rbt_node *n)
         } else if (n == p->left && p == pp->right) {
             /* Case 4 (red-right-left): The parent is a right child and n is its left
              * child. We need to rotate the parent right, then the grandparent left, and
-             * recolor.
-             * */
+             * recolor. */
             rc = _rbt_node_rotate_right(T, p, NULL);
             check(rc == 0, "_rbt_node_rotate_right failed.");
             rc = _rbt_node_rotate_left(T, pp, NULL);
@@ -323,8 +322,7 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
         } else {
             if (n->color == BLACK) {
-                /* Case 1 (black-left): The parent is black so we can just insert a left
-                 * child. */
+                /* Case 1 (black-left): The parent is black so we can just insert a child. */
                 /* debug("Insert case 1: black-left") */
                 rc = _rbt_node_new(&n->left);
                 check(rc == 0, "_rbt_node_new failed.");
@@ -397,8 +395,7 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
         } else {
             if (n->color == BLACK) {
-                /* Case 4 (black-right): The parent is black so we can just insert a
-                 * right child. */
+                /* Case 4 (black-right): Same as case 1. */
                 /* debug("Insert case 4: black-right"); */
                 rc = _rbt_node_new(&n->right);
                 check(rc == 0, "_rbt_node_new failed.");
