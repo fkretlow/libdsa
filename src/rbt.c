@@ -322,7 +322,8 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
         } else {
             if (n->color == BLACK) {
-                /* Case 1 (black-left): The parent is black so we can just insert a child. */
+                /* Case 1 (black-left): The parent is black so we can just insert a red
+                 * child. */
                 /* debug("Insert case 1: black-left") */
                 rc = _rbt_node_new(&n->left);
                 check(rc == 0, "_rbt_node_new failed.");
@@ -509,4 +510,160 @@ int _rbt_has(const _rbt *T, const void *value)
     return 0;
 error:
     return -1;
+}
+
+static inline int _rbt_node_is_empty_group(_rbt_node *n)
+{
+    return n->color == BLACK
+           && (!n->left || n->left->color == BLACK)
+           && (!n->right || n->right->color == BLACK);
+}
+
+int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
+{
+    /* debug("n = %d", *(int*)n->data); */
+    /* This routine should never be called on a node with any red children. */
+    assert(_rbt_node_is_empty_group(n));
+
+    int rc;
+    _rbt_node *p = n->parent;
+    _rbt_node *s = NULL;
+
+    if (n == p->right) {
+        if (p->color == BLACK) {
+            rc = _rbt_node_rotate_right(T, p, NULL);
+            check(rc == 0, "_rbt_node_rotate_right failed.");
+            p->parent->color = BLACK;
+            p->color = RED;
+        }
+
+        /* Now we are guaranteed to have a red parent. */
+        s = p->left;
+        if (_rbt_node_is_empty_group(s)) {
+            /* The sibling is an empty group, too. We combine the red parent and both
+             * the sibling and the current node into a single full group by just
+             * inverting the colors. */
+            p->color = BLACK;
+            s->color = n->color = RED;
+        } else {
+            if (!s->left || s->left->color == BLACK) {
+                /* The sibling has no outer red child. We need to rotate it inwards
+                 * first. */
+                rc = _rbt_node_rotate_left(T, s, &s);
+                check(rc == 0, "_rbt_node_rotate_left failed.");
+                assert(s == p->left);
+                /* Note that s holds our new left sibling. */
+                s->color = BLACK;
+                s->left->color = RED;
+            }
+
+            rc = _rbt_node_rotate_right(T, p, NULL);
+            check(rc == 0, "_rbt_node_rotate_right failed.");
+            p->parent->color = RED;
+            p->parent->left->color = p->color = BLACK;
+            n->color = RED;
+        }
+
+    } else { /* n == p->left */
+        if (p->color == BLACK) {
+            rc = _rbt_node_rotate_left(T, p, NULL);
+            check(rc == 0, "_rbt_node_rotate_left failed.");
+            p->parent->color = BLACK;
+            p->color = RED;
+        }
+
+        /* Now we are guaranteed to have a red parent. */
+        s = p->right;
+        if (_rbt_node_is_empty_group(s)) {
+            /* The sibling is an empty group, too. We combine the red parent and both
+             * the sibling and the current node into a single full group by just
+             * inverting the colors. */
+            p->color = BLACK;
+            s->color = n->color = RED;
+        } else {
+            if (!s->right || s->right->color == BLACK) {
+                rc = _rbt_node_rotate_right(T, s, &s);
+                check(rc == 0, "_rbt_node_rotate_right failed.");
+                assert(s == p->right);
+                /* Now s holds our new right sibling. */
+                s->color = BLACK;
+                s->right->color = RED;
+            }
+
+            rc = _rbt_node_rotate_left(T, p, NULL);
+            check(rc == 0, "_rbt_node_rotate_left failed.");
+            p->parent->color = RED;
+            p->parent->right->color = p->color = BLACK;
+            n->color = RED;
+        }
+    }
+    return 0;
+error:
+    return -1;
+}
+
+static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
+{
+    check_ptr(T);
+    check_ptr(n);
+    check_ptr(value);
+
+    assert((n->parent && (n == n->parent->left || n == n->parent->right))
+           || n == T->root);
+
+    int rc;
+
+    if (_rbt_node_is_empty_group(n)) {
+        rc = _rbt_node_fill_group(T, n);
+        check(rc == 0, "_rbt_node_fill_group failed.");
+    }
+
+    int comp = TypeInterface_compare(T->element_type, value, n->data);
+
+    if (comp < 0) {
+        if (!n->left) {
+            return 0;
+        } else {
+            return _rbt_node_delete(T, n->left, value);
+        }
+
+    } else if (comp > 0) {
+        if (!n->right) {
+            return 0;
+        } else {
+            return _rbt_node_delete(T, n->right, value);
+        }
+
+    } else { /* comp == 0 */
+        // TODO... are we in a leaf position? Then just delete.
+
+        void *successor_value = _rbt_node_find_min(T, n->right);
+        check(successor_value != NULL, "Failed to find a successor value.");
+
+        rc = _rbt_node_set(T, n, &successor_value);
+        check(rc == 0, "_rbt_node_set failed.");
+
+        return _rbt_node_remove(T, n->right, successor_value);
+    }
+}
+
+int _rbt_remove(_rbt *T, const void *value)
+{
+    /* debug("value = %d", *(int*)value); */
+    check_ptr(T);
+    check_ptr(value);
+    assert (!_rbt_invariant(T));
+
+    int rc = 0;
+
+    if (T->root) {
+        rc = _rbt_node_remove(T, T->root, value);
+        check(rc >= 0, "_rbt_node_insert failed.");
+    }
+
+    assert(!_rbt_invariant(T));
+    return rc;
+error:
+    return -1;
+
 }
