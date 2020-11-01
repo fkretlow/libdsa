@@ -371,8 +371,8 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
                      * parent right, then the grandparent left. In order to save calls,
                      * we cheat and get the same effect by adding a left child to the
                      * grandparent, which can't have another child (see above), set it
-                     * to the value of the grandparent, and set the the grandparent to
-                     * the new value. */
+                     * to the value of the grandparent, and set the grandparent to the
+                     * new value. */
                     /* debug("Insert case 3: red-right-left") */
                     rc = _rbt_node_new(&n->parent->left);
                     check(rc == 0, "_rbt_node_new failed.");
@@ -470,8 +470,10 @@ int _rbt_insert(_rbt *T, const void *value)
     int rc = 0;
 
     if (!T->root) {
-        check(!_rbt_node_new(&T->root), "_rbt_node_new failed.");
-        check(!_rbt_node_set(T, T->root, value), "_rbt_node_set failed.");
+        rc = _rbt_node_new(&T->root);
+        check(rc == 0, "_rbt_node_new failed.");
+        rc = _rbt_node_set(T, T->root, value);
+        check(rc == 0, "_rbt_node_set failed.");
         T->root->color = BLACK;
         ++T->size;
     } else {

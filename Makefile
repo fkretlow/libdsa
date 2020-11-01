@@ -12,13 +12,14 @@ TEST=$(patsubst %.c,%,$(TEST_SOURCES))
 BIN_SOURCES=$(wildcard ./programs/*.c)
 BIN=$(patsubst ./programs/%.c,./build/%,$(BIN_SOURCES))
 
-.PHONY: all clean build test
+.PHONY: all clean build test doc
 
 all: clean $(LIB) test
 
 clean:
 	rm -rf ./build ./bin ./**/*.o
 	rm -rf `find ./tests/ -type f ! -name "*.*"`
+	rm -rf `find . -type f -name "*.aux" -o -name "*.log" -o -name "*.pdf"`
 	ctags -R .
 
 build:
@@ -39,3 +40,6 @@ $(BIN): $(LIB)
 bin: CFLAGS += -DNDEBUG
 bin: $(BIN)
 	./build/sort_comparisons
+
+doc:
+	find ./doc/ -name '*.tex' -exec xelatex -output-directory=./doc {} \;
