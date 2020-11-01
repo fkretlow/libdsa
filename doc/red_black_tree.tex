@@ -43,29 +43,29 @@ factor of 2:
 \text{depth}(l_j)
 \]
 
-In the following, let a \emph{group} of nodes in a red-black-tree denote either \emph{any
-black node together with all its red child nodes,} or the \emph{null-group} which
-contains no nodes at all.  By invariant (2) we know that the nearest descendant nodes
-below a group must be black nodes, and as such they form the roots of groups themselves.
-Thus we can rephrase invariant (3) like so:
+In the following, let a \emph{group} of nodes in a red-black-tree denote either
+\emph{any black node together with all its red child nodes,} or the \emph{null-group}
+which contains no nodes at all.  A group that is not the null-group contains either 0,
+1, or 2 red child nodes.  If it contains 0 red child nodes, it consists of 1 node (the
+black root) and has 2 descendant groups (a). If it contains 1 red child node, it
+consists of 2 nodes (the black root and one red child) and it has 3 descendant groups
+(b). And if it contains 2 red child nodes, it consists of 3 nodes (the black root and
+one red child on either side) and it has 4 descendant groups (c). In the latter case the
+group is said to be \emph{full}. If a group contains 1 red child node, it is possible to
+rotate it in such a way that the former red child becomes the black root of the group,
+and the former black root becomes a red child on the opposite site; this rotation does
+not affect any descendant groups.
+
+By invariant (2) we know that the nearest descendant nodes below a group must be black
+nodes, and as such they form the roots of groups themselves.  Thus we can rephrase
+invariant (3) as follows:
 
 \begin{enumerate}[label=(\arabic*)]
 \setcounter{enumi}{2}
 \item All paths from the root to a leaf go through the same number of groups.
 \end{enumerate}
 
-Obviously, a group that is not the null-group contains either 0, 1 or 2 red child nodes.
-If it contains 0 red child nodes, it consists of 1 node (the black root) and has 2
-descending groups (a). If it contains 1 red child node, it consists of 2 nodes (the
-black root and one red child)) and it has 3 descending groups (b). And if it contains 2
-red child nodes, it consists of 3 nodes (the black root and one red child on either
-side) and it has 4 descending groups (c). In the latter case the group is said to be
-\emph{full}. If a group contains 1 red child node, it is possible to rotate it in such a
-way that the former red child becomes the black root of the group, and the former black
-root becomes a red child on the opposite site; this rotation does not affect any
-descendant groups.
-
-In order to preserve invariant (3), inserting a node into a red-black-tree must not add
+In order to preserve this invariant, inserting a node into a red-black-tree must not add
 a new group to the tree (except at the very root where the addition affects all paths
 equally). Likewise, deleting a node from the tree must not remove a group entirely
 (again, except at the root). The fact that groups can have variable numbers of red nodes
