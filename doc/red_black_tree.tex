@@ -69,9 +69,9 @@ In order to preserve this invariant, inserting a node into a red-black-tree must
 a new group to the tree (except at the very root where the addition affects all paths
 equally). Likewise, deleting a node from the tree must not remove a group entirely
 (again, except at the root). The fact that groups can have variable numbers of red nodes
-provides us with enough flexibility though: We can shift nodes between groups and rotate
-sub-trees to make sure we have some leeway at the position where we need to insert or
-delete a node.
+provides us with enough flexibility though: We can shift nodes between groups, rotate
+sub-trees, and recolor nodes to make sure we have some leeway at the position where we
+need to insert or delete a node.
 
 \subsection{Insertion}
 Insertion into a normal binary search tree is straightforward. You start at the root,
