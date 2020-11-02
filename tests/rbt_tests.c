@@ -114,23 +114,27 @@ int test_rbt_usage(void)
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
+    for (int i = 0; i < N_VALUES / 2; ++i) {
+        rc = _rbt_remove(&T, &i);
+        test(rc == 1, "rc = %d (%d)", rc, 1);
+        rc = _rbt_has(&T, &v);
+        test(rc == 0, "rc = %d (%d)" ,rc, 0);
+    }
+
     _rbt_clear(&T);
 
-    size = 0;
     for (int i = 0; i < N_VALUES; ++i) {
         v = (int)rand() % MAX_VALUE;
         rc = _rbt_insert(&T, &v);
-        if (rc == 0) ++size;
         test(rc >= 0, "_rbt_insert failed");
-        test(T.size == size, "T.size = %lu (%lu)", T.size, size);
+        if (rc == 1) { /* The value was already there. */
+            --i;
+        }
+        test(T.size == (size_t)i + 1, "T.size = %lu (%d)", T.size, i + 1);
         rc = _rbt_has(&T, &v);
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
-    return TEST_OK;
-}
 
-int test_rbt_clear(void)
-{
     _rbt_clear(&T);
     return TEST_OK;
 }
@@ -147,6 +151,5 @@ int main(void)
     /* srand(1604071123); */
 
     run_test(test_rbt_usage);
-    run_test(test_rbt_clear);
     test_suite_end();
 }

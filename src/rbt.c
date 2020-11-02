@@ -600,6 +600,8 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
 
         /* Now we are guaranteed to have a red parent. */
         assert(p->color == RED);
+        assert(p == n->parent);
+        s = p->right;
 
         if (_rbt_node_is_empty_group(s)) {
             /* The sibling is an empty group, too. We combine the red parent and both
@@ -687,6 +689,8 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
 
         /* Now we are guaranteed to have a red parent. */
         assert(p->color == RED);
+        assert(p == n->parent);
+        s = p->left;
 
         if (_rbt_node_is_empty_group(s)) {
             /* The sibling is an empty group, too. We combine the red parent and both
@@ -699,6 +703,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
             if (!s->right || s->right->color == BLACK) {
                 /* The sibling has no outer (right) red child. We need to rotate it
                  * inwards first. */
+                assert(s == p->right);
                 rc = _rbt_node_rotate_right(T, s, &s);
                 check(rc == 0, "_rbt_node_rotate_right failed.");
                 assert(s == p->right);
@@ -785,6 +790,7 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
                 n->parent->right = NULL;
             }
             _rbt_node_delete(T, n);
+            return 1; /* Found it. */
 
         } else {
             /* Oh well... replace this value with the smallest greater value. Then
