@@ -123,16 +123,27 @@ int test_rbt_usage(void)
 
     _rbt_clear(&T);
 
+    int values[N_VALUES] = { 0 };
     for (int i = 0; i < N_VALUES; ++i) {
         v = (int)rand() % MAX_VALUE;
         rc = _rbt_insert(&T, &v);
         test(rc >= 0, "_rbt_insert failed");
         if (rc == 1) { /* The value was already there. */
             --i;
+        } else {
+            values[i] = v;
         }
         test(T.size == (size_t)i + 1, "T.size = %lu (%d)", T.size, i + 1);
         rc = _rbt_has(&T, &v);
         test(rc == 1, "rc = %d (%d)", rc, 1);
+    }
+
+    for (int i = 0; i < N_VALUES; ++i) {
+        /* debug("loop i = %d", i); */
+        rc = _rbt_remove(&T, values + i);
+        test(rc == 1, "rc = %d (%d)", rc, 1);
+        rc = _rbt_has(&T, values + i);
+        test(rc == 0, "rc = %d (%d)", rc, 0);
     }
 
     _rbt_clear(&T);
@@ -147,8 +158,8 @@ int main(void)
 
     unsigned seed = (unsigned)time(NULL);
     srand(seed);
-    /* debug("random seed was %u", seed); */
-    /* srand(1604071123); */
+    debug("random seed was %u", seed);
+    /* srand(1604337690); */
 
     run_test(test_rbt_usage);
     test_suite_end();

@@ -10,8 +10,8 @@ int _suppress_errors;
 
 #define check(T, M, ...) if (!(T)) { \
     if (!_suppress_errors) { \
-        fprintf(stderr, KRED "Error: " KRESET M " [%s %s:%d]" "\n", \
-                ##__VA_ARGS__, __func__, __FILE__, __LINE__); \
+        fprintf(stderr, KRED "[Error]" KRESET " %s:" M " [%s:%d]" "\n", \
+                __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
     } \
     goto error; \
 }
@@ -19,14 +19,14 @@ int _suppress_errors;
 #define check_alloc(P) check((P), "Failed to allocate memory for " #P ".")
 #define check_ptr(P) check((P), #P " is NULL.")
 
-#define sentinel(M, ...) fprintf(stderr, KRED "Error: " KRESET M "\n", ##__VA_ARGS__); \
+#define sentinel(M, ...) fprintf(stderr, KRED "[Error] " KRESET M "\n", ##__VA_ARGS__); \
     goto error;
 
 #ifdef NDEBUG
     #define debug(M, ...)
 #else
-    #define debug(M, ...) fprintf(stderr, "Debug: " M " [%s %s:%d]" "\n", \
-                                  ##__VA_ARGS__, __func__, __FILE__, __LINE__);
+    #define debug(M, ...) fprintf(stderr, "[Debug] %24s :: " M "   [%d]" "\n", \
+                                  __func__, ##__VA_ARGS__, __LINE__);
 #endif
 
 #define debug_array(M, A, n, ...) \
