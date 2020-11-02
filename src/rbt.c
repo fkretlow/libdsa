@@ -205,18 +205,18 @@ void _rbt_clear(_rbt *T)
     T->size = 0;
 }
 
-static inline int _rbt_node_is_four_node(_rbt_node *n)
+static inline int _rbt_node_is_full_group(_rbt_node *n)
 {
     return n->color == BLACK
            && n->left && n->left->color == RED
            && n->right && n->right->color == RED;
 }
 
-int _rbt_node_move_up_four_node(_rbt *T, _rbt_node *n)
+int _rbt_node_make_space_in_group(_rbt *T, _rbt_node *n)
 {
     /* debug("n = %d", *(int*)n->data); */
     /* This routine should never be called on a node that is not the root of a four-node. */
-    assert(_rbt_node_is_four_node(n));
+    assert(_rbt_node_is_full_group(n));
 
     int rc;
     _rbt_node *p = n->parent;
@@ -301,17 +301,14 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
     int rc;
 
-    /* On the path down to the insertion position we need to make sure that every node
-     * we walk through has space for the insertion. For lack of better words we use the
-     * terminology of a 2-3-4 tree (an isometry of a red-black-tree), where a four-node
-     * is a node with three values (a black one in the middle and a red one on either
-     * side) and four children.  If the group of nodes with the current node n as its
-     * root is such a four-node, we can push n up into the group of nodes above, because
-     * we know that our direct ancestor group is not a four-node, because we have just
-     * done the same thing to it that we are about to do here. */
-    if (_rbt_node_is_four_node(n)) {
-        rc = _rbt_node_move_up_four_node(T, n);
-        check(rc == 0, "_rbt_node_move_up_four_node failed.");
+    /* On the path down to the insertion position we need to make sure that every group
+     * we walk through has space for the insertion. If the group with the current node n
+     * at the root is full, we can push n up into the group above, because we know that
+     * our direct ancestor group is not full, because we have just done the same thing
+     * to it that we are about to do here. */
+    if (_rbt_node_is_full_group(n)) {
+        rc = _rbt_node_make_space_in_group(T, n);
+        check(rc == 0, "_rbt_node_make_space_in_group failed.");
     }
 
     int comp = TypeInterface_compare(T->element_type, value, n->data);
@@ -527,7 +524,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
 
     int rc;
     _rbt_node *p = n->parent;
-    _rbt_node *s = NULL;
+    _rbt_node *s = NULL; /* The sibling node. */
 
     if (n == p->right) {
         if (p->color == BLACK) {
@@ -552,7 +549,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
                 rc = _rbt_node_rotate_left(T, s, &s);
                 check(rc == 0, "_rbt_node_rotate_left failed.");
                 assert(s == p->left);
-                /* Note that s holds our new left sibling. */
+                /* Note that s has been updated to hold our new left sibling. */
                 s->color = BLACK;
                 s->left->color = RED;
             }
@@ -602,6 +599,12 @@ error:
     return -1;
 }
 
+static inline _rbt_node *_rbt_node_get_smallest_child(_rbt_node *n)
+{
+    while (n->left) n = n->left;
+    return n;
+}
+
 static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
 {
     check_ptr(T);
@@ -613,6 +616,8 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
 
     int rc;
 
+    /* Make sure we have leeway for the deletion: Need at least one read node in every
+     * group we walk through. */
     if (_rbt_node_is_empty_group(n)) {
         rc = _rbt_node_fill_group(T, n);
         check(rc == 0, "_rbt_node_fill_group failed.");
@@ -622,29 +627,56 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
 
     if (comp < 0) {
         if (!n->left) {
-            return 0;
+            return 0; /* Didn't find it. */
         } else {
-            return _rbt_node_delete(T, n->left, value);
+            return _rbt_node_remove(T, n->left, value);
         }
 
     } else if (comp > 0) {
         if (!n->right) {
             return 0;
         } else {
-            return _rbt_node_delete(T, n->right, value);
+            return _rbt_node_remove(T, n->right, value);
         }
 
     } else { /* comp == 0 */
-        // TODO... are we in a leaf position? Then just delete.
+        if (!n->left || !n->right) {
+            /* This is a leaf node. We can just delete... */
+            if (n->color == BLACK) {
+                /* ... if it's red, that is. Otherwise we need to rotate the parent
+                 * first. */
+                assert(n->left || n->right);
+                if (n->right) {
+                    rc = _rbt_node_rotate_left(T, n, NULL);
+                    check(rc == 0, "_rbt_node_rotate_left failed.");
+                } else {
+                    rc = _rbt_node_rotate_right(T, n, NULL);
+                    check(rc == 0, "_rbt_node_rotate_right failed.");
+                }
+                n->parent->color = BLACK;
+            }
 
-        void *successor_value = _rbt_node_find_min(T, n->right);
-        check(successor_value != NULL, "Failed to find a successor value.");
+            if (n == n->parent->left) {
+                n->parent->left = NULL;
+            } else { /* n == n->parent->right */
+                n->parent->right = NULL;
+            }
+            _rbt_node_delete(T, n);
 
-        rc = _rbt_node_set(T, n, &successor_value);
-        check(rc == 0, "_rbt_node_set failed.");
 
-        return _rbt_node_remove(T, n->right, successor_value);
+        } else {
+            /* Oh well... replace this value with the smallest greater value. Then
+             * delete the leaf node where that came from. */
+            _rbt_node *succ = _rbt_node_get_smallest_child(n);
+
+            rc = _rbt_node_set(T, n, succ->data);
+            check(rc == 0, "_rbt_node_set failed.");
+
+            return _rbt_node_remove(T, n->right, succ->data);
+        }
     }
+error:
+    return -1;
 }
 
 int _rbt_remove(_rbt *T, const void *value)
