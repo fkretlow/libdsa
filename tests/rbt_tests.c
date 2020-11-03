@@ -24,20 +24,56 @@ static TypeInterface int_type = {
     NULL
 };
 
-struct rb_balance {
+struct rbt_stats {
     size_t red;
     size_t black;
+    size_t full;
+    size_t empty;
 };
 
-static struct rb_balance balance = { 0, 0 };
+static struct rbt_stats stats;
 
-int check_rb_balance(_rbt_node *n, void *balance_struct)
+int _rbt_node_get_stats(_rbt_node *n, void *stats)
 {
+    struct rbt_stats *s = stats;
     if (n->color == RED) {
-        ++((struct rb_balance *)balance_struct)->red;
+        ++s->red;
     } else {
-        ++((struct rb_balance *)balance_struct)->black;
+        ++s->black;
+        if (n->color == BLACK
+                && n->left && n->left->color == RED
+                && n->right && n->right->color == RED) {
+            ++s->full;
+        } else if ( n->color == BLACK
+                && (!n->left || n->left->color == BLACK)
+                && (!n->right || n->right->color == BLACK)) {
+            ++s->empty;
+        }
     }
+
+    return 0;
+}
+
+void print_rbt_stats(const _rbt *T, const char *header)
+{
+    struct rbt_stats s = { 0 };
+    _rbt_traverse(T, _rbt_node_get_stats, &s);
+
+    printf("%s\n", "----------------------------------");
+    if (header) printf("%s\n", header);
+    printf("%12s: %5lu\n", "nodes", T->size);
+    printf("%12s: %5lu (%.2f%%)\n",
+            "red nodes", s.red, (double)s.red / T->size * 100.0);
+    printf("%12s: %5lu (%.2f%%)\n",
+            "full groups", s.full, (double)s.full / s.black * 100.0);
+    printf("%12s: %5lu (%.2f%%)\n",
+            "empty groups", s.empty, (double)s.empty / s.black * 100.0);
+    printf("%s\n", "----------------------------------");
+}
+
+int print_node(_rbt_node *n, void *nothing)
+{
+    printf("%d %s\n", *(int*)n->data, n->color == RED ? "R" : "B");
     return 0;
 }
 
@@ -131,6 +167,8 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
+    print_rbt_stats(&T, "After sorted insertion");
+
     v = -1;
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
@@ -141,6 +179,8 @@ int test_rbt_usage(void)
         rc = _rbt_has(&T, &v);
         test(rc == 0, "rc = %d (%d)" ,rc, 0);
     }
+
+    print_rbt_stats(&T, "After removing half");
 
     _rbt_clear(&T);
 
@@ -161,9 +201,7 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    _rbt_traverse(&T, check_rb_balance, &balance);
-    debug("balance red to black was %lu/%lu, that's %.2f%% red nodes",
-            balance.red, balance.black, (double)balance.red / N_VALUES * 100.0);
+    print_rbt_stats(&T, "After random insertion");
 
     debug("_rbt_node_make_space_in_group was necessary %d out of %d times, that's %.2f%%.",
             _needed, _total, (double)_needed / (double)_total * 100.0);

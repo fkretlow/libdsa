@@ -833,6 +833,7 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
                     /* Hurray, we're at the root and the last one. Easy. */
                     _rbt_node_delete(T, n);
                     T->root = NULL;
+                    --T->size;
                     return 1;
                 }
 
@@ -856,6 +857,7 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
                 n->parent->right = NULL;
             }
             _rbt_node_delete(T, n);
+            --T->size;
             return 1; /* Found it. */
 
         } else {
