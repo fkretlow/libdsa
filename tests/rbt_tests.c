@@ -7,11 +7,14 @@
 #include "test.h"
 #include "type_interface.h"
 
-#define MAX_VALUE 1024
-#define N_VALUES 1024
+#define MAX_VALUE 100000
+#define N_VALUES 1000
 
 static _rbt T;
 static int rc;
+
+extern int _total;
+extern int _needed;
 
 static TypeInterface int_type = {
     sizeof(int),
@@ -20,6 +23,24 @@ static TypeInterface int_type = {
     int_compare,
     NULL
 };
+
+struct rb_balance {
+    size_t red;
+    size_t black;
+};
+
+static struct rb_balance balance = { 0, 0 };
+
+int check_rb_balance(_rbt_node *n, void *balance_struct)
+{
+    if (n->color == RED) {
+        ++((struct rb_balance *)balance_struct)->red;
+    } else {
+        ++((struct rb_balance *)balance_struct)->black;
+    }
+    return 0;
+}
+
 int test_rotations(void)
 {
     _rbt_node *p, *n, *l, *ll, *lr, *r, *rl, *rr, *res;
@@ -110,7 +131,7 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    v = 5000;
+    v = -1;
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
@@ -122,6 +143,8 @@ int test_rbt_usage(void)
     }
 
     _rbt_clear(&T);
+
+    _needed = _total = 0;
 
     int values[N_VALUES] = { 0 };
     for (int i = 0; i < N_VALUES; ++i) {
@@ -138,6 +161,14 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
+    _rbt_traverse(&T, check_rb_balance, &balance);
+    debug("balance red to black was %lu/%lu, that's %.2f%% red nodes",
+            balance.red, balance.black, (double)balance.red / N_VALUES * 100.0);
+
+    debug("_rbt_node_make_space_in_group was necessary %d out of %d times, that's %.2f%%.",
+            _needed, _total, (double)_needed / (double)_total * 100.0);
+    _needed = _total = 0;
+
     for (int i = 0; i < N_VALUES; ++i) {
         /* debug("loop i = %d", i); */
         rc = _rbt_remove(&T, values + i);
@@ -147,6 +178,10 @@ int test_rbt_usage(void)
     }
 
     _rbt_clear(&T);
+
+    debug("_rbt_node_fill_empty_group was necessary %d out of %d times, that's %.2f%%.",
+            _needed, _total, (double)_needed / (double)_total * 100.0);
+
     return TEST_OK;
 }
 
@@ -157,9 +192,9 @@ int main(void)
     run_test(test_rbt_init);
 
     unsigned seed = (unsigned)time(NULL);
+    /* unsigned seed = 1604388022; */
     srand(seed);
     debug("random seed was %u", seed);
-    /* srand(1604337690); */
 
     run_test(test_rbt_usage);
     test_suite_end();

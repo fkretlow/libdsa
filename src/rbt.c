@@ -3,10 +3,13 @@
 #include "debug.h"
 #include "rbt.h"
 
+int _total = 0;
+int _needed = 0;
+
 /* Walk through all the nodes of the tree in ascending order. If at any point the
  * callback returns a non-zero integer, abort and return it. The parameter p is passed
  * to the callback. */
-static int _rbt_traverse_node(_rbt_node *n,
+static int _rbt_node_traverse(_rbt_node *n,
                               int (*f)(_rbt_node *n, void *p),
                               void *p)
 {
@@ -14,7 +17,7 @@ static int _rbt_traverse_node(_rbt_node *n,
 
     if (n) {
         if (n->left) {
-            rc = _rbt_traverse_node(n->left, f, p);
+            rc = _rbt_node_traverse(n->left, f, p);
             if (rc != 0) return rc;
         }
 
@@ -22,12 +25,19 @@ static int _rbt_traverse_node(_rbt_node *n,
         if (rc != 0) return rc;
 
         if (n->right) {
-            rc = _rbt_traverse_node(n->right, f, p);
+            rc = _rbt_node_traverse(n->right, f, p);
             if (rc != 0) return rc;
         }
     }
 
     return rc;
+}
+
+int _rbt_traverse(const _rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
+    if (T && T->root) {
+        return _rbt_node_traverse(T->root, f, p);
+    }
+    return 0;
 }
 
 int _rbt_node_invariant(_rbt_node *n, void *black_count)
@@ -60,7 +70,7 @@ int _rbt_node_invariant(_rbt_node *n, void *black_count)
 int _rbt_invariant(const _rbt *T)
 {
     int black_count = -1;
-    int rc = _rbt_traverse_node(T->root, _rbt_node_invariant, &black_count);
+    int rc = _rbt_node_traverse(T->root, _rbt_node_invariant, &black_count);
     return rc;
 }
 
@@ -301,17 +311,23 @@ int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
 
     int rc;
 
+    int comp = TypeInterface_compare(T->element_type, value, n->data);
+
     /* On the path down to the insertion position we need to make sure that every group
      * we walk through has space for the insertion. If the group with the current node n
      * at the root is full, we can push n up into the group above, because we know that
      * our direct ancestor group is not full, because we have just done the same thing
      * to it that we are about to do here. */
     if (_rbt_node_is_full_group(n)) {
+        ++_total;
         rc = _rbt_node_make_space_in_group(T, n);
         check(rc == 0, "_rbt_node_make_space_in_group failed.");
+        if ((comp > 0 && _rbt_node_is_full_group(n->right))
+                || (comp < 0 && _rbt_node_is_full_group(n->left))
+                || comp == 0) {
+            ++_needed;
+        }
     }
-
-    int comp = TypeInterface_compare(T->element_type, value, n->data);
 
     if (comp < 0) {
         if (n->left) {
@@ -518,7 +534,6 @@ static inline int _rbt_node_is_empty_group(_rbt_node *n)
 
 int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
 {
-    assert(!_rbt_invariant(T));
     /* debug("n = %d", *(int*)n->data); */
     /* This routine should never be called on a node with any red children. */
     assert(_rbt_node_is_empty_group(n));
@@ -540,7 +555,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
         /* n is the root and it's an empty group. But we don't know at this point in
          * which direction we'll move. We'll need to handle the case of an empty root
          * group as a direct ancestor later. */
-        assert(!_rbt_invariant(T));
         return 0;
     }
 
@@ -576,7 +590,10 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
                     n->color = RED;
 
                 } else { /* The sibling has one red child. */
-                    if (s->left && s->left->color == BLACK) {
+                    assert((s->left && s->left->color == RED)
+                            || (s->right && s->right->color == RED));
+
+                    if (s->right && s->right->color == RED) {
                         /* Make sure the sibling has an outer (i.e. left) red child. */
                         rc = _rbt_node_rotate_left(T, s, &s);
                         check(rc == 0, "_rbt_node_rotate_left failed.");
@@ -586,6 +603,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
                         s->left->color = RED;
                     }
 
+                    assert(s->left && s->left->color == RED);
                     rc = _rbt_node_rotate_right(T, p, NULL);
                     check(rc == 0, "_rbt_node_rotate_right failed.");
 
@@ -609,7 +627,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
         } /* endif p->color == BLACK */
 
         /* Now we are guaranteed to have a red parent. */
-        assert(!_rbt_invariant(T));
         assert(p->color == RED);
         assert(p == n->parent);
         s = p->left;
@@ -621,7 +638,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
              * inverting the colors. */
             p->color = BLACK;
             s->color = n->color = RED;
-            assert(!_rbt_invariant(T));
 
         } else {
             /* debug("sibling has red children"); */
@@ -642,7 +658,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
             p->parent->color = RED;
             p->parent->left->color = p->color = BLACK;
             n->color = RED;
-            assert(!_rbt_invariant(T));
         }
 
     } else { /* n == p->left */
@@ -680,7 +695,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
 
                 } else { /* The sibling has one red child. */
                     /* debug("sibling has a red child"); */
-                    if (s->right && s->right->color == BLACK) {
+                    if (s->left && s->left->color == RED) {
                         /* debug("... the left one, need to rotate it"); */
                         /* Make sure the sibling has an outer (i.e. right) red child. */
                         rc = _rbt_node_rotate_right(T, s, &s);
@@ -691,6 +706,7 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
                         s->right->color = RED;
                     }
 
+                    assert(s->right && s->right->color == RED);
                     rc = _rbt_node_rotate_left(T, p, NULL);
                     check(rc == 0, "_rbt_node_rotate_left failed.");
 
@@ -715,7 +731,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
         } /* endif p->color == BLACK */
 
         /* Now we are guaranteed to have a red parent. */
-        assert(!_rbt_invariant(T));
         assert(p->color == RED);
         assert(p == n->parent);
         s = p->right;
@@ -728,7 +743,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
             /* debug("p->color = %d, s->color = %d, n->color = %d", p->color, s->color, n->color); */
             p->color = BLACK;
             s->color = n->color = RED;
-            assert(!_rbt_invariant(T));
 
         } else {
             /* debug("sibling has red children"); */
@@ -750,7 +764,6 @@ int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
             p->parent->color = RED;
             p->parent->right->color = p->color = BLACK;
             n->color = RED;
-            assert(!_rbt_invariant(T));
         }
     }
 
@@ -772,26 +785,31 @@ static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
     check_ptr(n);
     check_ptr(value);
 
-    assert(!_rbt_invariant(T));
     assert((n->parent && (n == n->parent->left || n == n->parent->right))
            || n == T->root);
 
     int rc;
 
+    int comp = TypeInterface_compare(T->element_type, value, n->data);
+
     /* Make sure we have leeway for the deletion: Need at least one red node in every
      * group we walk through. */
     if (_rbt_node_is_empty_group(n)) {
+        ++_total;
         rc = _rbt_node_fill_group(T, n);
         check(rc == 0, "_rbt_node_fill_group failed.");
+        if ((comp > 0 && _rbt_node_is_empty_group(n->right))
+                || (comp < 0 && _rbt_node_is_empty_group(n->left))
+                || comp == 0) {
+            ++_needed;
+        }
     }
-    assert(!_rbt_invariant(T));
 
-    if (n->color == BLACK) assert(n == T->root || ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)));
-    if (n->color == RED) assert(n->parent->color == BLACK);
-    /* assert((n->color == BLACK && (n->left->color == RED || n->right->color == RED))
-           || (n->color == RED && n->parent->color == BLACK)); */
-
-    int comp = TypeInterface_compare(T->element_type, value, n->data);
+    assert((n->color == BLACK
+                && (((n->left && n->left->color == RED)
+                        || (n->right && n->right->color == RED))
+                    || n == T->root))
+           || (n->color == RED && n->parent->color == BLACK));
 
     if (comp < 0) {
         if (!n->left) {
@@ -866,7 +884,6 @@ int _rbt_remove(_rbt *T, const void *value)
     int rc = 0;
 
     if (T->root) {
-        assert(!_rbt_invariant(T));
         rc = _rbt_node_remove(T, T->root, value);
         check(rc >= 0, "_rbt_node_insert failed.");
     }
