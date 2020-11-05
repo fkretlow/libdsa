@@ -18,18 +18,12 @@
 \subsection{Introduction and general properties}
 A red-black-tree is a self-balancing binary search tree. In addition to the invariants
 of the latter, the former garantees that the tree remains roughly balanced even when it
-receives input sequences that lead to pathological cases for normal binary search trees
-(sorted input). Specifically, the red-black-tree guarantees that the lengths of any two
-paths from the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most
-a factor of 2.
+receives input sequences that constitute pathological cases for normal binary search
+trees (sorted input).
 
-\[
-\forall \text{ leaf nodes } l_{i}, l_{j} \in T : \text{depth}(l_i) \leq 2 \cdot
-\text{depth}(l_j)
-\]
-
-It does so by assigning one of two colors (traditionally red and black) to
-every node and maintaining the following invariants:
+Every node in a red-black-tree is assigned one of two colors (traditionally red and
+black). The following invariants hold after each insertion into, or deletion from a
+red-black-tree.
 
 \begin{enumerate}[label=(\arabic*)]
 \item Every node is either red or black.
@@ -40,26 +34,33 @@ every node and maintaining the following invariants:
 If \(b\) is the number of black nodes on every path from the root to a leaf, then
 the shortest such path (which contains no red nodes at all) has a length of \(b\), and
 the longest such path (where black and red nodes alternate) has a length of
-\(2b\).)
+\(2b\). Thus the tree guarantees that the lengths of any two
+paths from the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most
+a factor of 2.
 
+\[
+\forall \text{ leaf nodes } l_{i}, l_{j} \in T : \text{depth}(l_i) \leq 2 \cdot
+\text{depth}(l_j)
+\]
 
 In the following discussion, let a \emph{group} of nodes, \(g\), in a red-black-tree
 denote either \emph{any black node together with all its red child nodes,} or the
 \emph{null-group} which contains no nodes at all\footnote{Calling nothing a group
 simplifies a few arguments.}.
 
-The \emph{weight} of a group is the
-number of \emph{red} nodes it contains, obviously \(0 \leq \text{weight}(g) \leq 2\). If
-\(\text{weight}(g) = 0\), \(g\) is said to be \emph{empty}. If \(\text{weight}(g) = 2\),
-\(g\) is said to be \emph{full}.
+The \emph{weight} of a group is the number of nodes it contains, obviously \(0 \leq
+\text{weight}(g) \leq 3\). The null-group has a weight of 0. If \(\text{weight}(g) =
+1\), \(g\) is said to be \emph{empty}, because it doesn't contain any red child nodes.
+If \(\text{weight}(g) = 3\), \(g\) is said to be \emph{full}, because it is not possible
+to add another node to the group.
 
-If \(\text{weight}(g) = 1\), it is possible to rotate \(g\) in such a way that the
+If \(\text{weight}(g) = 2\), it is possible to rotate \(g\) in such a way that the
 former red child becomes the black root of the group, and the former black root becomes
 a red child on the opposite site; this rotation does not affect any descendant groups.
 
-By invariant (2) we know that the nearest descendant nodes below a group must be black
+By invariant 2 we know that the nearest descendant nodes below a group must be black
 nodes, and as such they form the roots of groups themselves.  Thus we can rephrase
-invariant (3) as follows:
+invariant 3 as follows:
 
 \begin{enumerate}[label=(\arabic*)]
 \setcounter{enumi}{2}
@@ -82,12 +83,10 @@ there's no left child, or the other way around) you simply add the value at that
 position.
 
 Insertion into a red-black-tree works similarly but it must not add a new group
-somewhere down the tree because that would violate invariant (3). Therefore insertion is
+somewhere down the tree because that would violate invariant 3. Therefore insertion is
 not possible if the direct parent of the to-be-added node is part of a full group. The
-solution is to transform the group the parent belongs to in such a way that it contains
-at most one red node. Then we can add the new node as a red child to the group, after
-rotating it first if necessary. The following algorithm performs this operation on the
-group.
+solution is to reduce the weight of that group: If \(1 \leq \text{weight}(g) \leq 2\), it is
+always possible to add another node to \(g\).
 
 \begin{small}
 \begin{verbatim}
@@ -131,13 +130,7 @@ procedure decrease-weight(n):
         case 3.2: pp has 2 red children
             decrease-weight(pp)
             decrease-weight(n) // try again
-\end{verbatim}
-\end{small}
 
-The actual insertion algorithm makes use of this.
-
-\begin{small}
-\begin{verbatim}
 procedure insert(n, v):
     p := parent of n
 

@@ -217,8 +217,8 @@ void _rbt_clear(_rbt *T)
 
 static inline unsigned short _rbt_group_weight(_rbt_node *n)
 {
-    assert(n->color == BLACK);
     unsigned short w = 0;
+    if (n) ++w;
     if (n->left && n->left->color == RED) ++w;
     if (n->right && n->right->color == RED) ++w;
     return w;
@@ -238,7 +238,7 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
     _rbt_node *l = n->left;
     _rbt_node *r = n->right;
 
-    assert(_rbt_group_weight(n) == 2);
+    assert(_rbt_group_weight(n) == 3);
 
     /* Case 1: n is the root of the tree. */
     if (n == T->root) {
@@ -336,7 +336,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
         _rbt_node *p = n->parent;
 
         /* Case 2.1: p has 2 red children */
-        if (_rbt_group_weight(p) == 2) {
+        if (_rbt_group_weight(p) == 3) {
             /* debug("Case 2.1 p is full"); */
             _rbt_group_decrease_weight(T, p);
             /* Now n may be elsewhere. Go again. */
@@ -344,7 +344,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
         }
 
         /* Case 2.2: p has 1 red child (n) */
-        else { /* weight(p) = 0 is handled in case 1 */
+        else { /* weight(p) = 1 is handled in case 1 */
             if (comp < 0 && n == p->left) {
                 /* debug("Case 2.2 left-left"); */
                 _rbt_node_rotate_right(T, p, NULL);
