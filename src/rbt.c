@@ -255,10 +255,12 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
 
     /* Case 3: p is red. */
     else if (p->color == RED) {
+
         /* Case 3.1: pp has 1 red child (p) */
         _rbt_node *ps = p == pp->left ? pp->right : pp->left;
         assert(ps);
         if (ps->color == BLACK) {
+
             /* Case 3.1a: left-left or right-right ancestor chain. */
             if (n == pp->right->right || n == pp->left->left) {
                 /* debug("Case 3.1a straight ancestor chain"); */
@@ -423,11 +425,12 @@ int _rbt_has(const _rbt *T, const void *value)
             n = n->right;
         } else if (comp < 0) {
             n = n->left;
-        } else {
+        } else { /* comp == 0: found it. */
             return 1;
         }
     }
 
+    /* Didn't find it. */
     return 0;
 error:
     return -1;
