@@ -26,7 +26,7 @@ black). The following invariants hold after each insertion into, or deletion fro
 red-black-tree.
 
 \begin{enumerate}[label=(\arabic*)]
-\item Every node is either red or black.
+\item The root node of the tree is black. Every other node is either red or black.
 \item If a node is red, it doesn't have a red child.
 \item All paths from the root to a leaf go through the same number of black nodes.
 \end{enumerate}
@@ -43,29 +43,28 @@ a factor of 2.
 \text{depth}(l_j)
 \]
 
-In the following discussion, let a \emph{group} of nodes, \(g\), in a red-black-tree
-denote either \emph{any black node together with all its red child nodes,} or the
-\emph{null-group} which contains no nodes at all\footnote{Calling nothing a group
-simplifies a few arguments.}.
-
-The \emph{weight} of a group is the number of nodes it contains, obviously \(0 \leq
-\text{weight}(g) \leq 3\). The null-group has a weight of 0. If \(\text{weight}(g) =
-1\), \(g\) is said to be \emph{empty}, because it doesn't contain any red child nodes.
-If \(\text{weight}(g) = 3\), \(g\) is said to be \emph{full}, because it is not possible
-to add another node to the group.
-
-If \(\text{weight}(g) = 2\), it is possible to rotate \(g\) in such a way that the
-former red child becomes the black root of the group, and the former black root becomes
-a red child on the opposite site; this rotation does not affect any descendant groups.
-
-By invariant 2 we know that the nearest descendant nodes below a group must be black
-nodes, and as such they form the roots of groups themselves.  Thus we can rephrase
-invariant 3 as follows:
+\subsection{Groups of Nodes}
+Let a \emph{group} of nodes in a red-black-tree denote either \emph{any black node
+together with all its direct red child nodes,} or the \emph{null-group} which contains
+no nodes at all\footnote{Calling nothing a group simplifies a few arguments.}.  Any node
+in a red-black-tree belongs to exactly one group: If we combine invariants 1 and 2 with
+this definition, we can infer that the nearest descendant nodes below a group must be
+black, and so they constitute roots of groups themselves.  We can rephrase invariant 3
+as follows:
 
 \begin{enumerate}[label=(\arabic*)]
 \setcounter{enumi}{2}
 \item All paths from the root to a leaf go through the same number of groups.
 \end{enumerate}
+
+The \emph{weight} of a group \(g\) is the number of nodes it contains, obviously \(0
+\leq \text{weight}(g) \leq 3\). The null-group has a weight of 0. If \(\text{weight}(g)
+= 1\), \(g\) is said to be \emph{empty:} it doesn't contain any red child nodes.  If
+\(\text{weight}(g) = 3\), \(g\) is said to be \emph{full:} it contains two red child
+nodes and it's not possible to add another node to the group.  If \(\text{weight}(g) =
+2\), it's possible to rotate \(g\) in such a way that the former red child becomes the
+black root of the group, and the former black root becomes a red child on the opposite
+site; this rotation does not affect any other group than \(g\).
 
 In order to preserve this invariant, inserting a node into a red-black-tree must not add
 a new group to the tree (except at the very root where the addition affects all paths
