@@ -19,11 +19,17 @@
 A red-black-tree is a self-balancing binary search tree. In addition to the invariants
 of the latter, the former garantees that the tree remains roughly balanced even when it
 receives input sequences that lead to pathological cases for normal binary search trees
-(sorted input).
+(sorted input). Specifically, the red-black-tree guarantees that the lengths of any two
+paths from the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most
+a factor of 2.
 
-How does it work? We assign one of two colors (traditionally red and black) to every
-node in the tree and execute the insertion and deletion operations in such a way that the
-following invariants hold:
+\[
+\forall \text{ leaf nodes } l_{i}, l_{j} \in T : \text{depth}(l_i) \leq 2 \cdot
+\text{depth}(l_j)
+\]
+
+It does so by assigning one of two colors (traditionally red and black) to
+every node and maintaining the following invariants:
 
 \begin{enumerate}[label=(\arabic*)]
 \item Every node is either red or black.
@@ -31,30 +37,25 @@ following invariants hold:
 \item All paths from the root to a leaf go through the same number of black nodes.
 \end{enumerate}
 
-Now, if \(b\) is the number of black nodes on every path from the root to a leaf, then
+If \(b\) is the number of black nodes on every path from the root to a leaf, then
 the shortest such path (which contains no red nodes at all) has a length of \(b\), and
 the longest such path (where black and red nodes alternate) has a length of
-\(2b\). In other words, a red-black-tree guarantees that the lengths of any two paths
-from the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most a
-factor of 2:
+\(2b\).)
 
-\[
-\forall \text{ leaf nodes } l_{i}, l_{j} \in T : \text{depth}(l_i) \leq 2 \cdot
-\text{depth}(l_j)
-\]
 
-In the following, let a \emph{group} of nodes in a red-black-tree denote either
-\emph{any black node together with all its red child nodes,} or the \emph{null-group}
-which contains no nodes at all.  A group that is not the null-group contains either 0,
-1, or 2 red child nodes.  If it contains 0 red child nodes, it consists of 1 node (the
-black root) and has 2 descendant groups (a). If it contains 1 red child node, it
-consists of 2 nodes (the black root and one red child) and it has 3 descendant groups
-(b). And if it contains 2 red child nodes, it consists of 3 nodes (the black root and
-one red child on either side) and it has 4 descendant groups (c). In the latter case the
-group is said to be \emph{full}. If a group contains 1 red child node, it is possible to
-rotate it in such a way that the former red child becomes the black root of the group,
-and the former black root becomes a red child on the opposite site; this rotation does
-not affect any descendant groups.
+In the following discussion, let a \emph{group} of nodes, \(g\), in a red-black-tree
+denote either \emph{any black node together with all its red child nodes,} or the
+\emph{null-group} which contains no nodes at all\footnote{Calling nothing a group
+simplifies a few arguments.}.
+
+The \emph{weight} of a group is the
+number of \emph{red} nodes it contains, obviously \(0 \leq \text{weight}(g) \leq 2\). If
+\(\text{weight}(g) = 0\), \(g\) is said to be \emph{empty}. If \(\text{weight}(g) = 2\),
+\(g\) is said to be \emph{full}.
+
+If \(\text{weight}(g) = 1\), it is possible to rotate \(g\) in such a way that the
+former red child becomes the black root of the group, and the former black root becomes
+a red child on the opposite site; this rotation does not affect any descendant groups.
 
 By invariant (2) we know that the nearest descendant nodes below a group must be black
 nodes, and as such they form the roots of groups themselves.  Thus we can rephrase
@@ -85,19 +86,102 @@ somewhere down the tree because that would violate invariant (3). Therefore inse
 not possible if the direct parent of the to-be-added node is part of a full group. The
 solution is to transform the group the parent belongs to in such a way that it contains
 at most one red node. Then we can add the new node as a red child to the group, after
-rotating it first if necessary.
+rotating it first if necessary. The following algorithm performs this operation on the
+group.
 
-How to transform a full group into a not-so-full group? It's possible to shift one
-node of a full group up into its ancestor group, provided the ancestor group is not
-full. That's then what we need to ensure: We start at the root, and in every group we
-walk through on the way down to the insertion position we make sure it's not a full
-group. Maybe in the next group further down we'll shift a node up, making the previous
-group full again, but that doesn't matter. We only ever care about the current group so
-when we arrive at our destination we can happily add a new node.
+\begin{small}
+\begin{verbatim}
+procedure decrease-weight(n):
+    p := parent of n
+    pp := grandparent of n
+    l, r := children of n
+
+    // assume that n is black and l, r are red
+
+    case 1: n is the root of the tree
+        recolor:
+            l, r: black
+
+    case 2: p is black
+        recolor:
+            n: red
+            l, r: black
+
+    case 3: p is red
+        case 3.1: pp has 1 red child (p)
+            case 3.1a: pp->p->n is right-right or left-left
+                right-right: rotate-left(pp)
+                left-left: rotate-right(pp)
+                recolor:
+                    pp: red
+                    p: black
+                    n: red
+                    l, r: black
+            case 3.1b: pp->p->n is right-left or left-right
+                right-left:
+                    rotate-right(p)
+                    rotate-left(pp)
+                left-right:
+                    rotate-left(p)
+                    rotate-right(pp)
+                recolor:
+                    pp: red
+                    l, r: black
+
+        case 3.2: pp has 2 red children
+            decrease-weight(pp)
+            decrease-weight(n) // try again
+\end{verbatim}
+\end{small}
+
+The actual insertion algorithm makes use of this.
+
+\begin{small}
+\begin{verbatim}
+procedure insert(n, v):
+    p := parent of n
+
+    if v = n.value:
+        return
+    else if v < n.value and n has a left child:
+        insert(n.left, v)
+        return
+    else if v > n.value and n has a right child:
+        insert(n.right, v)
+        return
+
+    case 1: n is black
+        if v < n.value:
+            n.left = new node(v, red)
+            n.left.parent = n
+        else:
+            n.right = new node(v, red)
+            n.right.parent = n
+
+    case 2: n is red
+        case 2.1: weight(p) = 2
+            decrease-weight(p)
+            // now n can be anywhere, go again:
+            insert(n, v)
+
+        case 2.2: weight(p) = 1
+            case 2.2.1: v < n.value and n = p.left
+                rotate-right(p)
+                n.left = new node(v, red)
+            case 2.2.2: v > n.value and n = p.right
+                rotate-left(p)
+                n.right = new node(v, red)
+            case 2.2.3: v < n.value and n = p.right
+                p.left = new node(v, red)
+                swap(p, p.left)
+            case 2.2.4: v > n.value and n = p.left
+                p.right = new node(v, red)
+                swap(p, p.right)
+\end{verbatim}
+\end{small}
 
 \subsection{Deletion}
-Deletion works similarly. Only, on the way down to the node we want to delete we ensure
-that every group we walk through is not an empty group.
+Deletion is only possible if the group we delete from is not empty.
 
 
 \end{document}

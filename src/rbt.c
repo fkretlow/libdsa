@@ -215,6 +215,15 @@ void _rbt_clear(_rbt *T)
     T->size = 0;
 }
 
+static inline unsigned short _rbt_group_weight(_rbt_node *n)
+{
+    assert(n->color == BLACK);
+    unsigned short w = 0;
+    if (n->left && n->left->color == RED) ++w;
+    if (n->right && n->right->color == RED) ++w;
+    return w;
+}
+
 static inline int _rbt_node_is_full_group(_rbt_node *n)
 {
     return n->color == BLACK
@@ -222,263 +231,162 @@ static inline int _rbt_node_is_full_group(_rbt_node *n)
            && n->right && n->right->color == RED;
 }
 
-int _rbt_node_make_space_in_group(_rbt *T, _rbt_node *n)
+static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
 {
-    /* debug("n = %d", *(int*)n->data); */
-    /* This routine should never be called on a node that is not the root of a four-node. */
-    assert(_rbt_node_is_full_group(n));
-
-    int rc;
     _rbt_node *p = n->parent;
+    _rbt_node *pp = p ? p->parent : NULL;
+    _rbt_node *l = n->left;
+    _rbt_node *r = n->right;
 
-    if (!p) {
-        /* Case 1 (root): This is the root. Breaking up the four-node is as easy as
-         * painting both children black. */
-        assert(n == T->root);
-        n->left->color = n->right->color = BLACK;
+    assert(_rbt_group_weight(n) == 2);
+
+    /* Case 1: n is the root of the tree. */
+    if (n == T->root) {
+        /* debug("Case 1: n is the root"); */
+        l->color = r->color = BLACK;
     }
 
+    /* Case 2: p is black. */
     else if (p->color == BLACK) {
-        /* Case 2 (black): The parent is a black node. We simply move n up into the
-         * parent group by painting it red. Then both children can become black nodes.
-         * */
+        /* debug("Case 2: p is black"); */
         n->color = RED;
-        n->left->color = n->right->color = BLACK;
+        l->color = r->color = BLACK;
     }
 
+    /* Case 3: p is red. */
     else if (p->color == RED) {
-        /* Okay, the parent is red. Now things get a little more involved. We need
-         * pointers to the grandparent and to both of n's children. */
-        _rbt_node *pp = p->parent;
-        _rbt_node *cl = n->left;
-        _rbt_node *cr = n->right;
+        /* Case 3.1: pp has 1 red child (p) */
+        _rbt_node *ps = p == pp->left ? pp->right : pp->left;
+        assert(ps);
+        if (ps->color == BLACK) {
+            /* Case 3.1a: left-left or right-right ancestor chain. */
+            if (n == pp->right->right || n == pp->left->left) {
+                /* debug("Case 3.1a straight ancestor chain"); */
+                if (n == pp->right->right) {
+                    _rbt_node_rotate_left(T, pp, NULL);
+                } else {
+                    _rbt_node_rotate_right(T, pp, NULL);
+                }
+                pp->color = RED;
+                p->color = BLACK;
+                n->color = RED;
+                l->color = r->color = BLACK;
+            }
 
-        if (n == p->left && p == pp->left) {
-            /* Case 3 (red-left-left): Both n and its parent are left nodes. We rotate
-             * the parent right and recolor. */
-            rc = _rbt_node_rotate_right(T, pp, NULL);
-            check(rc == 0, "_rbt_node_rotate_right failed.");
-            p->color = BLACK;
-            pp->color = RED;
-            n->color = RED;
-            cl->color = cr->color = BLACK;
+            /* Case 3.1b: right-left or left-right ancestor chain. */
+            else {
+                /* debug("Case 3.1b: right-left or left-right ancestor chain"); */
+                if (n == pp->right->left) {
+                    _rbt_node_rotate_right(T, p, NULL);
+                    _rbt_node_rotate_left(T, pp, NULL);
+                } else {
+                    _rbt_node_rotate_left(T, p, NULL);
+                    _rbt_node_rotate_right(T, pp, NULL);
+                }
+                pp->color = RED;
+                l->color = r->color = BLACK;
+            }
+        }
 
-        } else if (n == p->left && p == pp->right) {
-            /* Case 4 (red-right-left): The parent is a right child and n is its left
-             * child. We need to rotate the parent right, then the grandparent left, and
-             * recolor. */
-            rc = _rbt_node_rotate_right(T, p, NULL);
-            check(rc == 0, "_rbt_node_rotate_right failed.");
-            rc = _rbt_node_rotate_left(T, pp, NULL);
-            check(rc == 0, "_rbt_node_rotate_left failed.");
-            p->color = pp->color = RED;
-            cl->color = cr->color = BLACK;
-
-        } else if (n == p->right && p == pp->right) {
-            /* Case 5 (red-right-right): Same as case 2 with opposite directions. */
-            rc = _rbt_node_rotate_left(T, pp, NULL);
-            check(rc == 0, "_rbt_node_rotate_left failed.");
-            p->color = BLACK;
-            pp->color = RED;
-            n->color = RED;
-            cl->color = cr->color = BLACK;
-
-        } else if (n == p->right && p == pp->left) {
-            /* Case 6 (red-left-right): Same as case 4 wit opposite directions. */
-            rc = _rbt_node_rotate_left(T, p, NULL);
-            check(rc == 0, "_rbt_node_rotate_left failed.");
-            rc = _rbt_node_rotate_right(T, pp, NULL);
-            check(rc == 0, "_rbt_node_rotate_right failed.");
-            p->color = pp->color = RED;
-            cl->color = cr->color = BLACK;
+        /* Case 3.2: pp has 2 red children */
+        else {
+            /* debug("Case 3.2: pp is full."); */
+            _rbt_group_decrease_weight(T, pp);
+            /* Things may have changed. Go again. */
+            _rbt_group_decrease_weight(T, n);
         }
     }
-
-    return 0;
-error:
-    return -1;
 }
 
-int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *value)
+static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
 {
-    /* debug("n = %d, value = %d", *(int*)n->data, *(int*)value); */
-    check_ptr(T);
-    check_ptr(n);
-    check_ptr(value);
-
-    assert((n->parent && (n == n->parent->left || n == n->parent->right))
-           || n == T->root);
-
-    int rc;
-
-    int comp = TypeInterface_compare(T->element_type, value, n->data);
-
-    /* On the path down to the insertion position we need to make sure that every group
-     * we walk through has space for the insertion. If the group with the current node n
-     * at the root is full, we can push n up into the group above, because we know that
-     * our direct ancestor group is not full, because we have just done the same thing
-     * to it that we are about to do here. */
-    if (_rbt_node_is_full_group(n)) {
-        ++_total;
-        rc = _rbt_node_make_space_in_group(T, n);
-        check(rc == 0, "_rbt_node_make_space_in_group failed.");
-        if ((comp > 0 && _rbt_node_is_full_group(n->right))
-                || (comp < 0 && _rbt_node_is_full_group(n->left))
-                || comp == 0) {
-            ++_needed;
-        }
-    }
-
-    if (comp < 0) {
-        if (n->left) {
-            return _rbt_node_insert(T, n->left, value);
-
-        } else {
-            if (n->color == BLACK) {
-                /* Case 1 (black-left): The parent is black so we can just insert a red
-                 * child. */
-                /* debug("Insert case 1: black-left") */
-                rc = _rbt_node_new(&n->left);
-                check(rc == 0, "_rbt_node_new failed.");
-                n->left->parent = n;
-                n->left->color = RED;
-
-                rc = _rbt_node_set(T, n->left, value);
-                check(rc == 0, "_rbt_node_set failed.");
-
-                ++T->size;
-
-            } else {
-                /* The parent is red and we are at a leaf position. The parent cannot
-                 * have another child, because that child would be black, which would
-                 * violate the same-number-of-black-nodes property. */
-                assert(!n->right);
-                if (n == n->parent->left) {
-                    /* Case 2 (red-left-left): The parent is a red left child, and we
-                     * need to insert a left child. We can't just insert because the new
-                     * child would be black and that would violate the same-number-of-
-                     * black-nodes property. But we know that our grandparent is not a
-                     * four-node so it can't have another red child. That means we can
-                     * rotate it.  Then our parent becomes a black node and we insert
-                     * the value into a left, red child. */
-                    /* debug("Insert case 2: red-left-left") */
-                    rc = _rbt_node_rotate_right(T, n->parent, &n);
-                    check(rc == 0, "_rbt_node_rotate_right failed.");
-                    n->color = BLACK;
-                    n->right->color = RED;
-
-                    rc = _rbt_node_new(&n->left);
-                    check(rc == 0, "_rbt_node_new failed.");
-                    n->left->parent = n;
-                    n->left->color = RED;
-
-                    rc = _rbt_node_set(T, n->left, value);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    ++T->size;
-
-                } else if (n == n->parent->right) {
-                    /* Case 3 (red-right-left): The parent is a red right child, and we
-                     * need to insert a left child. Again, we can't just insert for the
-                     * same reason as above. In this case we need to do two rotations
-                     * successively after inserting the new value: First, rotate the
-                     * parent right, then the grandparent left. In order to save calls,
-                     * we cheat and get the same effect by adding a left child to the
-                     * grandparent, which can't have another child (see above), set it
-                     * to the value of the grandparent, and set the grandparent to the
-                     * new value. */
-                    /* debug("Insert case 3: red-right-left") */
-                    rc = _rbt_node_new(&n->parent->left);
-                    check(rc == 0, "_rbt_node_new failed.");
-                    n->parent->left->parent = n->parent;
-                    n->parent->left->color = RED;
-
-                    rc = _rbt_node_set(T, n->parent->left, n->parent->data);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    rc = _rbt_node_set(T, n->parent, value);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    ++T->size;
-                }
-            }
-        }
-    } else if (comp > 0) {
-        if (n->right) {
-            return _rbt_node_insert(T, n->right, value);
-
-        } else {
-            if (n->color == BLACK) {
-                /* Case 4 (black-right): Same as case 1. */
-                /* debug("Insert case 4: black-right"); */
-                rc = _rbt_node_new(&n->right);
-                check(rc == 0, "_rbt_node_new failed.");
-                n->right->parent = n;
-                n->right->color = RED;
-
-                rc = _rbt_node_set(T, n->right, value);
-                check(rc == 0, "_rbt_node_set failed.");
-
-                ++T->size;
-
-            } else {
-                /* The parent is red and we are at a leaf position. The parent cannot
-                 * have another child, because that child would be black, which would
-                 * violate the same-number-of-black-nodes property. */
-                assert(!n->right);
-                if (n == n->parent->right) {
-                    /* Case 5 (red-right-right): Same procedure as in case 2 above with
-                     * opposite directions */
-                    /* debug("Insert case 5: red-right-right"); */
-                    rc = _rbt_node_rotate_left(T, n->parent, &n);
-                    check(rc == 0, "_rbt_node_rotate_left failed.");
-                    n->color = BLACK;
-                    n->left->color = RED;
-
-                    rc = _rbt_node_new(&n->right);
-                    check(rc == 0, "_rbt_node_new failed.");
-                    n->right->parent = n;
-                    n->right->color = RED;
-
-                    rc = _rbt_node_set(T, n->right, value);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    ++T->size;
-
-                } else if (n == n->parent->left) {
-                    /* Case 6 (red-left-right): Same procedure as in case 3 above with
-                     * opposite directions. */
-                    /* debug("Insert case 6: red-left-right"); */
-                    rc = _rbt_node_new(&n->parent->right);
-                    check(rc == 0, "_rbt_node_new failed.");
-                    n->parent->right->parent = n->parent;
-                    n->parent->right->color = RED;
-
-                    rc = _rbt_node_set(T, n->parent->right, n->parent->data);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    rc = _rbt_node_set(T, n->parent, value);
-                    check(rc == 0, "_rbt_node_set failed.");
-
-                    ++T->size;
-                }
-            }
-        }
-    } else {
-        /* debug("Insert: value is already there."); */
+    /* debug("n = %d, v = %d", *(int*)n->data, *(int*)v); */
+    int comp = TypeInterface_compare(T->element_type, v, n->data);
+    if (comp == 0) {
         return 1;
+    } else if (comp < 0 && n->left) {
+        return _rbt_node_insert(T, n->left, v);
+    } else if (comp > 0 && n->right) {
+        return _rbt_node_insert(T, n->right, v);
     }
 
+    /* Case 1: n is black */
+    if (n->color == BLACK) {
+        if (comp < 0) {
+            /* debug("Case 1 left"); */
+            _rbt_node_new(&n->left);
+            _rbt_node_set(T, n->left, v);
+            n->left->parent = n;
+            n->left->color = RED;
+            ++T->size;
+        } else { /* comp > 0 */
+            /* debug("Case 1 right"); */
+            _rbt_node_new(&n->right);
+            _rbt_node_set(T, n->right, v);
+            n->right->parent = n;
+            n->right->color = RED;
+            ++T->size;
+        }
+    }
+
+    /* Case 2: n is red */
+    else {
+        _rbt_node *p = n->parent;
+
+        /* Case 2.1: p has 2 red children */
+        if (_rbt_group_weight(p) == 2) {
+            /* debug("Case 2.1 p is full"); */
+            _rbt_group_decrease_weight(T, p);
+            /* Now n may be elsewhere. Go again. */
+            return _rbt_node_insert(T, n, v);
+        }
+
+        /* Case 2.2: p has 1 red child (n) */
+        else { /* weight(p) = 0 is handled in case 1 */
+            if (comp < 0 && n == p->left) {
+                /* debug("Case 2.2 left-left"); */
+                _rbt_node_rotate_right(T, p, NULL);
+                _rbt_node_new(&n->left);
+                n->left->parent = n;
+                _rbt_node_set(T, n->left, v);
+                n->color = BLACK;
+                p->color = RED;
+                n->left->color = RED;
+            } else if (comp > 0 && n == p->right) {
+                /* debug("Case 2.2 right-right"); */
+                _rbt_node_rotate_left(T, p, NULL);
+                _rbt_node_new(&n->right);
+                n->right->parent = n;
+                _rbt_node_set(T, n->right, v);
+                n->color = BLACK;
+                p->color = RED;
+                n->right->color = RED;
+            } else if (comp < 0 && n == p->right) {
+                /* debug("Case 2.2 right-left"); */
+                _rbt_node_new(&p->left);
+                _rbt_node_set(T, p->left, p->data);
+                _rbt_node_set(T, p, v);
+                p->left->parent = p;
+                p->left->color = RED;
+            } else if (comp > 0 && n == p->left) {
+                /* debug("Case 2.2 left-right"); */
+                _rbt_node_new(&p->right);
+                _rbt_node_set(T, p->right, p->data);
+                _rbt_node_set(T, p, v);
+                p->right->parent = p;
+                p->right->color = RED;
+            }
+            ++T->size;
+        }
+    }
     return 0;
-error:
-    return -1;
 }
 
-int _rbt_insert(_rbt *T, const void *value)
+int _rbt_insert(_rbt *T, const void *v)
 {
-    /* debug("value = %d", *(int*)value); */
+    /* debug("v = %d", *(int*)v); */
     check_ptr(T);
-    check_ptr(value);
+    check_ptr(v);
     assert (!_rbt_invariant(T));
 
     int rc = 0;
@@ -486,12 +394,12 @@ int _rbt_insert(_rbt *T, const void *value)
     if (!T->root) {
         rc = _rbt_node_new(&T->root);
         check(rc == 0, "_rbt_node_new failed.");
-        rc = _rbt_node_set(T, T->root, value);
+        rc = _rbt_node_set(T, T->root, v);
         check(rc == 0, "_rbt_node_set failed.");
         T->root->color = BLACK;
         ++T->size;
     } else {
-        rc = _rbt_node_insert(T, T->root, value);
+        rc = _rbt_node_insert(T, T->root, v);
         check(rc >= 0, "_rbt_node_insert failed.");
     }
 

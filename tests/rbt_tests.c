@@ -167,31 +167,25 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    print_rbt_stats(&T, "After sorted insertion");
-
     v = -1;
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    for (int i = 0; i < N_VALUES / 2; ++i) {
+    /* for (int i = 0; i < N_VALUES / 2; ++i) {
         rc = _rbt_remove(&T, &i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
         rc = _rbt_has(&T, &v);
         test(rc == 0, "rc = %d (%d)" ,rc, 0);
-    }
-
-    print_rbt_stats(&T, "After removing half");
+    } */
 
     _rbt_clear(&T);
-
-    _needed = _total = 0;
 
     int values[N_VALUES] = { 0 };
     for (int i = 0; i < N_VALUES; ++i) {
         v = (int)rand() % MAX_VALUE;
         rc = _rbt_insert(&T, &v);
         test(rc >= 0, "_rbt_insert failed");
-        if (rc == 1) { /* The value was already there. */
+        if (rc == 1) {
             --i;
         } else {
             values[i] = v;
@@ -201,24 +195,15 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    print_rbt_stats(&T, "After random insertion");
-
-    debug("_rbt_node_make_space_in_group was necessary %d out of %d times, that's %.2f%%.",
-            _needed, _total, (double)_needed / (double)_total * 100.0);
-    _needed = _total = 0;
-
-    for (int i = 0; i < N_VALUES; ++i) {
-        /* debug("loop i = %d", i); */
+    /* for (int i = 0; i < N_VALUES; ++i) {
+        [>debug("loop i = %d", i);<]
         rc = _rbt_remove(&T, values + i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
         rc = _rbt_has(&T, values + i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
-    }
+    } */
 
     _rbt_clear(&T);
-
-    debug("_rbt_node_fill_empty_group was necessary %d out of %d times, that's %.2f%%.",
-            _needed, _total, (double)_needed / (double)_total * 100.0);
 
     return TEST_OK;
 }
