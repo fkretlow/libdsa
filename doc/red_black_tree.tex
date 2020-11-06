@@ -2,11 +2,17 @@
 
 \usepackage{algpseudocode}
 \usepackage{booktabs}
+\usepackage{caption}
 \usepackage{enumitem}
 \usepackage{fontspec}
+\usepackage{graphicx}
 \usepackage{mathtools}
 \usepackage{microtype}
+\usepackage{sectsty}
 \usepackage[table,xcdraw]{xcolor}
+
+\allsectionsfont{\sffamily}
+\captionsetup{font=small,labelfont={bf,sf},margin=1.5em}
 
 \title{Balanced Binary Search Trees}
 \author{Florian Kretlow}
@@ -31,48 +37,51 @@ red-black-tree.
 \item All paths from the root to a leaf go through the same number of black nodes.
 \end{enumerate}
 
-If \(b\) is the number of black nodes on every path from the root to a leaf, then
-the shortest such path (which contains no red nodes at all) has a length of \(b\), and
-the longest such path (where black and red nodes alternate) has a length of
-\(2b\). Thus the tree guarantees that the lengths of any two
-paths from the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most
-a factor of 2.
+If \(b\) is the number of black nodes on every path from the root to a leaf, then the
+shortest possible path from the root to a leaf (which contains no red nodes) has a
+length of \(b\), and the longest possible path (where black and red nodes alternate) has
+a length of \(2b\).  Thus the invariants ensure that the lengths of any two paths from
+the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most a factor of
+2.
 
 \[
 \forall \text{ leaf nodes } l_{i}, l_{j} \in T : \text{depth}(l_i) \leq 2 \cdot
 \text{depth}(l_j)
 \]
 
+The balance is weaker than in an AVL tree (where the difference between the heights of
+the left and right sub-trees of any sub-tree is at most 1). Consequently, operations on
+a red-black-tree require fewer tree rotations, so they’re faster. Both red-black-trees
+and AVL trees get, insert, and delete elements in logarithmic time (\(O(\log(n))\)).
+
 \subsection{Groups of Nodes}
-Let a \emph{group} of nodes in a red-black-tree denote either \emph{any black node
-together with all its direct red child nodes,} or the \emph{null-group} which contains
-no nodes at all\footnote{Calling nothing a group simplifies a few arguments.}.  Any node
-in a red-black-tree belongs to exactly one group: If we combine invariants 1 and 2 with
-this definition, we can infer that the nearest descendant nodes below a group must be
-black, and so they constitute roots of groups themselves.  We can rephrase invariant 3
-as follows:
+Let a \emph{group} of nodes in a red-black-tree denote \emph{any black node together
+with all its direct red child nodes.} Every node in a red-black-tree belongs to exactly
+one group: Every black node is the ‘head’ of its own group. Every red node belongs
+to the group of its black parent. Using the fact that every group contains exactly one
+black node, we can rephrase invariant 3 as follows:
 
 \begin{enumerate}[label=(\arabic*)]
 \setcounter{enumi}{2}
 \item All paths from the root to a leaf go through the same number of groups.
 \end{enumerate}
 
-The \emph{weight} of a group \(g\) is the number of nodes it contains, obviously \(0
-\leq \text{weight}(g) \leq 3\). The null-group has a weight of 0. If \(\text{weight}(g)
-= 1\), \(g\) is said to be \emph{empty:} it doesn't contain any red child nodes.  If
-\(\text{weight}(g) = 3\), \(g\) is said to be \emph{full:} it contains two red child
-nodes and it's not possible to add another node to the group.  If \(\text{weight}(g) =
-2\), it's possible to rotate \(g\) in such a way that the former red child becomes the
-black root of the group, and the former black root becomes a red child on the opposite
-site; this rotation does not affect any other group than \(g\).
+The \emph{weight} of a group \(g\) is the number of nodes it contains, obviously \(1
+\leq \text{weight}(g) \leq 3\). If \(\text{weight}(g) = 1\), \(g\) is said to be
+\emph{empty:} it doesn't contain any red child nodes.  If \(\text{weight}(g) = 3\),
+\(g\) is said to be \emph{full:} it contains two red child nodes and it's not possible
+to add another node to the group.  If \(\text{weight}(g) = 2\), it's possible to rotate
+\(g\) in such a way that the former red child becomes the black root of the group, and
+the former black root becomes a red child on the opposite site; this rotation does not
+affect any other group than \(g\).
 
-In order to preserve this invariant, inserting a node into a red-black-tree must not add
-a new group to the tree (except at the very root where the addition affects all paths
-equally). Likewise, deleting a node from the tree must not remove a group entirely
-(again, except at the root). The fact that groups can have variable numbers of red nodes
-provides us with enough flexibility though: We can shift nodes between groups, rotate
-sub-trees, and recolor nodes to make sure we have some leeway at the position where we
-need to insert or delete a node.
+\begin{figure}
+\begin{centering}
+    \includegraphics[scale=2]{img/groups.pdf}
+    \caption{Possible groups in a red-black-tree. The direct ancestor of the head of a
+    group can be both red and black. Every direct descendant below a group is black.}
+\end{centering}
+\end{figure}
 
 \subsection{Insertion}
 Insertion into a normal binary search tree is straightforward. You start at the root,
@@ -81,11 +90,11 @@ right if it is greater. When you've nowhere left to go (i.e. you'd need to go le
 there's no left child, or the other way around) you simply add the value at that
 position.
 
-Insertion into a red-black-tree works similarly but it must not add a new group
-somewhere down the tree because that would violate invariant 3. Therefore insertion is
-not possible if the direct parent of the to-be-added node is part of a full group. The
-solution is to reduce the weight of that group: If \(1 \leq \text{weight}(g) \leq 2\), it is
-always possible to add another node to \(g\).
+In order to preserve the invariants, inserting a node into a red-black-tree must not add
+a new group to the tree (except at the very root where the addition affects all paths
+equally).  Therefore insertion is not possible if the direct parent of the to-be-added
+node is part of a full group. The solution is to reduce the weight of that group: If \(
+\text{weight}(g) \leq 2\), it is possible to add a node to \(g\).
 
 \begin{small}
 \begin{verbatim}
@@ -173,7 +182,8 @@ procedure insert(n, v):
 \end{small}
 
 \subsection{Deletion}
-Deletion is only possible if the group we delete from is not empty.
+Deletion is only possible if the group we delete from is not empty. Likewise, deleting a node from the tree must not remove a group entirely
+(again, except at the root).
 
 \begin{small}
 \begin{verbatim}
