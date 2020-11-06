@@ -192,8 +192,8 @@ procedure increase-weight(n):
         // case 1.1: s is empty
         if weight(s) == 1:
             recolor:
-                p: red
-                n, s: black
+                p: black
+                n, s: red
 
         // case 1.2: s is not empty
         else:
@@ -241,41 +241,33 @@ procedure increase-weight(n):
                 n: red
                 outer child of s: black
 
+
 procedure delete(n, v):
-    if v < n.value and n has a left child:
-        delete(n.left, v)
-        return
-    else if v > n.value and n has a right child:
-        delete(n.right, v)
-        return
+    while v != n.value:
+        if v < n.value:
+            n = n.left
+        else if v > n.value:
+            n = n.right
+        if n == nil: return // not found
 
-    // case 1: n is empty and the root of the tree
-    if n is the root and weight(n) == 1:
-        remove n from the tree
-
-    // case 2: n is in a leaf position
-    if n is in a leaf position:
-        if n is black and weight(n) == 1:
-            increase-weight(n)
-
-        if n is black:
-            if n has a left child:
-                rotate-right(n)
-            else:
-                rotate-left(n)
-
-        remove n from the tree
-
-    // case 3: n is not in a leaf position
-    else:
+    if n is not in a leaf position:
         successor := n.right
         while successor has a left child:
             successor = successor.left
-        n.value = successor.value
-        delete(n.right, successor.value)
-        OR:
         swap(n, successor)
-        remove successor from the tree?
+        // now n is where successor was, in a leaf position
+
+    if n is black and not the root and weight(n) == 1:
+        increase-weight(n)
+
+    if n is black:
+        if n has a left child:
+            rotate-right(n)
+        else:
+            rotate-left(n)
+
+    remove n from the tree
+
 \end{verbatim}
 \end{small}
 

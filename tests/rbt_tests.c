@@ -7,7 +7,7 @@
 #include "test.h"
 #include "type_interface.h"
 
-#define MAX_VALUE 100000
+#define MAX_VALUE 10000
 #define N_VALUES 1000
 
 static _rbt T;
@@ -73,6 +73,7 @@ void print_rbt_stats(const _rbt *T, const char *header)
 
 int print_node(_rbt_node *n, void *nothing)
 {
+    nothing = nothing;
     printf("%d %s\n", *(int*)n->data, n->color == RED ? "R" : "B");
     return 0;
 }
@@ -171,12 +172,14 @@ int test_rbt_usage(void)
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    /* for (int i = 0; i < N_VALUES / 2; ++i) {
+    /* print_rbt_stats(&T, "sorted input"); */
+
+    for (int i = 0; i < N_VALUES / 2; ++i) {
         rc = _rbt_remove(&T, &i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
         rc = _rbt_has(&T, &v);
         test(rc == 0, "rc = %d (%d)" ,rc, 0);
-    } */
+    }
 
     _rbt_clear(&T);
 
@@ -195,13 +198,16 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    /* for (int i = 0; i < N_VALUES; ++i) {
-        [>debug("loop i = %d", i);<]
+    /* print_rbt_stats(&T, "unsorted input"); */
+    /* _rbt_traverse(&T, print_node, NULL); */
+
+    for (int i = 0; i < N_VALUES; ++i) {
+        /* debug("deleting unsorted values: loop i = %d", i); */
         rc = _rbt_remove(&T, values + i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
         rc = _rbt_has(&T, values + i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
-    } */
+    }
 
     _rbt_clear(&T);
 
@@ -211,14 +217,14 @@ int test_rbt_usage(void)
 int main(void)
 {
     test_suite_start();
-    run_test(test_rotations);
-    run_test(test_rbt_init);
 
     unsigned seed = (unsigned)time(NULL);
     /* unsigned seed = 1604388022; */
     srand(seed);
     debug("random seed was %u", seed);
 
+    run_test(test_rotations);
+    run_test(test_rbt_init);
     run_test(test_rbt_usage);
     test_suite_end();
 }

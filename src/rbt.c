@@ -88,6 +88,7 @@ error:
 /* static inline */
 void _rbt_node_delete(const _rbt *T, _rbt_node *n)
 {
+    /* We don't remove any edges here. */
     if (n) {
         if (n->data && T) {
             TypeInterface_destroy(T->element_type, n->data);
@@ -98,11 +99,11 @@ void _rbt_node_delete(const _rbt *T, _rbt_node *n)
 }
 
 /* static */
-int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *value)
+int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *v)
 {
     check_ptr(T);
     check_ptr(n);
-    check_ptr(value);
+    check_ptr(v);
 
     if (n->data) {
         TypeInterface_destroy(T->element_type, n->data);
@@ -111,7 +112,7 @@ int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *value)
         check_alloc(n->data);
     }
 
-    TypeInterface_copy(T->element_type, n->data, value);
+    TypeInterface_copy(T->element_type, n->data, v);
 
     return 0;
 error:
@@ -215,10 +216,12 @@ void _rbt_clear(_rbt *T)
     T->size = 0;
 }
 
+/* Return the weight of the group that contains n. n can be any node in the group. */
 static inline unsigned short _rbt_group_weight(_rbt_node *n)
 {
-    unsigned short w = 0;
-    if (n) ++w;
+    if (!n) return 0;
+    if (n->color == RED) n = n->parent;
+    unsigned short w = 1;
     if (n->left && n->left->color == RED) ++w;
     if (n->right && n->right->color == RED) ++w;
     return w;
@@ -305,7 +308,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
     /* debug("n = %d, v = %d", *(int*)n->data, *(int*)v); */
     int comp = TypeInterface_compare(T->element_type, v, n->data);
     if (comp == 0) {
-        return 1;
+        return 1; /* found it, nothing to do */
     } else if (comp < 0 && n->left) {
         return _rbt_node_insert(T, n->left, v);
     } else if (comp > 0 && n->right) {
@@ -411,16 +414,16 @@ error:
     return -1;
 }
 
-int _rbt_has(const _rbt *T, const void *value)
+int _rbt_has(const _rbt *T, const void *v)
 {
     check_ptr(T);
-    check_ptr(value);
+    check_ptr(v);
 
     _rbt_node *n = T->root;
     int comp;
 
     while (n) {
-        comp = TypeInterface_compare(T->element_type, value, n->data);
+        comp = TypeInterface_compare(T->element_type, v, n->data);
         if (comp > 0) {
             n = n->right;
         } else if (comp < 0) {
@@ -436,368 +439,170 @@ error:
     return -1;
 }
 
-static inline int _rbt_node_is_empty_group(_rbt_node *n)
+static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
 {
-    return n->color == BLACK
-           && (!n->left || n->left->color == BLACK)
-           && (!n->right || n->right->color == BLACK);
+    _rbt_node *p = n->parent;
+    _rbt_node *s = p ? (n == p->left ? p->right : p->left) : NULL;
+    _rbt_node *so = NULL; /* outer child of s */
+
+    /* Case 1: ancestor group is not empty. */
+    if (_rbt_group_weight(p) > 1) {
+        if (p->color == BLACK) {
+            if (n == p->right) {
+                _rbt_node_rotate_right(T, p, NULL);
+                s = p->left;
+            } else {
+                _rbt_node_rotate_left(T, p, NULL);
+                s = p->right;
+            }
+            p->parent->color = BLACK;
+            p->color = RED;
+        }
+
+        assert(p->color == RED);
+
+        /* Case 1.1: s is empty. */
+        if (_rbt_group_weight(s) == 1) {
+            p->color = BLACK;
+            n->color = s->color = RED;
+        }
+
+        /* Case 1.2: s is not empty. */
+        else {
+            /* Ensure that s has an outer child. */
+            if (s == p->left && (!s->left || s->left->color == BLACK)) {
+                _rbt_node_rotate_left(T, s, &s); /* Note that s is updated. */
+                so = s->left;
+                s->color = BLACK;
+                so->color = RED;
+            } else if (s == p->right && (!s->right || s->right->color == BLACK)) {
+                _rbt_node_rotate_right(T, s, &s); /* Note that s is updated. */
+                so = s->right;
+                s->color = BLACK;
+                so->color = RED;
+            } else {
+                so = n == p->right ? s->left : s->right;
+            }
+
+            if (n == p->right) {
+                _rbt_node_rotate_right(T, p, NULL);
+            } else {
+                _rbt_node_rotate_left(T, p, NULL);
+            }
+
+            p->color = BLACK;
+            n->color = s->color = RED;
+            so->color = BLACK;
+        }
+    }
+
+    /* Case 2: ancestor group is empty. */
+    else { /* _rbt_group_weight(p) <= 1 */
+
+        /* Case 2.1: s is empty. */
+        if (_rbt_group_weight(s) == 1) {
+            if (p == T->root) {
+                n->color = s->color = RED;
+            } else {
+                _rbt_group_increase_weight(T, p);
+                return _rbt_group_increase_weight(T, n);
+            }
+        }
+
+        /* Case 2.2: s is not empty. Like 1.2 with different color changes. */
+        else { /* _rbt_group_weight(s) > 1 */
+            /* Ensure that s has an outer child. */
+            if (s == p->left && (!s->left || s->left->color == BLACK)) {
+                _rbt_node_rotate_left(T, s, &s); /* Note that s is updated. */
+                so = s->left;
+                s->color = BLACK;
+                so->color = RED;
+            } else if (s == p->right && (!s->right || s->right->color == BLACK)) {
+                _rbt_node_rotate_right(T, s, &s); /* Note that s is updated. */
+                so = s->right;
+                s->color = BLACK;
+                so->color = RED;
+            } else {
+                so = n == p->right ? s->left : s->right;
+            }
+
+            if (n == p->right) {
+                _rbt_node_rotate_right(T, p, NULL);
+            } else {
+                _rbt_node_rotate_left(T, p, NULL);
+            }
+
+            n->color = RED;
+            so->color = BLACK;
+        }
+    }
 }
 
-int _rbt_node_fill_group(_rbt *T, _rbt_node *n)
+int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
 {
-    /* debug("n = %d", *(int*)n->data); */
-    /* This routine should never be called on a node with any red children. */
-    assert(_rbt_node_is_empty_group(n));
+    int comp;
+    for ( ;; ) {
+        comp = TypeInterface_compare(T->element_type, v, n->data);
+        if (!n) return 0;           /* not found */
+        else if (comp == 0) break;  /* found, go on */
+        else if (comp < 0) n = n->left;
+        else if (comp > 0) n = n->right;
+    }
 
-    int rc = -1;
-    _rbt_node *p = n->parent;
-    assert(p || n == T->root);
-    _rbt_node *s = NULL; /* The sibling node. */
+    if (n->left && n->right) {
+        /* n is not in a leaf position. Swap with a node that is. */
+        _rbt_node *succ = n->right;
+        while (succ->left) succ = succ->left;
+        /* succ->data isn't needed for the deletion. Set it to NULL so the value isn't
+         * destroyed. This way we save a call to the value copy constructor. */
+        n->data = succ->data;
+        succ->data = NULL;
+        n = succ;
+    }
+
+    assert(!n->right || !n->left);
+
+    if (n->color == BLACK && n != T->root && _rbt_group_weight(n) == 1) {
+        _rbt_group_increase_weight(T, n);
+        assert(_rbt_group_weight(n) > 1);
+    }
+
+    if (n->color == BLACK) {
+        if (n->left) {
+            _rbt_node_rotate_right(T, n, NULL);
+            n->color = RED;
+            n->parent->color = BLACK;
+        } else if (n->right) {
+            _rbt_node_rotate_left(T, n, NULL);
+            n->color = RED;
+            n->parent->color = BLACK;
+        }
+    }
 
     if (n == T->root) {
-        /* debug("n is the root"); */
-        if (n->left && _rbt_node_is_empty_group(n->left)
-                && n->right &&  _rbt_node_is_empty_group(n->right)) {
-            /* debug("transforming 3*black at the root"); */
-            /* Handle the case of an empty group at the root of the tree where both
-             * descendant groups are also empty. I.o.w. three black nodes at the top. */
-            n->left->color = n->right->color = RED;
-        }
-        /* n is the root and it's an empty group. But we don't know at this point in
-         * which direction we'll move. We'll need to handle the case of an empty root
-         * group as a direct ancestor later. */
-        return 0;
+        T->root = NULL;
+    } else if (n == n->parent->left) {
+        n->parent->left = NULL;
+    } else {
+        n->parent->right = NULL;
     }
+    _rbt_node_delete(T, n);
+    --T->size;
 
-    if (n == p->right) {
-        /* debug("right child"); */
-        s = p->left;
-        /* debug("p->color = %d, s->color = %d, n->color = %d", p->color, s->color, n->color); */
-
-        if (p->color == BLACK) {
-            /* debug("black parent"); */
-            /* Assume that the direct ancestor group is not empty unless it is the root
-             * of the tree... */
-            assert(!_rbt_node_is_empty_group(p) || p == T->root);
-
-            if (p == T->root && _rbt_node_is_empty_group(p)) {
-                /* debug("ancestor group is empty and root"); */
-                /* ... in which case we need some special shenanigans to happen:
-                 * Assume that the sibling is black, and not empty because that case
-                 * would have been handled above. */
-                assert(s->left || s->right);
-
-                if (_rbt_node_is_full_group(s)) {
-                    /* Rotate the sibling left, then p right, and recolor. */
-                    rc = _rbt_node_rotate_left(T, s, NULL);
-                    check(rc == 0, "_rbt_node_rotate_left failed.");
-
-                    rc = _rbt_node_rotate_right(T, p, NULL);
-                    check(rc == 0, "_rbt_node_rotate_right failed.");
-
-                    /* p is no longer the root of the tree. Its successor, the former
-                     * right child of s, was originally red. */
-                    p->parent->color = BLACK;
-                    n->color = RED;
-
-                } else { /* The sibling has one red child. */
-                    assert((s->left && s->left->color == RED)
-                            || (s->right && s->right->color == RED));
-
-                    if (s->right && s->right->color == RED) {
-                        /* Make sure the sibling has an outer (i.e. left) red child. */
-                        rc = _rbt_node_rotate_left(T, s, &s);
-                        check(rc == 0, "_rbt_node_rotate_left failed.");
-
-                        /* Note that s has been updated to hold the new sibling. */
-                        s->color = BLACK;
-                        s->left->color = RED;
-                    }
-
-                    assert(s->left && s->left->color == RED);
-                    rc = _rbt_node_rotate_right(T, p, NULL);
-                    check(rc == 0, "_rbt_node_rotate_right failed.");
-
-                    /* Now s is at the root of the tree and it's p's parent. */
-                    assert(s == p->parent);
-                    s->left->color = BLACK;
-                    n->color = RED;
-                }
-                /* End of the special root case. Ooof! */
-                return 0; // ???
-
-            } else {
-                /* Black parent, but it's not an empty group: The sibling is red.
-                 * Prepare for the actual happening below by rotating the ancestor group
-                 * so the parent node becomes red. */
-                rc = _rbt_node_rotate_right(T, p, NULL);
-                check(rc == 0, "_rbt_node_rotate_right failed.");
-                p->parent->color = BLACK;
-                p->color = RED;
-            }
-        } /* endif p->color == BLACK */
-
-        /* Now we are guaranteed to have a red parent. */
-        assert(p->color == RED);
-        assert(p == n->parent);
-        s = p->left;
-
-        if (_rbt_node_is_empty_group(s)) {
-            /* debug("sibling is an empty group"); */
-            /* The sibling is an empty group, too. We combine the red parent and both
-             * the sibling and the current node into a single full group by just
-             * inverting the colors. */
-            p->color = BLACK;
-            s->color = n->color = RED;
-
-        } else {
-            /* debug("sibling has red children"); */
-            if (!s->left || s->left->color == BLACK) {
-                /* debug("sibling has no left red child"); */
-                /* The sibling has no outer (left) red child. We need to rotate it
-                 * inwards first. */
-                rc = _rbt_node_rotate_left(T, s, &s);
-                check(rc == 0, "_rbt_node_rotate_left failed.");
-                assert(s == p->left);
-                /* Note that s has been updated to hold the new left sibling. */
-                s->color = BLACK;
-                s->left->color = RED;
-            }
-
-            rc = _rbt_node_rotate_right(T, p, NULL);
-            check(rc == 0, "_rbt_node_rotate_right failed.");
-            p->parent->color = RED;
-            p->parent->left->color = p->color = BLACK;
-            n->color = RED;
-        }
-
-    } else { /* n == p->left */
-        /* debug("left child"); */
-        s = p->right;
-        /* debug("p->color = %d, s->color = %d, n->color = %d", p->color, s->color, n->color); */
-
-        if (p->color == BLACK) {
-            /* debug("black parent"); */
-            /* Assume that the direct ancestor group is not empty unless it is the root
-             * of the tree... */
-            assert(!_rbt_node_is_empty_group(p) || p == T->root);
-
-            if (p == T->root && _rbt_node_is_empty_group(p)) {
-                /* debug("ancestor group is empty and root"); */
-                /* ... in which case we need some special shenanigans to happen:
-                 * Assume that the sibling is black, and not empty because that case
-                 * would have been handled above. */
-                assert(s->left || s->right);
-
-                if (_rbt_node_is_full_group(s)) {
-                    /* debug("sibling is a full group"); */
-
-                    /* Rotate the sibling right, then p left, and recolor. */
-                    rc = _rbt_node_rotate_right(T, s, NULL);
-                    check(rc == 0, "_rbt_node_rotate_right failed.");
-
-                    rc = _rbt_node_rotate_left(T, p, NULL);
-                    check(rc == 0, "_rbt_node_rotate_left failed.");
-
-                    /* p is no longer the root of the tree. Its successor, the former
-                     * left child of s, was originally red. */
-                    p->parent->color = BLACK;
-                    n->color = RED;
-
-                } else { /* The sibling has one red child. */
-                    /* debug("sibling has a red child"); */
-                    if (s->left && s->left->color == RED) {
-                        /* debug("... the left one, need to rotate it"); */
-                        /* Make sure the sibling has an outer (i.e. right) red child. */
-                        rc = _rbt_node_rotate_right(T, s, &s);
-                        check(rc == 0, "_rbt_node_rotate_left failed.");
-
-                        /* Note that s has been updated to hold the new sibling. */
-                        s->color = BLACK;
-                        s->right->color = RED;
-                    }
-
-                    assert(s->right && s->right->color == RED);
-                    rc = _rbt_node_rotate_left(T, p, NULL);
-                    check(rc == 0, "_rbt_node_rotate_left failed.");
-
-                    /* Now s is at the root of the tree and it's p's parent. */
-                    s->right->color = BLACK;
-                    n->color = RED;
-                }
-                /* End of the special root case. */
-                return 0; // ???
-
-            } else {
-                /* Black parent, but it's not an empty group: The sibling is red.
-                 * Prepare for the actual happening below by rotating the ancestor group
-                 * so the parent node becomes red. */
-                /* debug("right sibling is red"); */
-                assert(s->color == RED);
-                rc = _rbt_node_rotate_left(T, p, NULL);
-                check(rc == 0, "_rbt_node_rotate_right failed.");
-                p->parent->color = BLACK;
-                p->color = RED;
-            }
-        } /* endif p->color == BLACK */
-
-        /* Now we are guaranteed to have a red parent. */
-        assert(p->color == RED);
-        assert(p == n->parent);
-        s = p->right;
-
-        if (_rbt_node_is_empty_group(s)) {
-            /* debug("sibling is an empty group"); */
-            /* The sibling is an empty group, too. We combine the red parent and both
-             * the sibling and the current node into a single full group by just
-             * inverting the colors. */
-            /* debug("p->color = %d, s->color = %d, n->color = %d", p->color, s->color, n->color); */
-            p->color = BLACK;
-            s->color = n->color = RED;
-
-        } else {
-            /* debug("sibling has red children"); */
-            if (!s->right || s->right->color == BLACK) {
-                /* debug("sibling has no right red child"); */
-                /* The sibling has no outer (right) red child. We need to rotate it
-                 * inwards first. */
-                assert(s == p->right);
-                rc = _rbt_node_rotate_right(T, s, &s);
-                check(rc == 0, "_rbt_node_rotate_right failed.");
-                assert(s == p->right);
-                /* Note that s has been updated to hold the new right sibling. */
-                s->color = BLACK;
-                s->right->color = RED;
-            }
-
-            rc = _rbt_node_rotate_left(T, p, NULL);
-            check(rc == 0, "_rbt_node_rotate_left failed.");
-            p->parent->color = RED;
-            p->parent->right->color = p->color = BLACK;
-            n->color = RED;
-        }
-    }
-
-    return 0;
-error:
-    return -1;
+    return 1; /* found it, deleted it */
 }
 
-static inline _rbt_node *_rbt_node_get_smallest_child(_rbt_node *n)
+int _rbt_remove(_rbt *T, const void *v)
 {
-    while (n->left) n = n->left;
-    return n;
-}
-
-static int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *value)
-{
-    /* debug("n = %d, v = %d, n->color = %d", *(int*)n->data, *(int*)value, n->color); */
+    /* debug("v = %d", *(int*)v); */
     check_ptr(T);
-    check_ptr(n);
-    check_ptr(value);
-
-    assert((n->parent && (n == n->parent->left || n == n->parent->right))
-           || n == T->root);
-
-    int rc;
-
-    int comp = TypeInterface_compare(T->element_type, value, n->data);
-
-    /* Make sure we have leeway for the deletion: Need at least one red node in every
-     * group we walk through. */
-    if (_rbt_node_is_empty_group(n)) {
-        ++_total;
-        rc = _rbt_node_fill_group(T, n);
-        check(rc == 0, "_rbt_node_fill_group failed.");
-        if ((comp > 0 && _rbt_node_is_empty_group(n->right))
-                || (comp < 0 && _rbt_node_is_empty_group(n->left))
-                || comp == 0) {
-            ++_needed;
-        }
-    }
-
-    assert((n->color == BLACK
-                && (((n->left && n->left->color == RED)
-                        || (n->right && n->right->color == RED))
-                    || n == T->root))
-           || (n->color == RED && n->parent->color == BLACK));
-
-    if (comp < 0) {
-        if (!n->left) {
-            return 0; /* Didn't find it. */
-        } else {
-            return _rbt_node_remove(T, n->left, value);
-        }
-
-    } else if (comp > 0) {
-        if (!n->right) {
-            return 0;
-        } else {
-            return _rbt_node_remove(T, n->right, value);
-        }
-
-    } else { /* comp == 0 */
-        if (!n->left || !n->right) {
-            /* This is a leaf node. We can probably just delete. */
-            if (n->color == BLACK) {
-                if (n == T->root && !n->left && !n->right) {
-                    /* Hurray, we're at the root and the last one. Easy. */
-                    _rbt_node_delete(T, n);
-                    T->root = NULL;
-                    --T->size;
-                    return 1;
-                }
-
-                /* We're not at the root and not red... need to rotate first. */
-                assert(n->left || n->right);
-                if (n->right) {
-                    rc = _rbt_node_rotate_left(T, n, NULL);
-                    check(rc == 0, "_rbt_node_rotate_left failed.");
-                } else {
-                    rc = _rbt_node_rotate_right(T, n, NULL);
-                    check(rc == 0, "_rbt_node_rotate_right failed.");
-                }
-                n->parent->color = BLACK;
-            }
-
-            if (n == T->root) {
-                T->root = NULL;
-            } else if (n == n->parent->left) {
-                n->parent->left = NULL;
-            } else { /* n == n->parent->right */
-                n->parent->right = NULL;
-            }
-            _rbt_node_delete(T, n);
-            --T->size;
-            return 1; /* Found it. */
-
-        } else {
-            /* Oh well... replace this value with the smallest greater value. Then
-             * delete the leaf node where that came from. */
-            _rbt_node *succ = _rbt_node_get_smallest_child(n->right);
-            check(succ && succ->data, "Failed to find a suitable successor.");
-
-            rc = _rbt_node_set(T, n, succ->data);
-            check(rc == 0, "_rbt_node_set failed.");
-
-            return _rbt_node_remove(T, n->right, succ->data);
-        }
-    }
-error:
-    return -1;
-}
-
-int _rbt_remove(_rbt *T, const void *value)
-{
-    /* debug("v = %d", *(int*)value); */
-    check_ptr(T);
-    check_ptr(value);
+    check_ptr(v);
     assert (!_rbt_invariant(T));
 
     int rc = 0;
 
     if (T->root) {
-        rc = _rbt_node_remove(T, T->root, value);
+        rc = _rbt_node_remove(T, T->root, v);
         check(rc >= 0, "_rbt_node_insert failed.");
     }
 
