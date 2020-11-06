@@ -133,7 +133,7 @@ procedure decrease-weight(n):
 procedure insert(n, v):
     p := parent of n
 
-    if v = n.value:
+    if v == n.value:
         return
     else if v < n.value and n has a left child:
         insert(n.left, v)
@@ -175,5 +175,108 @@ procedure insert(n, v):
 \subsection{Deletion}
 Deletion is only possible if the group we delete from is not empty.
 
+\begin{small}
+\begin{verbatim}
+procedure increase-weight(n):
+    p := parent of n
+    s := sibling of n
+
+    // case 1: ancestor group is not empty
+    if p is red or weight(p) >= 2:
+        if p is black:
+            if n == p.right:
+                rotate-right(p); s = p.left
+            else:
+                rotate-left(p); s = p.right
+
+        // case 1.1: s is empty
+        if weight(s) == 1:
+            recolor:
+                p: red
+                n, s: black
+
+        // case 1.2: s is not empty
+        else:
+            // make sure s has an outer child
+            if s == p.left and s.left is black:
+                rotate-left(s); s = p.left
+            else if s == p.right and s.right is black:
+                rotate-right(s); s = p.right
+
+            if n == p.right:
+                rotate-right(p)
+            else:
+                rotate-left(p)
+
+            recolor:
+                p: black
+                n, s: red
+                outer child of s: black
+
+    // case 2: ancestor group is empty
+    else:
+        // case 2.1: s is empty
+        if weight(s) == 1:
+            if p is root:
+                recolor:
+                    n, s: red
+            else:
+                increase-weight(p)
+                increase-weight(n)
+
+        // case 2.2: s is not empty
+        else:
+            // make sure s has an outer child
+            if s == p.left and s.left is black:
+                rotate-left(s); s = p.left
+            else if s == p.right and s.right is black:
+                rotate-right(s); s = p.right
+
+            if n == p.right:
+                rotate-right(p)
+            else:
+                rotate-left(p)
+
+            recolor:
+                n: red
+                outer child of s: black
+
+procedure delete(n, v):
+    if v < n.value and n has a left child:
+        delete(n.left, v)
+        return
+    else if v > n.value and n has a right child:
+        delete(n.right, v)
+        return
+
+    // case 1: n is empty and the root of the tree
+    if n is the root and weight(n) == 1:
+        remove n from the tree
+
+    // case 2: n is in a leaf position
+    if n is in a leaf position:
+        if n is black and weight(n) == 1:
+            increase-weight(n)
+
+        if n is black:
+            if n has a left child:
+                rotate-right(n)
+            else:
+                rotate-left(n)
+
+        remove n from the tree
+
+    // case 3: n is not in a leaf position
+    else:
+        successor := n.right
+        while successor has a left child:
+            successor = successor.left
+        n.value = successor.value
+        delete(n.right, successor.value)
+        OR:
+        swap(n, successor)
+        remove successor from the tree?
+\end{verbatim}
+\end{small}
 
 \end{document}
