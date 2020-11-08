@@ -20,7 +20,8 @@ clean:
 	rm -rf ./build ./bin ./**/*.o
 	rm -rf `find ./tests/ -type f ! -name "*.*"`
 	rm -rf `find . -type f -name "*.aux" -o -name "*.log" -o -name "*.pdf"`
-	rm -f ./**/*.gc*
+	rm -f `find . -type f -name "*.gc*" -o -name "*.info"`
+	rm -rf ./cov
 	ctags -R .
 
 build:
@@ -34,6 +35,11 @@ $(TEST): $(LIB)
 
 test: $(TEST)
 	sh ./tests/runtests.sh
+	mkdir -p cov
+	lcov --quiet --capture --directory . --output-file ./cov/coverage.info
+	genhtml ./cov/coverage.info --output-directory ./cov --quiet
+	rm -f `find . -type f -name "*.gc*" -o -name "*.info"`
+
 
 $(BIN): $(LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(BIN_SOURCES) $(LIB)

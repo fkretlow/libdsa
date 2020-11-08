@@ -5,7 +5,9 @@
 *.aux
 *.log
 *.gc*
+*.info
 tags
+/cov/
 /build/
 /tests/*
 !/tests/*.c

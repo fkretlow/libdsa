@@ -196,7 +196,7 @@ int test_rbt_usage(void)
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    print_rbt_stats(&T, "sorted input");
+    /* print_rbt_stats(&T, "sorted input"); */
 
     for (int i = 0; i < N_VALUES / 2; ++i) {
         rc = _rbt_remove(&T, &i);
@@ -222,7 +222,7 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    print_rbt_stats(&T, "unsorted input");
+    /* print_rbt_stats(&T, "unsorted input"); */
     /* _rbt_traverse(&T, print_node, NULL); */
 
     for (int i = 0; i < N_VALUES; ++i) {
@@ -245,7 +245,7 @@ int main(void)
     unsigned seed = (unsigned)time(NULL);
     /* unsigned seed = 1604388022; */
     srand(seed);
-    debug("random seed was %u", seed);
+    /* debug("random seed was %u", seed); */
 
     run_test(test_rotations);
     run_test(test_rbt_init);

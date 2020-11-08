@@ -227,13 +227,6 @@ static inline unsigned short _rbt_group_weight(_rbt_node *n)
     return w;
 }
 
-static inline int _rbt_node_is_full_group(_rbt_node *n)
-{
-    return n->color == BLACK
-           && n->left && n->left->color == RED
-           && n->right && n->right->color == RED;
-}
-
 static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
 {
     _rbt_node *p = n->parent;
