@@ -1,5 +1,5 @@
-CFLAGS= -g -Wall -Wextra -I./src
-LDFLAGS= -L./build
+CFLAGS= -g -Wall -Wextra -I./src -coverage
+LDFLAGS= -L./build -coverage
 LDLIBS= -lm
 
 LIB_SOURCES=$(wildcard ./src/*.c)
@@ -20,6 +20,7 @@ clean:
 	rm -rf ./build ./bin ./**/*.o
 	rm -rf `find ./tests/ -type f ! -name "*.*"`
 	rm -rf `find . -type f -name "*.aux" -o -name "*.log" -o -name "*.pdf"`
+	rm -f ./**/*.gc*
 	ctags -R .
 
 build:

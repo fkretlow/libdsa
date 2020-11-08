@@ -34,8 +34,6 @@ struct rbt_stats {
     size_t shortest;
 };
 
-static struct rbt_stats stats;
-
 int _rbt_node_get_stats(_rbt_node *n, void *stats)
 {
     struct rbt_stats *s = stats;

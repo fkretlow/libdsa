@@ -4,6 +4,7 @@
 *.txt
 *.aux
 *.log
+*.gc*
 tags
 /build/
 /tests/*
