@@ -245,28 +245,3 @@ unsigned long String_hash(const String s)
 {
     return jenkins_hash((s)->data, (s)->size);
 }
-
-void _string_ptr_copy(void *dest, const void *src)
-{
-    *(String *)dest = String_copy(*(String *)src);
-}
-
-void _string_ptr_delete(void *s) { String_delete(*(String *)s); }
-
-int _string_ptr_compare(const void *s1, const void *s2)
-{
-    return String_compare(*(String *)s1, *(String *)s2);
-}
-
-unsigned long _string_ptr_hash(const void *s)
-{
-    return jenkins_hash((*(String *)s)->data, (*(String *)s)->size);
-}
-
-TypeInterface String_type = {
-    sizeof(String),
-    _string_ptr_copy,
-    _string_ptr_delete,
-    _string_ptr_compare,
-    _string_ptr_hash
-};

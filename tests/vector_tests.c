@@ -8,14 +8,6 @@
 static Vector V;
 static int rc;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_vector_new(void)
 {
     V = Vector_new(&int_type);

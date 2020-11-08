@@ -8,16 +8,6 @@
 #include "debug.h"
 #include "str.h"
 
-int compint(const void *a, const void *b)
-{
-    return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
-}
-
-int int_compare(const void *a, const void *b)
-{
-    return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
-}
-
 String serialize_int(const void *ip)
 {
     int i = *(int *)ip;
@@ -37,10 +27,10 @@ error:
 
 String serialize_string(const void *s)
 {
-    String out = String_from_cstr("'");
+    String out = String_from_cstr("\"");
     check(out != NULL, "Failed to create String for serialized string.");
     check(!String_append(out, *(String *)s), "Failed to append string to result string.");
-    check(!String_push_back(out, '\''), "Failed to append trailing ' to result string.");
+    check(!String_push_back(out, '"'), "Failed to append trailing ' to result string.");
     return out;
 error:
     if (out) String_delete(out);

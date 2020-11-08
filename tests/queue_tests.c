@@ -7,14 +7,6 @@
 static Queue Q;
 static int rc;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_queue_new(void)
 {
     Q = Queue_new(&int_type);

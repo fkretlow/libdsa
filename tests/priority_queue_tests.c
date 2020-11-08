@@ -11,14 +11,6 @@
 static PriorityQueue Q;
 static int rc, v1, v2;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_priority_queue_new(void)
 {
     Q = PriorityQueue_new(&int_type);

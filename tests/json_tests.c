@@ -6,14 +6,6 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_serialize_list_of_ints(void)
 {
     List L = List_new(&int_type);
@@ -46,7 +38,7 @@ int test_serialize_list_of_strings(void)
         List_push_back(L, &s);
     }
 
-    expected = String_from_cstr("['Haydn', 'Mozart', 'Beethoven']");
+    expected = String_from_cstr("[\"Haydn\", \"Mozart\", \"Beethoven\"]");
 
     json = List_to_json(L, serialize_string);
     test(json != NULL, "Failed to serialize list of strings.");

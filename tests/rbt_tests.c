@@ -14,17 +14,6 @@
 static _rbt T;
 static int rc;
 
-extern int _total;
-extern int _needed;
-
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 struct rbt_stats {
     size_t red;
     size_t black;

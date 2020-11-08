@@ -4,11 +4,11 @@
 #include "debug.h"
 #include "map.h"
 
-extern void *TypeInterface_allocate(TypeInterface *T, size_t n);
+/* extern void *TypeInterface_allocate(TypeInterface *T, size_t n);
 extern void TypeInterface_copy(TypeInterface *T, void *dest, const void *src);
 extern void TypeInterface_destroy(TypeInterface *T, void *obj);
 extern int TypeInterface_compare(TypeInterface *T, const void *a, const void *b);
-extern unsigned long TypeInterface_hash(TypeInterface *T, const void *obj);
+extern unsigned long TypeInterface_hash(TypeInterface *T, const void *obj); */
 
 static inline _map_node *_map_node_new(void)
 {

@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 #include "hash.h"
-#include "type_interface.h"
 
 #define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))
 #define STRING_MAX_SIZE 1024lu
@@ -37,7 +36,5 @@ int String_push_back(String s, const char c);
 int String_pop_back(String s, char *out);
 String String_concat(const String s1, const String s2);
 unsigned long String_hash(const String s);
-
-TypeInterface String_type;
 
 #endif // _str_h

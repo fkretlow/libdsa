@@ -7,14 +7,6 @@
 static Stack S;
 int rc;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_stack_new(void)
 {
     S = Stack_new(&int_type);

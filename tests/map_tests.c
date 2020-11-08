@@ -9,16 +9,6 @@
 static Map M;
 static int rc, key, value;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
-extern TypeInterface String_type;
-
 int test_map_new(void)
 {
     M = Map_new(&int_type, &int_type);

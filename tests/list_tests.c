@@ -8,14 +8,6 @@
 static List L;
 static int rc;
 
-static TypeInterface int_type = {
-    sizeof(int),
-    NULL,
-    NULL,
-    int_compare,
-    NULL
-};
-
 int test_list_new(void)
 {
     L = List_new(&int_type);

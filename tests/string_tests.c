@@ -4,7 +4,6 @@
 #include "type_interface.h"
 
 static int rc;
-extern TypeInterface String_type;
 
 int test_string_from_cstr(void)
 {
@@ -137,6 +136,8 @@ int test_string_type_interface(void)
 {
     String s1 = String_from_cstr("Debussy");
     String s2 = String_from_cstr("Debussy");
+
+    /* TypeInterface_print(&String_type, stdout, &s1); */
 
     rc = TypeInterface_compare(&String_type, &s1, &s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
