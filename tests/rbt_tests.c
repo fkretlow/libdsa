@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -29,6 +30,8 @@ struct rbt_stats {
     size_t black;
     size_t full;
     size_t empty;
+    size_t longest;
+    size_t shortest;
 };
 
 static struct rbt_stats stats;
@@ -51,23 +54,45 @@ int _rbt_node_get_stats(_rbt_node *n, void *stats)
         }
     }
 
+    if (!n->left || !n->right) {
+        size_t l = 1;
+        while (n->parent) {
+            n = n->parent;
+            ++l;
+        }
+        if (l < s->shortest) {
+            s->shortest = l;
+        } else if (l > s->longest) {
+            s->longest = l;
+        }
+    }
+
     return 0;
 }
 
 void print_rbt_stats(const _rbt *T, const char *header)
 {
-    struct rbt_stats s = { 0 };
+    struct rbt_stats s = {
+        .red = 0,
+        .black = 0,
+        .full = 0,
+        .empty = 0,
+        .longest = 0,
+        .shortest = SIZE_MAX
+    };
     _rbt_traverse(T, _rbt_node_get_stats, &s);
 
     printf("%s\n", "----------------------------------");
     if (header) printf("%s\n", header);
-    printf("%12s: %5lu\n", "nodes", T->size);
-    printf("%12s: %5lu (%.2f%%)\n",
+    printf("%-15s %5lu\n", "nodes", T->size);
+    printf("%-15s %5lu   %5.2f%%\n",
             "red nodes", s.red, (double)s.red / T->size * 100.0);
-    printf("%12s: %5lu (%.2f%%)\n",
+    printf("%-15s %5lu   %5.2f%%\n",
             "full groups", s.full, (double)s.full / s.black * 100.0);
-    printf("%12s: %5lu (%.2f%%)\n",
+    printf("%-15s %5lu   %5.2f%%\n",
             "empty groups", s.empty, (double)s.empty / s.black * 100.0);
+    printf("%-15s %5lu\n", "shortest path", s.shortest);
+    printf("%-15s %5lu\n", "longest path", s.longest);
     printf("%s\n", "----------------------------------");
 }
 
@@ -168,11 +193,12 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
+
     v = -1;
     rc = _rbt_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    /* print_rbt_stats(&T, "sorted input"); */
+    print_rbt_stats(&T, "sorted input");
 
     for (int i = 0; i < N_VALUES / 2; ++i) {
         rc = _rbt_remove(&T, &i);
@@ -198,7 +224,7 @@ int test_rbt_usage(void)
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    /* print_rbt_stats(&T, "unsorted input"); */
+    print_rbt_stats(&T, "unsorted input");
     /* _rbt_traverse(&T, print_node, NULL); */
 
     for (int i = 0; i < N_VALUES; ++i) {

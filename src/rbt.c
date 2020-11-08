@@ -542,9 +542,9 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
 {
     int comp;
     for ( ;; ) {
+        if (!n) return 0; /* not found */
         comp = TypeInterface_compare(T->element_type, v, n->data);
-        if (!n) return 0;           /* not found */
-        else if (comp == 0) break;  /* found, go on */
+        if (comp == 0) break; /* found, go on */
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;
     }
@@ -601,10 +601,7 @@ int _rbt_remove(_rbt *T, const void *v)
 
     int rc = 0;
 
-    if (T->root) {
-        rc = _rbt_node_remove(T, T->root, v);
-        check(rc >= 0, "_rbt_node_insert failed.");
-    }
+    if (T->root) rc = _rbt_node_remove(T, T->root, v);
 
     assert(!_rbt_invariant(T));
     return rc;

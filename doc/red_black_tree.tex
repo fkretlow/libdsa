@@ -52,7 +52,7 @@ the root to a leaf (i.e. the depths of any two leaf nodes) differ by at most a f
 The balance is weaker than in an AVL tree (where the difference between the heights of
 the left and right sub-trees of any sub-tree is at most 1). Consequently, operations on
 a red-black-tree require fewer tree rotations, so they’re faster. Both red-black-trees
-and AVL trees get, insert, and delete elements in logarithmic time (\(O(\log(n))\)).
+and AVL trees get, insert, and delete elements in logarithmic time (\(\Theta(\log n)\)).
 
 \subsection{Groups of Nodes}
 Let a \emph{group} of nodes in a red-black-tree denote \emph{any black node together
@@ -182,8 +182,9 @@ procedure insert(n, v):
 \end{small}
 
 \subsection{Deletion}
-Deletion is only possible if the group we delete from is not empty. Likewise, deleting a node from the tree must not remove a group entirely
-(again, except at the root).
+
+Deletion is only possible if the group we delete from is not empty. Likewise, deleting a
+node from the tree must not remove a group entirely (again, except at the root).
 
 \begin{small}
 \begin{verbatim}
