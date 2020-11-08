@@ -3,9 +3,6 @@
 #include "debug.h"
 #include "rbt.h"
 
-int _total = 0;
-int _needed = 0;
-
 /* Walk through all the nodes of the tree in ascending order. If at any point the
  * callback returns a non-zero integer, abort and return it. The parameter p is passed
  * to the callback. */
@@ -380,6 +377,19 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
     return 0;
 }
 
+/******************************************************************************
+ *
+ * int _rbt_insert(_rbt *T, const void *v)
+ *
+ * Insert an element with the value v into the tree T.
+ *
+ * Return values:
+ *      1: The element was found and not added.
+ *      0: The element was added.
+ *     -1: An error occured.
+ *
+ ******************************************************************************/
+
 int _rbt_insert(_rbt *T, const void *v)
 {
     /* debug("v = %d", *(int*)v); */
@@ -431,6 +441,18 @@ int _rbt_has(const _rbt *T, const void *v)
 error:
     return -1;
 }
+
+/***************************************************************************************
+ *
+ * static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
+ *
+ * Increase the weight of the group with the head n. It is assumed that n is the head of
+ * an empty group, i.o.w. n->color == BLACK && !n->left && !n->right.  After the
+ * function exits n can be both red or black.
+ *
+ * See ./doc/red_black_tree.pdf for a description of the algorithm.
+ *
+ **************************************************************************************/
 
 static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
 {
@@ -584,6 +606,19 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
 
     return 1; /* found it, deleted it */
 }
+
+/******************************************************************************
+ *
+ * int _rbt_remove(_rbt *T, const void *v)
+ *
+ * Remove the element with the value v from the tree T.
+ *
+ * Return values:
+ *      1: The element was found and deleted.
+ *      0: The element was not found.
+ *     -1: An error occured.
+ *
+ ******************************************************************************/
 
 int _rbt_remove(_rbt *T, const void *v)
 {
