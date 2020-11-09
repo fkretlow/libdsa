@@ -28,6 +28,7 @@ typedef struct _rbt {
 
 int _rbt_init(_rbt *T, TypeInterface *element_type);
 void _rbt_clear(_rbt *T);
+int _rbt_copy(_rbt *dest, const _rbt *src);
 
 // These functions return 1 if found, 0 if not found, -1 on error.
 int _rbt_insert(_rbt *T, const void *value);
@@ -36,7 +37,7 @@ int _rbt_has(const _rbt *T, const void *value);
 
 int _rbt_traverse(const _rbt *T, int (*f)(_rbt_node *n, void *p), void *p);
 
-int _rbt_node_new(_rbt_node **node_out);
+_rbt_node *_rbt_node_new(void);
 void _rbt_node_delete(const _rbt *T, _rbt_node *n);
 int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *value);
 int _rbt_node_rotate_left(_rbt *T, _rbt_node *n, _rbt_node **node_out);

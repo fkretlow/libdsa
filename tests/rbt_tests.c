@@ -8,8 +8,8 @@
 #include "test.h"
 #include "type_interface.h"
 
-#define MAX_VALUE 10000
-#define N_VALUES 1000
+#define MAX_VALUE 100
+#define N_VALUES 10
 
 static _rbt T;
 static int rc;
@@ -92,15 +92,25 @@ int print_node(_rbt_node *n, void *nothing)
 
 int test_rotations(void)
 {
-    _rbt_node *p, *n, *l, *ll, *lr, *r, *rl, *rr, *res;
-    test(!_rbt_node_new(&p), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&n), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&l), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&ll), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&lr), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&r), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&rl), "_rbt_node_new failed.");
-    test(!_rbt_node_new(&rr), "_rbt_node_new failed.");
+    _rbt_node *p = _rbt_node_new();
+    _rbt_node *n = _rbt_node_new();
+    _rbt_node *l = _rbt_node_new();
+    _rbt_node *ll = _rbt_node_new();
+    _rbt_node *lr = _rbt_node_new();
+    _rbt_node *r = _rbt_node_new();
+    _rbt_node *rl = _rbt_node_new();
+    _rbt_node *rr = _rbt_node_new();
+
+    _rbt_node *res;
+
+    test(p, "_rbt_node_new failed.");
+    test(n, "_rbt_node_new failed.");
+    test(l, "_rbt_node_new failed.");
+    test(ll, "_rbt_node_new failed.");
+    test(lr, "_rbt_node_new failed.");
+    test(r, "_rbt_node_new failed.");
+    test(rl, "_rbt_node_new failed.");
+    test(rr, "_rbt_node_new failed.");
 
     // construct the test tree
     p->left = n, n->parent = p;
@@ -227,6 +237,37 @@ int test_rbt_usage(void)
     return TEST_OK;
 }
 
+int test_rbt_copy(void)
+{
+    for (int i = 0; i < 4; ++i) {
+        _rbt_insert(&T, &i);
+    }
+
+    _rbt C = { 0 };
+    int rc = _rbt_copy(&C, &T);
+    test(rc == 0, "rc = %d (%d)", rc, 0);
+
+    _rbt_node *r = C.root;
+    test(r->color == BLACK, "r->color = %d (%d)", r->color, BLACK);
+    test(*(int*)r->data == 1, "r->data = %d (%d)", *(int*)r->data, 1);
+
+    _rbt_node *rl = r->left;
+    test(rl->color == BLACK, "rl->color = %d (%d)", rl->color, BLACK);
+    test(*(int*)rl->data == 0, "rl->data = %d (%d)", *(int*)rl->data, 0);
+
+    _rbt_node *rr = r->right;
+    test(rr->color == BLACK, "rr->color = %d (%d)", rr->color, BLACK);
+    test(*(int*)rr->data == 2, "rr->data = %d (%d)", *(int*)rr->data, 2);
+
+    _rbt_node *rrr = rr->right;
+    test(rrr->color == RED, "rrr->color = %d (%d)", rrr->color, RED);
+    test(*(int*)rrr->data == 3, "rrr->data = %d (%d)", *(int*)rrr->data, 3);
+
+    _rbt_clear(&C);
+    _rbt_clear(&T);
+    return TEST_OK;
+}
+
 int main(void)
 {
     test_suite_start();
@@ -239,5 +280,6 @@ int main(void)
     run_test(test_rotations);
     run_test(test_rbt_init);
     run_test(test_rbt_usage);
+    run_test(test_rbt_copy);
     test_suite_end();
 }

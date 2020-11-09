@@ -72,14 +72,9 @@ int _rbt_invariant(const _rbt *T)
 }
 
 /* static inline */
-int _rbt_node_new(_rbt_node **node_out)
+_rbt_node *_rbt_node_new(void)
 {
-    _rbt_node *n = calloc(1, sizeof(*n));
-    check_alloc(n);
-    *node_out = n;
-    return 0;
-error:
-    return -1;
+    return calloc(1, sizeof(_rbt_node));
 }
 
 /* static inline */
@@ -113,6 +108,46 @@ int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *v)
 
     return 0;
 error:
+    return -1;
+}
+
+/**************************************************************************************
+ *
+ * _rbt_node *_rbt_node_copy(const _rbt *T, const _rbt_node *n)
+ *
+ * Recursively copy the tree rooted at src to dest.
+ *
+ *************************************************************************************/
+
+int _rbt_node_copy(const _rbt *T, _rbt_node **dest, const _rbt_node *src)
+{
+    check_ptr(T);
+    if (src == NULL) {
+        *dest = NULL;
+        return 0;
+    }
+
+    int rc;
+
+    _rbt_node *c = _rbt_node_new();
+    check(c, "Failed to create new node.");
+
+    rc = _rbt_node_set(T, c, src->data);
+    check(rc == 0, "Failed to copy data to new node.");
+    c->color = src->color;
+
+    rc = _rbt_node_copy(T, &c->left, src->left);
+    check(rc == 0, "Failed to copy left subtree.");
+    if (c->left) c->left->parent = c;
+
+    rc = _rbt_node_copy(T, &c->right, src->right);
+    check(rc == 0, "Failed to copy right subtree.");
+    if (c->right) c->right->parent = c;
+
+    *dest = c;
+    return 0;
+error:
+    if (c) _rbt_node_delete(T, c);
     return -1;
 }
 
@@ -213,6 +248,39 @@ void _rbt_clear(_rbt *T)
     T->size = 0;
 }
 
+/**************************************************************************************
+ *
+ * int _rbt_copy(_rbt *dest, const _rbt *src)
+ *
+ * Recursively copy a tree from src to dest.
+ * Assumes that dest points to an initialized rbt.
+ *
+ *************************************************************************************/
+
+int _rbt_copy(_rbt *dest, const _rbt *src)
+{
+    check_ptr(dest);
+    check_ptr(src);
+    assert(!_rbt_invariant(src));
+
+    int rc;
+
+    if (dest->size > 0) _rbt_clear(dest);
+    dest->element_type = src->element_type;
+
+    if (src->size > 0) {
+        rc = _rbt_node_copy(dest, &dest->root, src->root);
+        check(rc == 0, "Failed to copy nodes.");
+        dest->root->parent = NULL;
+        dest->size = src->size;
+    }
+
+    assert(!_rbt_invariant(dest));
+    return 0;
+error:
+    return -1;
+}
+
 /* Return the weight of the group that contains n. n can be any node in the group. */
 static inline unsigned short _rbt_group_weight(_rbt_node *n)
 {
@@ -309,14 +377,14 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
     if (n->color == BLACK) {
         if (comp < 0) {
             /* debug("Case 1 left"); */
-            _rbt_node_new(&n->left);
+            n->left = _rbt_node_new();
             _rbt_node_set(T, n->left, v);
             n->left->parent = n;
             n->left->color = RED;
             ++T->size;
         } else { /* comp > 0 */
             /* debug("Case 1 right"); */
-            _rbt_node_new(&n->right);
+            n->right = _rbt_node_new();
             _rbt_node_set(T, n->right, v);
             n->right->parent = n;
             n->right->color = RED;
@@ -341,7 +409,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
             if (comp < 0 && n == p->left) {
                 /* debug("Case 2.2 left-left"); */
                 _rbt_node_rotate_right(T, p, NULL);
-                _rbt_node_new(&n->left);
+                n->left = _rbt_node_new();
                 n->left->parent = n;
                 _rbt_node_set(T, n->left, v);
                 n->color = BLACK;
@@ -350,7 +418,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
             } else if (comp > 0 && n == p->right) {
                 /* debug("Case 2.2 right-right"); */
                 _rbt_node_rotate_left(T, p, NULL);
-                _rbt_node_new(&n->right);
+                n->right = _rbt_node_new();
                 n->right->parent = n;
                 _rbt_node_set(T, n->right, v);
                 n->color = BLACK;
@@ -358,14 +426,14 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
                 n->right->color = RED;
             } else if (comp < 0 && n == p->right) {
                 /* debug("Case 2.2 right-left"); */
-                _rbt_node_new(&p->left);
+                p->left = _rbt_node_new();
                 _rbt_node_set(T, p->left, p->data);
                 _rbt_node_set(T, p, v);
                 p->left->parent = p;
                 p->left->color = RED;
             } else if (comp > 0 && n == p->left) {
                 /* debug("Case 2.2 left-right"); */
-                _rbt_node_new(&p->right);
+                p->right = _rbt_node_new();
                 _rbt_node_set(T, p->right, p->data);
                 _rbt_node_set(T, p, v);
                 p->right->parent = p;
@@ -400,8 +468,8 @@ int _rbt_insert(_rbt *T, const void *v)
     int rc = 0;
 
     if (!T->root) {
-        rc = _rbt_node_new(&T->root);
-        check(rc == 0, "_rbt_node_new failed.");
+        T->root = _rbt_node_new();
+        check(T->root != NULL, "_rbt_node_new failed.");
         rc = _rbt_node_set(T, T->root, v);
         check(rc == 0, "_rbt_node_set failed.");
         T->root->color = BLACK;
