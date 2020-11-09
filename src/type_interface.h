@@ -36,5 +36,6 @@ void TypeInterface_print(TypeInterface *T, FILE *stream, const void *obj);
 /* Predefined type interfaces: */
 TypeInterface String_type;
 TypeInterface int_type;
+TypeInterface pointer_type;
 
 #endif // _type_interface_h

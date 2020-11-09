@@ -9,7 +9,7 @@
 #include "type_interface.h"
 
 #define MAX_VALUE 1000
-#define N_VALUES 1000
+#define N_VALUES 100
 
 static _rbt T;
 static int rc;
@@ -83,7 +83,7 @@ void print_rbt_stats(_rbt *T, const char *header)
     printf("%s\n", "----------------------------------");
 }
 
-int print_node(_rbt_node *n, void *nothing)
+static int print_node(_rbt_node *n, void *nothing)
 {
     nothing = nothing;
     printf("%d %s\n", *(int*)n->data, n->color == RED ? "R" : "B");

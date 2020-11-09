@@ -64,20 +64,31 @@ error:
     return -1;
 }
 
-Stack Stack_new(TypeInterface *element_type)
+int _stack_init(_stack *S, TypeInterface *element_type)
 {
     check_ptr(element_type);
-
-    Stack S = malloc(sizeof(*S));
-    check_alloc(S);
 
     S->top = NULL;
     S->size = 0;
     S->element_type = element_type;
 
+    return 0;
+error:
+    return -1;
+}
+
+Stack Stack_new(TypeInterface *element_type)
+{
+    Stack S = malloc(sizeof(*S));
+    check_alloc(S);
+
+    int rc = _stack_init(S, element_type);
+    check(rc == 0, "Failed to initialize stack.");
     assert(!_stack_invariant(S));
+
     return S;
 error:
+    if (S) free(S);
     return NULL;
 }
 

@@ -104,3 +104,17 @@ TypeInterface int_type = {
     .hash = int_hash,
     .print = int_print
 };
+
+int pointer_compare(const void *a, const void *b)
+{
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+TypeInterface pointer_type = {
+    .size = sizeof(void*),
+    .copy = NULL,
+    .destroy = NULL,
+    .compare = pointer_compare,
+    .hash = NULL,
+    .print = NULL
+};

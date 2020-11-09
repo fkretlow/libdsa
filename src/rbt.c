@@ -50,7 +50,7 @@ static int _rbt_node_traverse_r(_rbt_node *n,
 
     if (n) {
         if (n->right) {
-            rc = _rbt_node_traverse(n->right, f, p);
+            rc = _rbt_node_traverse_r(n->right, f, p);
             if (rc != 0) return rc;
         }
 
@@ -58,7 +58,7 @@ static int _rbt_node_traverse_r(_rbt_node *n,
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = _rbt_node_traverse(n->left, f, p);
+            rc = _rbt_node_traverse_r(n->left, f, p);
             if (rc != 0) return rc;
         }
     }

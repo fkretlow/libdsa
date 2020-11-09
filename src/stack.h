@@ -26,6 +26,7 @@ typedef _stack *Stack;
 #define Stack_empty(S) ((S)->size == 0)
 
 Stack Stack_new(TypeInterface *element_type);
+int _stack_init(_stack *S, TypeInterface *element_type);
 void Stack_delete(Stack S);
 void Stack_clear(Stack S);
 
