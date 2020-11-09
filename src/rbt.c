@@ -638,6 +638,8 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
         while (succ->left) succ = succ->left;
         /* succ->data isn't needed for the deletion. Set it to NULL so the value isn't
          * destroyed. This way we save a call to the value copy constructor. */
+        TypeInterface_destroy(T->element_type, n->data);
+        free(n->data);
         n->data = succ->data;
         succ->data = NULL;
         n = succ;

@@ -8,8 +8,8 @@
 #include "test.h"
 #include "type_interface.h"
 
-#define MAX_VALUE 100
-#define N_VALUES 10
+#define MAX_VALUE 1000
+#define N_VALUES 1000
 
 static _rbt T;
 static int rc;
