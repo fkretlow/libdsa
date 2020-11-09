@@ -66,7 +66,7 @@ static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
  *
  * Create an exact copy of the larger set in linear time and traverse the smaller set,
  * inserting each of its elements into the copy. If m, n are the sizes of the larger and
- * the smaller set, respectively, this requires approximately m + n * log (m + n) steps.
+ * the smaller set respectively, this gives an upper bound of m + n * log (m + n) steps.
  *
  **************************************************************************************/
 
@@ -104,12 +104,17 @@ static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack)
  * The naive approach would be to create a new set, then traverse both sets and insert
  * every element into the new set. If m is the size of the larger set, and n of the
  * other one, that would require m + n insertions with a logarithmic number of steps
- * each, resulting in a total of approximately (m + n) * log n steps.
+ * each, resulting in an upper bound of (m + n) * log n steps.
  *
  * We trade space for time and create two stacks of pointers to data elements as an
  * in-between data structure in linear time. Then we walk through both stacks
  * simultaneously, comparing elements and inserting only elements that are in both
  * stacks. This gives us slightly fewer m + n + n * log n steps.
+ *
+ * TODO: The Stack data structure is a bad choice for this because of the memory
+ * overhead and bad memory locality of a linked list. For just pointers it's twice the
+ * amount of memory! Use a vector with pre-reserved capacity instead, or allocate raw
+ * arrays.
  *
  **************************************************************************************/
 
