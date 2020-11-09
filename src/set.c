@@ -27,6 +27,14 @@ void Set_delete(Set S)
     }
 }
 
+/***************************************************************************************
+ *
+ * Set Set_copy(Set S);
+ *
+ * Return an exact copy of the given set. Adapter for _rbt_copy.
+ *
+ **************************************************************************************/
+
 Set Set_copy(Set S)
 {
     Set C = Set_new(S->element_type);
@@ -34,23 +42,76 @@ Set Set_copy(Set S)
     return C;
 }
 
+/***************************************************************************************
+ *
+ * static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
+ *
+ * Callback for _rbt_traverse: Insert the data members in a red-black tree into the
+ * given other tree.
+ *
+ **************************************************************************************/
+
 static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
 {
     int rc = _rbt_insert(T, n->data);
     return rc >= 0 ? 0 : -1;
 }
 
+/***************************************************************************************
+ *
+ * Set Set_union(Set S1, Set S2);
+ *
+ * Return a new set that contains all elements that are in either of S1 and S2 or both,
+ * or NULL on error.
+ *
+ * Create an exact copy of the larger set in linear time and traverse the smaller set,
+ * inserting each of its elements into the copy. If m, n are the sizes of the larger and
+ * the smaller set, respectively, this requires approximately m + n * log (m + n) steps.
+ *
+ **************************************************************************************/
+
 Set Set_union(Set S1, Set S2)
 {
-    Set U = Set_copy(S1);
-    _rbt_traverse(S2, _copy_data_into_other_rbt, U);
+    Set larger = Set_size(S1) > Set_size(S2) ? S1 : S2;
+    Set smaller = larger == S1 ? S2 : S1;
+
+    Set U = Set_copy(larger);
+    _rbt_traverse(smaller, _copy_data_into_other_rbt, U);
     return U;
 }
+
+/***************************************************************************************
+ *
+ * static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack);
+ *
+ * Callback for _rbt_traverse: Push pointers to the data elements in a red-black tree
+ * onto the given stack.
+ *
+ **************************************************************************************/
 
 static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack)
 {
     return Stack_push(stack, &n->data);
 }
+
+/***************************************************************************************
+ *
+ * Set Set_intersection(Set S1, Set S2);
+ *
+ * Return a new set that contains all elements that are in both S1 and S2
+ * or NULL on error.
+ *
+ * The naive approach would be to create a new set, then traverse both sets and insert
+ * every element into the new set. If m is the size of the larger set, and n of the
+ * other one, that would require m + n insertions with a logarithmic number of steps
+ * each, resulting in a total of approximately (m + n) * log n steps.
+ *
+ * We trade space for time and create two stacks of pointers to data elements as an
+ * in-between data structure in linear time. Then we walk through both stacks
+ * simultaneously, comparing elements and inserting only elements that are in both
+ * stacks. This gives us slightly fewer m + n + n * log n steps.
+ *
+ **************************************************************************************/
 
 Set Set_intersection(Set S1, Set S2)
 {

@@ -83,12 +83,12 @@ void print_rbt_stats(_rbt *T, const char *header)
     printf("%s\n", "----------------------------------");
 }
 
-static int print_node(_rbt_node *n, void *nothing)
+/* static int print_node(_rbt_node *n, void *nothing)
 {
     nothing = nothing;
     printf("%d %s\n", *(int*)n->data, n->color == RED ? "R" : "B");
     return 0;
-}
+} */
 
 int test_rotations(void)
 {
