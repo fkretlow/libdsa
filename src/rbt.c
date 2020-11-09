@@ -3,9 +3,21 @@
 #include "debug.h"
 #include "rbt.h"
 
-/* Walk through all the nodes of the tree in ascending order. If at any point the
- * callback returns a non-zero integer, abort and return it. The parameter p is passed
- * to the callback. */
+/***************************************************************************************
+ *
+ * static int _rbt_node_traverse(_rbt_node *n,
+ *                               int (*f)(_rbt_node *n, void *p),
+ *                               void *p);
+ * static int _rbt_node_traverse_r(_rbt_node *n,
+ *                                 int (*f)(_rbt_node *n, void *p),
+ *                                 void *p);
+ *
+ * Walk through all the nodes of the sub-tree with the root n in ascending/descending
+ * order.  Call f on every node with the additional parameter p. If f returns a non-zero
+ * integer, abort and return it.
+ *
+ **************************************************************************************/
+
 static int _rbt_node_traverse(_rbt_node *n,
                               int (*f)(_rbt_node *n, void *p),
                               void *p)
@@ -30,9 +42,51 @@ static int _rbt_node_traverse(_rbt_node *n,
     return rc;
 }
 
-int _rbt_traverse(const _rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
+static int _rbt_node_traverse_r(_rbt_node *n,
+                                int (*f)(_rbt_node *n, void *p),
+                                void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = _rbt_node_traverse(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = _rbt_node_traverse(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+/***************************************************************************************
+ *
+ * int _rbt_traverse(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p);
+ * int _rbt_traverse_r(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p);
+ *
+ * Walk through all the nodes of the tree in ascending/descending order.  Call f on
+ * every node with the additional parameter p. If f returns a non-zero integer, abort
+ * and return it.
+ *
+ **************************************************************************************/
+
+int _rbt_traverse(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
     if (T && T->root) {
         return _rbt_node_traverse(T->root, f, p);
+    }
+    return 0;
+}
+
+int _rbt_traverse_r(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
+    if (T && T->root) {
+        return _rbt_node_traverse_r(T->root, f, p);
     }
     return 0;
 }

@@ -57,7 +57,7 @@ int _rbt_node_get_stats(_rbt_node *n, void *stats)
     return 0;
 }
 
-void print_rbt_stats(const _rbt *T, const char *header)
+void print_rbt_stats(_rbt *T, const char *header)
 {
     struct rbt_stats s = {
         .red = 0,
