@@ -8,7 +8,7 @@
 
 #define MAX_VAL 1000
 
-static PriorityQueue Q;
+static PriorityQueue *Q;
 static int rc, v1, v2;
 
 int test_priority_queue_new(void)

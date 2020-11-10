@@ -8,7 +8,7 @@
 
 int test_serialize_list_of_ints(void)
 {
-    List L = List_new(&int_type);
+    List *L = List_new(&int_type);
     for (int i = 0; i < 8; ++i) {
         List_push_back(L, &i);
     }
@@ -27,7 +27,7 @@ int test_serialize_list_of_ints(void)
 
 int test_serialize_list_of_strings(void)
 {
-    List L = List_new(&String_type);
+    List *L = List_new(&String_type);
     String s, json, expected;
 
 

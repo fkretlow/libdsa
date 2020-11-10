@@ -2,24 +2,23 @@
 
 #include "set.h"
 #include "stack.h"
+#include "vector.h"
 
-Set Set_new(TypeInterface *element_type)
+Set *Set_new(TypeInterface *element_type)
 {
     check_ptr(element_type);
 
-    _rbt *S = malloc(sizeof(*S));
+    Set *S = malloc(sizeof(*S));
     check_alloc(S);
 
-    S->element_type = element_type;
-    S->size = 0;
-    S->root = NULL;
+    Set_initialize(S, element_type);
 
     return S;
 error:
     return NULL;
 }
 
-void Set_delete(Set S)
+void Set_delete(Set *S)
 {
     if (S) {
         _rbt_clear(S);
@@ -35,26 +34,11 @@ void Set_delete(Set S)
  *
  **************************************************************************************/
 
-Set Set_copy(Set S)
+Set *Set_copy(Set *S)
 {
-    Set C = Set_new(S->element_type);
+    Set *C = Set_new(S->element_type);
     _rbt_copy(C, S);
     return C;
-}
-
-/***************************************************************************************
- *
- * static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
- *
- * Callback for _rbt_traverse: Insert the data members in a red-black tree into the
- * given other tree.
- *
- **************************************************************************************/
-
-static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
-{
-    int rc = _rbt_insert(T, n->data);
-    return rc >= 0 ? 0 : -1;
 }
 
 /***************************************************************************************
@@ -70,28 +54,20 @@ static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
  *
  **************************************************************************************/
 
-Set Set_union(Set S1, Set S2)
+static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
 {
-    Set larger = Set_size(S1) > Set_size(S2) ? S1 : S2;
-    Set smaller = larger == S1 ? S2 : S1;
-
-    Set U = Set_copy(larger);
-    _rbt_traverse(smaller, _copy_data_into_other_rbt, U);
-    return U;
+    int rc = _rbt_insert(T, n->data);
+    return rc >= 0 ? 0 : -1;
 }
 
-/***************************************************************************************
- *
- * static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack);
- *
- * Callback for _rbt_traverse: Push pointers to the data elements in a red-black tree
- * onto the given stack.
- *
- **************************************************************************************/
-
-static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack)
+Set *Set_union(Set *S1, Set *S2)
 {
-    return Stack_push(stack, &n->data);
+    Set *larger = Set_size(S1) > Set_size(S2) ? S1 : S2;
+    Set *smaller = larger == S1 ? S2 : S1;
+
+    Set *U = Set_copy(larger);
+    Set_traverse(smaller, _copy_data_into_other_rbt, U);
+    return U;
 }
 
 /***************************************************************************************
@@ -111,70 +87,58 @@ static inline int _push_data_pointer_to_stack(_rbt_node *n, void *stack)
  * simultaneously, comparing elements and inserting only elements that are in both
  * stacks. This gives us slightly fewer m + n + n * log n steps.
  *
- * TODO: The Stack data structure is a bad choice for this because of the memory
- * overhead and bad memory locality of a linked list. For just pointers it's twice the
- * amount of memory! Use a vector with pre-reserved capacity instead, or allocate raw
- * arrays.
- *
  **************************************************************************************/
 
-Set Set_intersection(Set S1, Set S2)
+static inline int _push_data_pointer_to_vector(_rbt_node *n, void *v)
 {
+    return Vector_push_back(v, &n->data);
+}
+
+Set *Set_intersection(Set *S1, Set *S2)
+{
+    Set *I = NULL;
+    Vector V1, V2;
+    void *e1, *e2;
+    int comp;
+
     check_ptr(S1);
     check_ptr(S2);
     check(S1->element_type == S2->element_type, "Element types don't match.");
 
-    int rc = -1;
+    I = Set_new(S1->element_type);
+    Vector_initialize(&V1, &pointer_type);
+    Vector_initialize(&V2, &pointer_type);
 
-    Set I = Set_new(S1->element_type);
-    check(I != NULL, "Failed to create new set.");
+    Vector_reserve(&V1, Set_size(S1));
+    Vector_reserve(&V2, Set_size(S2));
 
-    _stack stack1, stack2;
-    rc = _stack_init(&stack1, &pointer_type);
-    check(rc == 0, "Failed to initialize first stack.");
+    Set_traverse_r(S1, _push_data_pointer_to_vector, &V1);
+    Set_traverse_r(S2, _push_data_pointer_to_vector, &V2);
 
-    rc = _stack_init(&stack2, &pointer_type);
-    check(rc == 0, "Failed to initialize second stack.");
+    Vector_pop_back(&V1, &e1);
+    Vector_pop_back(&V2, &e2);
 
-    rc = _rbt_traverse_r(S1, _push_data_pointer_to_stack, &stack1);
-    check(rc == 0, "Failed to copy data pointers from first set onto first stack.");
-
-    rc = _rbt_traverse_r(S2, _push_data_pointer_to_stack, &stack2);
-    check(rc == 0, "Failed to copy data pointers from second set onto second stack.");
-
-    void *v1, *v2;
-    rc = Stack_pop(&stack1, &v1);
-    check(rc == 0, "Failed to pop value from first stack.");
-    rc = Stack_pop(&stack2, &v2);
-    check(rc == 0, "Failed to pop value from second stack.");
-
-    int comp;
     for ( ;; ) {
-        comp = TypeInterface_compare(S1->element_type, v1, v2);
+        comp = TypeInterface_compare(S1->element_type, e1, e2);
         if (comp < 0) {
-            if (Stack_size(&stack1) == 0) break;
-            rc = Stack_pop(&stack1, &v1);
-            check(rc == 0, "Failed to pop value from first stack.");
+            if (Vector_size(&V1) == 0) break;
+            Vector_pop_back(&V1, &e1);
         } else if (comp > 0) {
-            if (Stack_size(&stack1) == 0) break;
-            rc = Stack_pop(&stack2, &v2);
-            check(rc == 0, "Failed to pop value from second stack.");
+            if (Vector_size(&V2) == 0) break;
+            Vector_pop_back(&V2, &e2);
         } else { /* comp == 0 */
-            rc = Set_insert(I, v1);
-            check(rc == 0, "Failed to insert value into new set.");
-
-            if (Stack_size(&stack1) == 0 || Stack_size(&stack2) == 0) break;
-            rc = Stack_pop(&stack1, &v1);
-            check(rc == 0, "Failed to pop value from first stack.");
-            rc = Stack_pop(&stack2, &v2);
-            check(rc == 0, "Failed to pop value from second stack.");
+            Set_insert(I, e1);
+            if (Vector_size(&V1) == 0 || Vector_size(&V2) == 0) break;
+            Vector_pop_back(&V1, &e1);
+            Vector_pop_back(&V2, &e2);
         }
     }
 
-    Stack_clear(&stack1);
-    Stack_clear(&stack2);
+    Vector_deallocate(&V1);
+    Vector_deallocate(&V2);
     return I;
 
 error:
+    if (I) Set_delete(I);
     return NULL;
 }

@@ -3,7 +3,7 @@
 #include "debug.h"
 #include "stack.h"
 
-static inline int _stack_invariant(const Stack S)
+static inline int Stack_invariant(const Stack *S)
 {
     if (S->top) check(S->size > 0, "Stack invariant violated: S->top && S->size == 0");
     return 0;
@@ -20,7 +20,7 @@ error:
     return NULL;
 }
 
-static inline void _stack_node_delete(const Stack S, _stack_node *n)
+static inline void _stack_node_delete(const Stack *S, _stack_node *n)
 {
     if (n) {
         if (n->data && S) {
@@ -31,7 +31,7 @@ static inline void _stack_node_delete(const Stack S, _stack_node *n)
     free(n);
 }
 
-static int _stack_node_set(const Stack S, _stack_node *n, const void *in)
+static int _stack_node_set(const Stack *S, _stack_node *n, const void *in)
 {
     check_ptr(S);
     check_ptr(n);
@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-static inline int _stack_node_get(const Stack S, _stack_node *n, void *out)
+static inline int _stack_node_get(const Stack *S, _stack_node *n, void *out)
 {
     check_ptr(S);
     check_ptr(n);
@@ -64,7 +64,7 @@ error:
     return -1;
 }
 
-int _stack_init(_stack *S, TypeInterface *element_type)
+int Stack_initialize(Stack *S, TypeInterface *element_type)
 {
     check_ptr(element_type);
 
@@ -77,14 +77,14 @@ error:
     return -1;
 }
 
-Stack Stack_new(TypeInterface *element_type)
+Stack *Stack_new(TypeInterface *element_type)
 {
-    Stack S = malloc(sizeof(*S));
+    Stack *S = malloc(sizeof(*S));
     check_alloc(S);
 
-    int rc = _stack_init(S, element_type);
+    int rc = Stack_initialize(S, element_type);
     check(rc == 0, "Failed to initialize stack.");
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
 
     return S;
 error:
@@ -92,7 +92,7 @@ error:
     return NULL;
 }
 
-void Stack_delete(Stack S)
+void Stack_delete(Stack *S)
 {
     if (S) {
         if (S->size) Stack_clear(S);
@@ -100,9 +100,9 @@ void Stack_delete(Stack S)
     }
 }
 
-void Stack_clear(Stack S)
+void Stack_clear(Stack *S)
 {
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
 
     _stack_node *cur;
     _stack_node *next;
@@ -115,10 +115,10 @@ void Stack_clear(Stack S)
     S->size = 0;
 }
 
-int Stack_push(Stack S, const void *in)
+int Stack_push(Stack *S, const void *in)
 {
     check_ptr(S);
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
     check_ptr(in);
 
     _stack_node *n = _stack_node_new();
@@ -129,16 +129,16 @@ int Stack_push(Stack S, const void *in)
     S->top = n;
     ++S->size;
 
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
     return 0;
 error:
     return -1;
 }
 
-int Stack_pop(Stack S, void *out)
+int Stack_pop(Stack *S, void *out)
 {
     check_ptr(S);
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
     check_ptr(out);
     check(S->size > 0, "Attempt to pop from empty stack.");
 
@@ -151,7 +151,7 @@ int Stack_pop(Stack S, void *out)
 
     _stack_node_delete(S, n);
 
-    assert(!_stack_invariant(S));
+    assert(!Stack_invariant(S));
     return 0;
 error:
     return -1;

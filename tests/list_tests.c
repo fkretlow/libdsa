@@ -5,7 +5,7 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static List L;
+static List *L;
 static int rc;
 
 int test_list_new(void)

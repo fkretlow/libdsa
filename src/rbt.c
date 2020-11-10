@@ -271,7 +271,7 @@ error:
     return -1;
 }
 
-int _rbt_init(_rbt *T, TypeInterface *element_type)
+int _rbt_initialize(_rbt *T, TypeInterface *element_type)
 {
     check_ptr(T);
     check_ptr(element_type);

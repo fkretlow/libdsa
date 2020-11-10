@@ -4,7 +4,7 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static Queue Q;
+static Queue *Q;
 static int rc;
 
 int test_queue_new(void)

@@ -4,7 +4,7 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static Stack S;
+static Stack *S;
 int rc;
 
 int test_stack_new(void)

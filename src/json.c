@@ -1,6 +1,6 @@
 #include "json.h"
 
-String List_to_json(const List L, serialize_f serialize)
+String List_to_json(const List *L, serialize_f serialize)
 {
     String temp = NULL;
     String json = NULL;
@@ -15,7 +15,7 @@ String List_to_json(const List L, serialize_f serialize)
     void *element;
 
     List_foreach(L, element) {
-        String temp = serialize(element);
+        temp = serialize(element);
         /* debug("%s, json='%s', temp='%s'", __func__, json->data, temp->data); */
         check(temp != NULL,
                 "Failed to serialize element at index %lu.", count);

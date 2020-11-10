@@ -13,24 +13,22 @@ typedef struct _stack_node {
     char *data;
 } _stack_node;
 
-typedef struct _stack {
+typedef struct Stack {
     _stack_node *top;
     size_t size;
     TypeInterface *element_type;
-} _stack;
-
-typedef _stack *Stack;
+} Stack;
 
 #define Stack_top(S) ((S)->top ? (void*)(S)->top->data : NULL)
 #define Stack_size(S) (S)->size
 #define Stack_empty(S) ((S)->size == 0)
 
-Stack Stack_new(TypeInterface *element_type);
-int _stack_init(_stack *S, TypeInterface *element_type);
-void Stack_delete(Stack S);
-void Stack_clear(Stack S);
+Stack *Stack_new(TypeInterface *element_type);
+int Stack_initialize(Stack *S, TypeInterface *element_type);
+void Stack_delete(Stack *S);
+void Stack_clear(Stack *S);
 
-int Stack_push(Stack S, const void *in);
-int Stack_pop(Stack S, void *out);
+int Stack_push(Stack *S, const void *in);
+int Stack_pop(Stack *S, void *out);
 
 #endif // _stack_h

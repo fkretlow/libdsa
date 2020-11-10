@@ -164,9 +164,9 @@ int test_rotations(void)
     return TEST_OK;
 }
 
-int test_rbt_init(void)
+int test_rbt_initialize(void)
 {
-    rc = _rbt_init(&T, &int_type);
+    rc = _rbt_initialize(&T, &int_type);
     test(rc == 0, "rc = %d (%d)", rc, 0);
     test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
     test(T.element_type->size == sizeof(int), "T.element_type->size = %lu (%lu)",
@@ -278,7 +278,7 @@ int main(void)
     /* debug("random seed was %u", seed); */
 
     run_test(test_rotations);
-    run_test(test_rbt_init);
+    run_test(test_rbt_initialize);
     run_test(test_rbt_usage);
     run_test(test_rbt_copy);
     test_suite_end();

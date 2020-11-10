@@ -7,7 +7,7 @@
 #define MAX_VALUE 1000
 #define N_VALUES 100
 
-static Set S;
+static Set *S;
 static int rc;
 
 /* static int print_node(_rbt_node *n, void *nothing)
@@ -58,8 +58,8 @@ int test_set_teardown(void)
 
 int test_set_union(void)
 {
-    Set S1 = Set_new(&int_type);
-    Set S2 = Set_new(&int_type);
+    Set *S1 = Set_new(&int_type);
+    Set *S2 = Set_new(&int_type);
 
     for (int i = 0; i < 10; ++i) {
         Set_insert(S1, &i);
@@ -68,7 +68,7 @@ int test_set_union(void)
         Set_insert(S2, &i);
     }
 
-    Set U = Set_union(S1, S2);
+    Set *U = Set_union(S1, S2);
     test(U != NULL, "Failed to create union of sets.");
 
     for (int i = 0; i < 15; ++i) {
@@ -84,8 +84,8 @@ int test_set_union(void)
 
 int test_set_intersection(void)
 {
-    Set S1 = Set_new(&int_type);
-    Set S2 = Set_new(&int_type);
+    Set *S1 = Set_new(&int_type);
+    Set *S2 = Set_new(&int_type);
 
     for (int i = 0; i < 10; ++i) {
         Set_insert(S1, &i);
@@ -95,7 +95,7 @@ int test_set_intersection(void)
         Set_insert(S2, &i);
     }
 
-    Set I = Set_intersection(S1, S2);
+    Set *I = Set_intersection(S1, S2);
     test(I != NULL, "Failed to create intersection of sets.");
 
     for (int i = 0; i < 4; ++i) {

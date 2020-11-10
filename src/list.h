@@ -14,32 +14,31 @@ typedef struct _list_node {
     char *data;
 } _list_node;
 
-typedef struct _list {
+typedef struct List {
     _list_node *first;
     _list_node *last;
     size_t size;
     TypeInterface *element_type;
-} _list;
-
-typedef _list *List;
+} List;
 
 #define List_first(L) ((L)->first ? (L)->first->data : NULL)
 #define List_last(L) ((L)->last ? (void*)((L)->last->data) : NULL)
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-List List_new(TypeInterface *element_type);
-void List_delete(List L);
-void List_clear(List L);
+int List_initialize(List *L, TypeInterface *element_type);
+List *List_new(TypeInterface *element_type);
+void List_delete(List *L);
+void List_clear(List *L);
 
-int List_get(const List L, const size_t i, void *out);
-int List_set(List L, const size_t i, const void *in);
-int List_insert(List L, const size_t i, const void *in);
-int List_remove(List L, const size_t i);
+int List_get(const List *L, const size_t i, void *out);
+int List_set(List *L, const size_t i, const void *in);
+int List_insert(List *L, const size_t i, const void *in);
+int List_remove(List *L, const size_t i);
 #define List_push_front(l, in) List_insert((l), 0, (in))
-int List_push_back(List L, const void *in);
-int List_pop_front(List L, void *out);
-int List_pop_back(List L, void *out);
+int List_push_back(List *L, const void *in);
+int List_pop_front(List *L, void *out);
+int List_pop_back(List *L, void *out);
 
 _list_node* __N;
 #define List_foreach(L, D) \

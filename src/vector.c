@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "vector.h"
 
-int _vector_init(_vector *V, TypeInterface *element_type)
+int Vector_initialize(Vector *V, TypeInterface *element_type)
 {
     check_ptr(V);
     check_ptr(element_type);
@@ -21,12 +21,13 @@ error:
     return -1;
 }
 
-Vector Vector_new(TypeInterface *element_type)
+Vector *Vector_new(TypeInterface *element_type)
 {
-    _vector *V = malloc(sizeof(*V));
+    Vector *V = malloc(sizeof(*V));
     check_alloc(V);
 
-    check(!_vector_init(V, element_type), "Failed to initialize new vector.");
+    int rc = Vector_initialize(V, element_type);
+    check(rc == 0, "Failed to initialize new vector.");
 
     return V;
 error:
@@ -35,7 +36,7 @@ error:
     return NULL;
 }
 
-void _vector_dealloc(_vector *V)
+void Vector_deallocate(Vector *V)
 {
     if (V && V->data) {
         Vector_clear(V);
@@ -43,16 +44,16 @@ void _vector_dealloc(_vector *V)
     }
 }
 
-void Vector_delete(Vector V)
+void Vector_delete(Vector *V)
 {
     if (V) {
-        _vector_dealloc(V);
+        Vector_deallocate(V);
         free(V);
     }
 }
 
 /* Reserve internal memory for at least `capacity` elements. */
-int Vector_reserve(Vector V, const size_t capacity)
+int Vector_reserve(Vector *V, const size_t capacity)
 {
     check_ptr(V);
 
@@ -85,7 +86,7 @@ error:
 
 /* Contract the internal storage if and as possible. Does not necessarily
  * shrink to the exact size. */
-int Vector_shrink_to_fit(Vector V)
+int Vector_shrink_to_fit(Vector *V)
 {
     check_ptr(V);
 
@@ -107,30 +108,33 @@ error:
     return -1;
 }
 
-void Vector_clear(Vector V)
+void Vector_clear(Vector *V)
 {
     if (V && V->data) {
         for (size_t i = 0; i < V->size; ++i) {
-            TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
+            TypeInterface_destroy(V->element_type,
+                                  V->data + i * TypeInterface_size(V->element_type));
         }
         V->size = 0;
         Vector_reserve(V, VECTOR_MIN_CAPACITY);
     }
 }
 
-int Vector_get(const Vector V, const size_t i, void *out)
+int Vector_get(const Vector *V, const size_t i, void *out)
 {
     check_ptr(V);
     check_ptr(out);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    TypeInterface_copy(V->element_type, out, V->data + i * TypeInterface_size(V->element_type));
+    TypeInterface_copy(V->element_type,
+                       out,
+                       V->data + i * TypeInterface_size(V->element_type));
     return 0;
 error:
     return -1;
 }
 
-int Vector_set(Vector V, const size_t i, const void *in)
+int Vector_set(Vector *V, const size_t i, const void *in)
 {
     check_ptr(V);
     check_ptr(in);
@@ -142,17 +146,20 @@ int Vector_set(Vector V, const size_t i, const void *in)
         }
         ++V->size;
     } else if (i < V->size) {
-        TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
+        TypeInterface_destroy(V->element_type,
+                              V->data + i * TypeInterface_size(V->element_type));
     }
 
-    TypeInterface_copy(V->element_type, V->data + i * TypeInterface_size(V->element_type), in);
+    TypeInterface_copy(V->element_type,
+                       V->data + i * TypeInterface_size(V->element_type),
+                       in);
 
     return 0;
 error:
     return -1;
 }
 
-int Vector_insert(Vector V, const size_t i, const void *in)
+int Vector_insert(Vector *V, const size_t i, const void *in)
 {
     check_ptr(V);
     check_ptr(in);
@@ -170,7 +177,9 @@ int Vector_insert(Vector V, const size_t i, const void *in)
                 (V->size - i) * TypeInterface_size(V->element_type));
     }
 
-    TypeInterface_copy(V->element_type, V->data + i * TypeInterface_size(V->element_type), in);
+    TypeInterface_copy(V->element_type,
+                       V->data + i * TypeInterface_size(V->element_type),
+                       in);
     ++V->size;
 
     return 0;
@@ -180,12 +189,13 @@ error:
 
 /* Delete the element at index i. All subsequent elements are moved, so any
  * pointers into the Vector become invalid. */
-int Vector_remove(Vector V, const size_t i)
+int Vector_remove(Vector *V, const size_t i)
 {
     check_ptr(V);
     check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
 
-    TypeInterface_destroy(V->element_type, V->data + i * TypeInterface_size(V->element_type));
+    TypeInterface_destroy(V->element_type,
+                          V->data + i * TypeInterface_size(V->element_type));
 
     if (i < V->size - 1) {
         /* Assume that nested types remain intact when only the top level data
@@ -209,12 +219,12 @@ error:
     return -1;
 }
 
-int Vector_push_back(Vector V, const void *in)
+int Vector_push_back(Vector *V, const void *in)
 {
     return Vector_set(V, V->size, in);
 }
 
-int Vector_pop_back(Vector V, void *out)
+int Vector_pop_back(Vector *V, void *out)
 {
     check_ptr(V);
     check(V->size > 0, "Attempt to pop_back from empty vector.");

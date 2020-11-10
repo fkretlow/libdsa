@@ -5,7 +5,7 @@
 #include "type_interface.h"
 #include "vector.h"
 
-static Vector V;
+static Vector *V;
 static int rc;
 
 int test_vector_new(void)

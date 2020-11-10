@@ -26,7 +26,7 @@ typedef struct _rbt {
 } _rbt;
 
 
-int _rbt_init(_rbt *T, TypeInterface *element_type);
+int _rbt_initialize(_rbt *T, TypeInterface *element_type);
 void _rbt_clear(_rbt *T);
 int _rbt_copy(_rbt *dest, const _rbt *src);
 
