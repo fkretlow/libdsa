@@ -8,10 +8,10 @@
 #include "debug.h"
 #include "str.h"
 
-String serialize_int(const void *ip)
+String *serialize_int(const void *ip)
 {
     int i = *(int *)ip;
-    String s = String_new();
+    String *s = String_new();
     check(s != NULL, "Failed to create String for serialized int.");
     size_t size = 1 * sizeof(char);
     if (i) size = (size_t)(floor(log10(i)) + 1) * sizeof(char);
@@ -25,11 +25,11 @@ error:
     return NULL;
 }
 
-String serialize_string(const void *s)
+String *serialize_string(const void *s)
 {
-    String out = String_from_cstr("\"");
+    String *out = String_from_cstr("\"");
     check(out != NULL, "Failed to create String for serialized string.");
-    check(!String_append(out, *(String *)s), "Failed to append string to result string.");
+    check(!String_append(out, (String *)s), "Failed to append string to result string.");
     check(!String_push_back(out, '"'), "Failed to append trailing ' to result string.");
     return out;
 error:

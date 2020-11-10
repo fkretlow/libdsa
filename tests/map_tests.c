@@ -75,19 +75,18 @@ int test_map_with_strings(void)
     M = Map_new(&String_type, &String_type);
     test(M != NULL, "M = NULL");
 
-    String k = String_from_cstr("name");
-    String v = String_from_cstr("Johann");
-    String v_out = NULL;
-    rc = Map_set(M, &k, &v);
+    String *k = String_from_cstr("name");
+    String *v = String_from_cstr("Johann");
+    String v_out;
+    rc = Map_set(M, k, v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
-    rc = Map_get(M, &k, &v_out);
+    rc = Map_get(M, k, &v_out);
     test(rc == 1, "rc = %d (%d)", rc, 1);
-    test(v_out != NULL, "v_out = NULL");
-    test(String_compare(v, v_out) == 0, "v != v_out");
+    test(String_compare(v, &v_out) == 0, "v != v_out");
 
     String_delete(k);
     String_delete(v);
-    String_delete(v_out);
+    String_deallocate(&v_out);
     Map_delete(M);
     return TEST_OK;
 }

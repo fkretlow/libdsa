@@ -7,7 +7,7 @@ static int rc;
 
 int test_string_from_cstr(void)
 {
-    String s = String_from_cstr("Hello World");
+    String *s = String_from_cstr("Hello World");
     test(s != NULL, "s = NULL");
     test(strncmp(s->data, "Hello World", 11) == 0, "wrong data");
     test(s->size == 11, "s->size = %lu (%lu)", s->size, 11lu);
@@ -18,9 +18,9 @@ int test_string_from_cstr(void)
 
 int test_string_compare(void)
 {
-    String s1 = String_from_cstr("foo");
-    String s2 = String_from_cstr("foo");
-    String s3 = String_from_cstr("bar");
+    String *s1 = String_from_cstr("foo");
+    String *s2 = String_from_cstr("foo");
+    String *s3 = String_from_cstr("bar");
 
     rc = String_compare(s1, s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
@@ -36,9 +36,9 @@ int test_string_compare(void)
 
 int test_string_assign(void)
 {
-    String s1 = String_from_cstr("Cesar");
-    String s2 = String_from_cstr("Augustus");
-    String s3 = String_from_cstr("");
+    String *s1 = String_from_cstr("Cesar");
+    String *s2 = String_from_cstr("Augustus");
+    String *s3 = String_from_cstr("");
 
     rc = String_assign(s3, s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
@@ -57,8 +57,8 @@ int test_string_assign(void)
 
 int test_string_copy(void)
 {
-    String s1 = String_from_cstr("Chopin");
-    String s2 = String_copy(s1);
+    String *s1 = String_from_cstr("Chopin");
+    String *s2 = String_copy(s1);
     test(s2 != NULL, "s2 == NULL");
     test(strncmp(s2->data, "Chopin", 7) == 0, "s2->data = '%s'", s1->data);
 
@@ -70,8 +70,8 @@ int test_string_copy(void)
 
 int test_string_append(void)
 {
-    String s1 = String_from_cstr("spicey");
-    String s2 = String_from_cstr(" bolognese");
+    String *s1 = String_from_cstr("spicey");
+    String *s2 = String_from_cstr(" bolognese");
 
     rc = String_append(s1, s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
@@ -92,9 +92,9 @@ int test_string_append(void)
 
 int test_string_concat(void)
 {
-    String s1 = String_from_cstr("abstract");
-    String s2 = String_from_cstr(" algebra");
-    String s3 = String_concat(s1, s2);
+    String *s1 = String_from_cstr("abstract");
+    String *s2 = String_from_cstr(" algebra");
+    String *s3 = String_concat(s1, s2);
     test(s3 != NULL, "s3 == NULL");
     test(strncmp(s3->data, "abstract algebra", 17) == 0, "s3->data = '%s'", s3->data);
 
@@ -107,7 +107,7 @@ int test_string_concat(void)
 
 int test_string_push_pop_back(void)
 {
-    String s = String_new();
+    String *s = String_new();
     char out;
 
     rc = String_push_back(s, 'a');
@@ -125,7 +125,7 @@ int test_string_push_pop_back(void)
 
 int test_string_hash(void)
 {
-    String s = String_from_cstr("Maurice Ravel");
+    String *s = String_from_cstr("Maurice Ravel");
     unsigned long hash = String_hash(s);
     test(hash != 0, "hash = 0");
     String_delete(s);
@@ -134,23 +134,24 @@ int test_string_hash(void)
 
 int test_string_type_interface(void)
 {
-    String s1 = String_from_cstr("Debussy");
-    String s2 = String_from_cstr("Debussy");
+    String *s1 = String_from_cstr("Debussy");
+    String *s2 = String_from_cstr("Debussy");
 
     /* TypeInterface_print(&String_type, stdout, &s1); */
 
-    rc = TypeInterface_compare(&String_type, &s1, &s2);
+    rc = TypeInterface_compare(&String_type, s1, s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
     unsigned long h1, h2;
-    h1 = TypeInterface_hash(&String_type, &s1);
-    h2 = TypeInterface_hash(&String_type, &s2);
+    h1 = TypeInterface_hash(&String_type, s1);
+    h2 = TypeInterface_hash(&String_type, s2);
     test(h1 == h2, "h1 != h2");
 
     String dest;
-    TypeInterface_copy(&String_type, &dest, &s1);
-    rc = String_compare(dest, s1);
+    TypeInterface_copy(&String_type, &dest, s1);
+    rc = String_compare(&dest, s1);
     test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(dest.size == s1->size, "dest->size != s1->size");
 
     TypeInterface_destroy(&String_type, &dest);
 

@@ -5,17 +5,31 @@
 #include "str.h"
 #include "type_interface.h"
 
-String String_new(void)
+int String_initialize(String *s)
 {
-    _string *s = calloc(1, sizeof(*s));
-    check_alloc(s);
-
-    return s;
-error:
-    return NULL;
+    if (s) {
+        s->data = NULL;
+        s->size = s->capacity = 0;
+    }
+    return 0;
 }
 
-void String_delete(String s)
+void String_deallocate(void *s)
+{
+    String *str = s;
+    if (s) {
+        if (str) free(str->data);
+        str->size = str->capacity = 0;
+    }
+}
+
+String *String_new(void)
+{
+    return calloc(1, sizeof(String));
+    /* calloc: fields are zero. */
+}
+
+void String_delete(String *s)
 {
     if (s->data) free(s->data);
     free(s);
@@ -23,7 +37,7 @@ void String_delete(String s)
 
 /* Allocate memory for at least `capacity` characters.
  * Does not shrink the internal storage. */
-int String_reserve(String s, const size_t capacity)
+int String_reserve(String *s, const size_t capacity)
 {
     check_ptr(s);
 
@@ -49,7 +63,7 @@ error:
 
 /* Shrink the internal storage if and as possible. Does not necessarily shrink
  * it to the exact size needed. */
-int String_shrink_to_fit(String s)
+int String_shrink_to_fit(String *s)
 {
     check_ptr(s);
 
@@ -73,16 +87,16 @@ error:
     return -1;
 }
 
-void String_clear(String s)
+void String_clear(String *s)
 {
     s->size = 0;
     s->data[0] = '\n';
     String_shrink_to_fit(s);
 }
 
-String String_copy(const String src)
+String *String_copy(const String *src)
 {
-    String s = NULL;
+    String *s = NULL;
     check_ptr(src);
 
     s = String_new();
@@ -96,7 +110,13 @@ error:
     return NULL;
 }
 
-int String_assign(String dest, const String src)
+void String_copy_to(void *dest, const void *src)
+{
+    String_initialize(dest);
+    String_assign(dest, src);
+}
+
+int String_assign(String *dest, const String *src)
 {
     check_ptr(dest);
     check_ptr(src);
@@ -112,7 +132,7 @@ error:
     return -1;
 }
 
-int String_assign_cstr(String dest, const char *cstr)
+int String_assign_cstr(String *dest, const char *cstr)
 {
     check_ptr(dest);
     check_ptr(cstr);
@@ -127,9 +147,9 @@ error:
     return -1;
 }
 
-String String_from_cstr(const char *cstr)
+String *String_from_cstr(const char *cstr)
 {
-    String s = NULL;
+    String *s = NULL;
     check_ptr(cstr);
 
     s = String_new();
@@ -143,17 +163,14 @@ error:
     return NULL;
 }
 
-int String_compare(const String s1, const String s2)
+int String_compare(const void *a, const void *b)
 {
-    check_ptr(s1);
-    check_ptr(s2);
-    check(s1->data && s2->data, "No string data allocated.");
+    const String *s1 = a;
+    const String *s2 = b;
     return strncmp(s1->data, s2->data, _max(s1->size, s2->size));
-error:
-    return -2;
 }
 
-int String_append(String s1, const String s2)
+int String_append(String *s1, const String *s2)
 {
     check_ptr(s1);
     check_ptr(s2);
@@ -173,7 +190,7 @@ error:
     return -1;
 }
 
-int String_append_cstr(String s1, const char *cstr)
+int String_append_cstr(String *s1, const char *cstr)
 {
     check_ptr(s1);
     check_ptr(cstr);
@@ -194,7 +211,7 @@ error:
     return -1;
 }
 
-int String_push_back(String s, const char c)
+int String_push_back(String *s, const char c)
 {
     check_ptr(s);
 
@@ -211,7 +228,7 @@ error:
     return -1;
 }
 
-int String_pop_back(String s, char *out)
+int String_pop_back(String *s, char *out)
 {
     check_ptr(s);
     check(s->size > 0, "Attempt to pop_back from empty string.");
@@ -225,9 +242,9 @@ error:
     return -1;
 }
 
-String String_concat(const String s1, const String s2)
+String *String_concat(const String *s1, const String *s2)
 {
-    String s = NULL;
+    String *s = NULL;
 
     check_ptr(s1);
     check_ptr(s2);
@@ -241,7 +258,14 @@ error:
     return NULL;
 }
 
-unsigned long String_hash(const String s)
+unsigned long String_hash(const void *s)
 {
-    return jenkins_hash((s)->data, (s)->size);
+    return jenkins_hash(((String *)s)->data, ((String *)s)->size);
+}
+
+void String_printf(FILE *stream, const void *s)
+{
+    fputc('"', stream);
+    fprintf(stream, "%s", ((String *)s)->data);
+    fputc('"', stream);
 }

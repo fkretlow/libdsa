@@ -44,39 +44,13 @@ void TypeInterface_print(TypeInterface *T, FILE *stream, const void *obj)
 
 /* Predefined type interfaces: */
 
-/* String */
-
-void _string_ptr_copy(void *dest, const void *src)
-{
-    *(String *)dest = String_copy(*(String *)src);
-}
-
-void _string_ptr_delete(void *s) { String_delete(*(String *)s); }
-
-int _string_ptr_compare(const void *s1, const void *s2)
-{
-    return String_compare(*(String *)s1, *(String *)s2);
-}
-
-unsigned long _string_ptr_hash(const void *s)
-{
-    return jenkins_hash((*(String *)s)->data, (*(String *)s)->size);
-}
-
-void _string_ptr_print(FILE *stream, const void *s)
-{
-    fputc('"', stream);
-    fprintf(stream, "%s", (*(String *)s)->data);
-    fputc('"', stream);
-}
-
 TypeInterface String_type = {
     .size = sizeof(String),
-    .copy = _string_ptr_copy,
-    .destroy = _string_ptr_delete,
-    .compare = _string_ptr_compare,
-    .hash = _string_ptr_hash,
-    .print = _string_ptr_print
+    .copy = String_copy_to,
+    .destroy = String_deallocate,
+    .compare = String_compare,
+    .hash = String_hash,
+    .print = String_printf
 };
 
 /* Built-in types */

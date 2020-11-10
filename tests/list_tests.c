@@ -104,20 +104,20 @@ int test_list_of_strings(void)
     L = List_new(&String_type);
     test(L != NULL, "L = NULL");
 
-    String s = String_new();
+    String *s = String_new();
     String_assign_cstr(s, "Haydn");
-    List_push_back(L, &s);
+    List_push_back(L, s);
 
     String_assign_cstr(s, "Mozart");
-    List_push_back(L, &s);
+    List_push_back(L, s);
 
     String_assign_cstr(s, "Beethoven");
-    List_push_back(L, &s);
+    List_push_back(L, s);
 
     String out;
     List_pop_back(L, &out);
-    test(String_compare(s, out) == 0, "s != out (out = \"%s\")", out->data);
-    String_delete(out);
+    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", out.data);
+    String_deallocate(&out);
 
     List_delete(L);
     String_delete(s);

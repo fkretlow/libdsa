@@ -1,9 +1,9 @@
 #include "json.h"
 
-String List_to_json(const List *L, serialize_f serialize)
+String *List_to_json(const List *L, serialize_f serialize)
 {
-    String temp = NULL;
-    String json = NULL;
+    String *temp = NULL;
+    String *json = NULL;
 
     check_ptr(L);
     check_ptr(serialize);

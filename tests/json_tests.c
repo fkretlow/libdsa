@@ -13,8 +13,8 @@ int test_serialize_list_of_ints(void)
         List_push_back(L, &i);
     }
 
-    String expected = String_from_cstr("[0, 1, 2, 3, 4, 5, 6, 7]");
-    String json = List_to_json(L, serialize_int);
+    String *expected = String_from_cstr("[0, 1, 2, 3, 4, 5, 6, 7]");
+    String *json = List_to_json(L, serialize_int);
     test(json != NULL, "Failed to serialize list of ints.");
     test(String_compare(expected, json) == 0,
             "json is not what we expect: '%s'", json->data);
@@ -28,19 +28,17 @@ int test_serialize_list_of_ints(void)
 int test_serialize_list_of_strings(void)
 {
     List *L = List_new(&String_type);
-    String s, json, expected;
 
-
-    s = String_new();
+    String *s = String_new();
     char *composers[3] = { "Haydn", "Mozart", "Beethoven" };
     for (int i = 0; i < 3; ++i) {
         String_assign_cstr(s, composers[i]);
-        List_push_back(L, &s);
+        List_push_back(L, s);
     }
 
-    expected = String_from_cstr("[\"Haydn\", \"Mozart\", \"Beethoven\"]");
+    String *expected = String_from_cstr("[\"Haydn\", \"Mozart\", \"Beethoven\"]");
 
-    json = List_to_json(L, serialize_string);
+    String *json = List_to_json(L, serialize_string);
     test(json != NULL, "Failed to serialize list of strings.");
     test(String_compare(json, expected) == 0, "expected != json = '%s'", json->data);
 

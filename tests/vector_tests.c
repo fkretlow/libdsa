@@ -78,20 +78,20 @@ int test_vector_of_strings(void)
     V = Vector_new(&String_type);
     test(V != NULL, "V = NULL");
 
-    String s = String_new();
+    String *s = String_new();
     String_assign_cstr(s, "Haydn");
-    Vector_push_back(V, &s);
+    Vector_push_back(V, s);
 
     String_assign_cstr(s, "Mozart");
-    Vector_push_back(V, &s);
+    Vector_push_back(V, s);
 
     String_assign_cstr(s, "Beethoven");
-    Vector_push_back(V, &s);
+    Vector_push_back(V, s);
 
     String out;
     Vector_pop_back(V, &out);
-    test(String_compare(s, out) == 0, "s != out (out = \"%s\")", out->data);
-    String_delete(out);
+    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", out.data);
+    String_deallocate(&out);
 
     Vector_delete(V);
     String_delete(s);
