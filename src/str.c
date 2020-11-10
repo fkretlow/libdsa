@@ -265,7 +265,5 @@ unsigned long String_hash(const void *s)
 
 void String_printf(FILE *stream, const void *s)
 {
-    fputc('"', stream);
     fprintf(stream, "%s", ((String *)s)->data);
-    fputc('"', stream);
 }

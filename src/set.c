@@ -28,7 +28,7 @@ void Set_delete(Set *S)
 
 /***************************************************************************************
  *
- * Set Set_copy(Set S);
+ * Set *Set_copy(Set *S);
  *
  * Return an exact copy of the given set. Adapter for _rbt_copy.
  *
@@ -43,7 +43,7 @@ Set *Set_copy(Set *S)
 
 /***************************************************************************************
  *
- * Set Set_union(Set S1, Set S2);
+ * Set *Set_union(Set *S1, Set *S2);
  *
  * Return a new set that contains all elements that are in either of S1 and S2 or both,
  * or NULL on error.
@@ -72,7 +72,7 @@ Set *Set_union(Set *S1, Set *S2)
 
 /***************************************************************************************
  *
- * Set Set_intersection(Set S1, Set S2);
+ * Set *Set_intersection(Set *S1, Set *S2);
  *
  * Return a new set that contains all elements that are in both S1 and S2
  * or NULL on error.
@@ -82,10 +82,10 @@ Set *Set_union(Set *S1, Set *S2)
  * other one, that would require m + n insertions with a logarithmic number of steps
  * each, resulting in an upper bound of (m + n) * log n steps.
  *
- * We trade space for time and create two stacks of pointers to data elements as an
- * in-between data structure in linear time. Then we walk through both stacks
+ * We trade space for time and create two arrays of pointers to data elements as an
+ * in-between data structure in linear time. Then we walk through both arrays
  * simultaneously, comparing elements and inserting only elements that are in both
- * stacks. This gives us slightly fewer m + n + n * log n steps.
+ * arrays. This should give us slightly fewer m + n + n * log n steps.
  *
  **************************************************************************************/
 
@@ -141,4 +141,28 @@ Set *Set_intersection(Set *S1, Set *S2)
 error:
     if (I) Set_delete(I);
     return NULL;
+}
+
+/***************************************************************************************
+ *
+ * Set *Set_difference(Set *S1, Set *S2);
+ *
+ * Return a new set that contains all elements that are in the first but not in the
+ * second set.
+ *
+ * Create an exact copy of the larger set and traverse the smaller set, removing each of
+ * its elements from the copy.
+ *
+ **************************************************************************************/
+
+static int _remove_data_from_other_rbt(_rbt_node *n, void *T)
+{
+    return _rbt_remove(T, n->data) >= 0 ? 0 : -1;
+}
+
+Set *Set_difference(Set *S1, Set *S2)
+{
+    Set *D = Set_copy(S1);
+    Set_traverse(S2, _remove_data_from_other_rbt, D);
+    return D;
 }

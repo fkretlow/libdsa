@@ -117,6 +117,36 @@ int test_set_intersection(void)
     return TEST_OK;
 }
 
+int test_set_difference(void)
+{
+    Set *S1 = Set_new(&int_type);
+    Set *S2 = Set_new(&int_type);
+
+    for (int i = 0; i < 10; ++i) {
+        Set_insert(S1, &i);
+    }
+
+    for (int i = 4; i < 15; ++i) {
+        Set_insert(S2, &i);
+    }
+
+    Set *D = Set_difference(S1, S2);
+
+    for (int i = 0; i < 4; ++i) {
+        rc = Set_has(D, &i);
+        test(rc == 1, "rc = %d (%d)", rc, 1);
+    }
+    for (int i = 4; i < 15; ++i) {
+        rc = Set_has(D, &i);
+        test(rc == 0, "rc = %d (%d)", rc, 0);
+    }
+
+    Set_delete(S1);
+    Set_delete(S2);
+    Set_delete(D);
+    return TEST_OK;
+}
+
 int main(void)
 {
     test_suite_start();
@@ -131,6 +161,7 @@ int main(void)
     run_test(test_set_teardown);
     run_test(test_set_union);
     run_test(test_set_intersection);
+    run_test(test_set_difference);
 
     test_suite_end();
 }
