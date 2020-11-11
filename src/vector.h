@@ -18,7 +18,7 @@ typedef struct {
 #define Vector_empty(V) ((V)->size == 0)
 
 int Vector_initialize(Vector *V, TypeInterface *element_type);
-void Vector_deallocate(Vector *V);
+void Vector_destroy(Vector *V);
 Vector *Vector_new(TypeInterface *element_type);
 void Vector_delete(Vector *V);
 

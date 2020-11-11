@@ -36,7 +36,7 @@ error:
     return NULL;
 }
 
-void Vector_deallocate(Vector *V)
+void Vector_destroy(Vector *V)
 {
     if (V && V->data) {
         Vector_clear(V);
@@ -47,7 +47,7 @@ void Vector_deallocate(Vector *V)
 void Vector_delete(Vector *V)
 {
     if (V) {
-        Vector_deallocate(V);
+        Vector_destroy(V);
         free(V);
     }
 }

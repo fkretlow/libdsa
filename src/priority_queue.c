@@ -31,7 +31,7 @@ PriorityQueue *PriorityQueue_new(TypeInterface *element_type)
 
     return Q;
 error:
-    if (Q->vector.data) Vector_deallocate(&Q->vector);
+    if (Q->vector.data) Vector_destroy(&Q->vector);
     if (Q->temp) free(Q->temp);
     free(Q);
     return NULL;
@@ -40,7 +40,7 @@ error:
 void PriorityQueue_delete(PriorityQueue *Q)
 {
     if (Q) {
-        Vector_deallocate(&Q->vector);
+        Vector_destroy(&Q->vector);
         free(Q->temp);
         free(Q);
     }

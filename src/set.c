@@ -134,8 +134,8 @@ Set *Set_intersection(Set *S1, Set *S2)
         }
     }
 
-    Vector_deallocate(&V1);
-    Vector_deallocate(&V2);
+    Vector_destroy(&V1);
+    Vector_destroy(&V2);
     return I;
 
 error:
