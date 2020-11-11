@@ -7,16 +7,16 @@
 #include "debug.h"
 #include "type_interface.h"
 
-struct _list_node;
-typedef struct _list_node {
-    struct _list_node *prev;
-    struct _list_node *next;
+struct ListNode;
+typedef struct ListNode {
+    struct ListNode *prev;
+    struct ListNode *next;
     char *data;
-} _list_node;
+} ListNode;
 
 typedef struct List {
-    _list_node *first;
-    _list_node *last;
+    ListNode *first;
+    ListNode *last;
     size_t size;
     TypeInterface *element_type;
 } List;
@@ -40,7 +40,7 @@ int List_push_back(List *L, const void *in);
 int List_pop_front(List *L, void *out);
 int List_pop_back(List *L, void *out);
 
-_list_node* __N;
+ListNode* __N;
 #define List_foreach(L, D) \
     for (__N = (L)->first, D = (void*)(__N->data); \
             __N != NULL; __N = __N->next, D = __N ? (void*)(__N->data) : NULL)

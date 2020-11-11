@@ -11,16 +11,16 @@ error:
     return -1;
 }
 
-static inline _list_node *_list_node_new(void)
+static inline ListNode *ListNode_new(void)
 {
-    _list_node *n = calloc(1, sizeof(*n));
+    ListNode *n = calloc(1, sizeof(*n));
     check_alloc(n);
     return n;
 error:
     return NULL;
 }
 
-static inline void _list_node_delete(const List *L, _list_node *n)
+static inline void ListNode_delete(const List *L, ListNode *n)
 {
     if (n) {
         if (n->data && L) {
@@ -31,7 +31,7 @@ static inline void _list_node_delete(const List *L, _list_node *n)
     }
 }
 
-static int _list_node_set(const List *L, _list_node *n, const void *in)
+static int ListNode_set(const List *L, ListNode *n, const void *in)
 {
     check_ptr(L);
     check_ptr(n);
@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-static inline int _list_node_get(const List *L, _list_node *n, void *out)
+static inline int ListNode_get(const List *L, ListNode *n, void *out)
 {
     check_ptr(L);
     check_ptr(n);
@@ -105,25 +105,25 @@ void List_clear(List *L)
     if (L) {
         assert(!List_invariant(L));
 
-        _list_node *cur;
-        _list_node *next;
+        ListNode *cur;
+        ListNode *next;
 
         for (cur = L->first; cur != NULL; cur = next) {
             next = cur->next;
-            _list_node_delete(L, cur);
+            ListNode_delete(L, cur);
         }
         L->first = L->last = NULL;
         L->size = 0;
     }
 }
 
-static _list_node *_list_get_node(const List *L, size_t i)
+static ListNode *List_get_node(const List *L, size_t i)
 {
     check_ptr(L);
     assert(!List_invariant(L));
     check(i < L->size, "Index out of range: %lu >= %lu", i, L->size);
 
-    _list_node *cur = L->first;
+    ListNode *cur = L->first;
     for (size_t j = 0; j < i; ++j) cur = cur->next;
 
     return cur;
@@ -137,9 +137,9 @@ int List_get(const List *L, const size_t i, void *out)
     assert(!List_invariant(L));
     check_ptr(out);
 
-    _list_node *n = _list_get_node(L, i);
+    ListNode *n = List_get_node(L, i);
     check(n != NULL, "Failed to get node at index %lu.", i);
-    check(!_list_node_get(L, n, out), "Failed to hand out data.");
+    check(!ListNode_get(L, n, out), "Failed to hand out data.");
 
     return 0;
 error:
@@ -152,9 +152,9 @@ int List_set(List *L, const size_t i, const void *in)
     assert(!List_invariant(L));
     check_ptr(in);
 
-    _list_node *n = _list_get_node(L, i);
+    ListNode *n = List_get_node(L, i);
     check(n != NULL, "Failed to get node at index %lu.", i);
-    check(!_list_node_set(L, n, in), "Failed to write data to new node.");
+    check(!ListNode_set(L, n, in), "Failed to write data to new node.");
 
     return 0;
 error:
@@ -167,9 +167,9 @@ int List_insert(List *L, const size_t i, const void *in)
     assert(!List_invariant(L));
     check_ptr(in);
 
-    _list_node *n = _list_node_new();
+    ListNode *n = ListNode_new();
     check(n != NULL, "Failed to make new node.");
-    check(!_list_node_set(L, n, in), "Failed to write data to new node.");
+    check(!ListNode_set(L, n, in), "Failed to write data to new node.");
 
     if (i == 0) {
         n->next = L->first;
@@ -177,9 +177,9 @@ int List_insert(List *L, const size_t i, const void *in)
         L->first = n;
         if (L->size == 0) L->last = n;
     } else {
-        _list_node *next = _list_get_node(L, i);
+        ListNode *next = List_get_node(L, i);
         check(next != NULL, "Failed to get node at index %lu.", i);
-        _list_node *prev = next->prev;
+        ListNode *prev = next->prev;
 
         prev->next = n;
         n->prev = prev;
@@ -199,7 +199,7 @@ int List_remove(List *L, const size_t i)
     check_ptr(L);
     assert(!List_invariant(L));
 
-    _list_node *n = _list_get_node(L, i);
+    ListNode *n = List_get_node(L, i);
     check(n != NULL, "Failed to get node at index %lu.", i);
 
     if (i == 0) {
@@ -215,13 +215,13 @@ int List_remove(List *L, const size_t i)
         L->last = n->prev;
         L->last->next = NULL;
     } else {
-        _list_node *next = n->next;
-        _list_node *prev = n->prev;
+        ListNode *next = n->next;
+        ListNode *prev = n->prev;
         prev->next = next;
         next->prev = prev;
     }
     --L->size;
-    _list_node_delete(L, n);
+    ListNode_delete(L, n);
 
     assert(!List_invariant(L));
     return 0;
@@ -235,9 +235,9 @@ int List_push_back(List *L, const void *in)
     assert(!List_invariant(L));
     check_ptr(in);
 
-    _list_node *n = _list_node_new();
+    ListNode *n = ListNode_new();
     check(n != NULL, "Failed to make new node.");
-    check(!_list_node_set(L, n, in), "Failed to write data to new node.");
+    check(!ListNode_set(L, n, in), "Failed to write data to new node.");
 
     if (L->size == 0) {
         L->first = L->last = n;
@@ -261,8 +261,8 @@ int List_pop_front(List *L, void *out)
     check_ptr(out);
     check(L->size > 0, "Attempt to pop from empty list.");
 
-    _list_node *n = L->first;
-    check(!_list_node_get(L, n, out), "Failed to hand out data.");
+    ListNode *n = L->first;
+    check(!ListNode_get(L, n, out), "Failed to hand out data.");
     check(!List_remove(L, 0), "Failed to remove first node.");
 
     assert(!List_invariant(L));
@@ -278,8 +278,8 @@ int List_pop_back(List *L, void *out)
     check_ptr(out);
     check(L->size > 0, "Attempt to pop from empty list.");
 
-    _list_node *n = L->last;
-    check(!_list_node_get(L, n, out), "Failed to hand out data.");
+    ListNode *n = L->last;
+    check(!ListNode_get(L, n, out), "Failed to hand out data.");
     check(!List_remove(L, L->size - 1), "Failed to remove last node.");
 
     assert(!List_invariant(L));
