@@ -146,11 +146,25 @@ int test_string_allocation(void)
     test(s->storage_allocated == true, "s->storage_allocated = false (true)");
     test(String_capacity(s) == 32, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
 
+    String_shrink_to_fit(s);
+    test(s->storage_allocated == true, "s->storage_allocated = false (true)");
+    test(String_capacity(s) == 32, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
+
     String_pop_back(s, NULL);
     test(s->storage_allocated == true, "s->storage_allocated = false (true)");
     test(String_capacity(s) == 32, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
 
     String_shrink_to_fit(s);
+    test(s->storage_allocated == false, "s->storage_allocated = true (false)");
+
+    String_clear(s);
+    test(s->storage_allocated == false, "s->storage_allocated = true (false)");
+
+    String_assign_cstr(s, "This is a very long string, longer than the threshold.");
+    test(s->storage_allocated == true, "s->storage_allocated = false (true)");
+    test(String_capacity(s) == 64, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
+
+    String_clear(s);
     test(s->storage_allocated == false, "s->storage_allocated = true (false)");
 
     String_delete(s);

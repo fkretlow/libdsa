@@ -37,7 +37,6 @@ test: $(TEST)
 	mkdir -p cov
 	lcov --quiet --capture --directory . --output-file ./cov/coverage.info
 	genhtml ./cov/coverage.info --output-directory ./cov --quiet
-	rm -f `find . -type f -name "*.gc*" -o -name "*.info"`
 
 
 $(BIN): $(LIB)
