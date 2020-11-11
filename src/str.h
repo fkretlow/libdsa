@@ -27,11 +27,11 @@ typedef struct String {
 
 #define String_size(S) ((S)->slen)
 #define String_empty(S) ((S)->slen == 0)
-#define String_data(s) ( ((String*)s)->storage_allocated \
-                            ? ((String*)s)->data.external.data \
-                            : ((String*)s)->data.internal.data )
-#define String_capacity(s) ( ((String*)s)->storage_allocated \
-                                ? ((String*)s)->data.external.capacity \
+#define String_data(s) ( (s)->storage_allocated \
+                            ? (s)->data.external.data \
+                            : (s)->data.internal.data )
+#define String_capacity(s) ( (s)->storage_allocated \
+                                ? (s)->data.external.capacity \
                                 : STRING_ALLOC_THRESHOLD )
 
 int String_initialize(String *s);

@@ -24,10 +24,7 @@ void String_destroy(void *sp)
     }
 }
 
-String *String_new(void)
-{
-    return calloc(1, sizeof(String));
-}
+String *String_new(void) { return calloc(1, sizeof(String)); }
 
 void String_delete(String *s)
 {
@@ -302,12 +299,12 @@ error:
 
 unsigned long String_hash(const void *s)
 {
-    char *data = String_data(s);
+    char *data = String_data((String*)s);
     return jenkins_hash(data, ((String *)s)->size);
 }
 
 void String_printf(FILE *stream, const void *s)
 {
-    char *data = String_data(s);
+    char *data = String_data((String *)s);
     fprintf(stream, "%s", data);
 }
