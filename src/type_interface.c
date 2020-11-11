@@ -47,7 +47,7 @@ void TypeInterface_print(TypeInterface *T, FILE *stream, const void *obj)
 TypeInterface String_type = {
     .size = sizeof(String),
     .copy = String_copy_to,
-    .destroy = String_deallocate,
+    .destroy = String_destroy,
     .compare = String_compare,
     .hash = String_hash,
     .print = String_printf

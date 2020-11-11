@@ -20,7 +20,7 @@ typedef struct String {
 #define String_empty(S) ((S)->slen == 0)
 
 int String_initialize(String *s);
-void String_deallocate(void *s);
+void String_destroy(void *s);
 String *String_new(void);
 void String_delete(String *s);
 int String_reserve(String *s, const size_t capacity);

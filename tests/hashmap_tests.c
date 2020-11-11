@@ -86,7 +86,7 @@ int test_hashmap_with_strings(void)
 
     String_delete(k);
     String_delete(v);
-    String_deallocate(&v_out);
+    String_destroy(&v_out);
     Hashmap_delete(M);
     return TEST_OK;
 }

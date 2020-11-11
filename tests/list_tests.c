@@ -117,7 +117,7 @@ int test_list_of_strings(void)
     String out;
     List_pop_back(L, &out);
     test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", out.data);
-    String_deallocate(&out);
+    String_destroy(&out);
 
     List_delete(L);
     String_delete(s);

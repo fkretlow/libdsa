@@ -14,7 +14,7 @@ int String_initialize(String *s)
     return 0;
 }
 
-void String_deallocate(void *s)
+void String_destroy(void *s)
 {
     String *str = s;
     if (s) {
