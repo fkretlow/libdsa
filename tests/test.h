@@ -47,8 +47,8 @@ extern int _suppress_errors;
     _tests_run++;
 
 #define test(T, M, ...) if (!(T)) { \
-    fprintf(stderr, KRED "   Fail: " KRESET M " [%d]\n", \
-            ##__VA_ARGS__, __LINE__); \
+    fprintf(stderr, KRED "[Fail]" KRESET " %s:%d %s: " M "\n", \
+            __FILE__, __LINE__, __func__,##__VA_ARGS__); \
     return TEST_ERR; \
 }
 
