@@ -1,6 +1,7 @@
 #ifndef _str_h
 #define _str_h
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,12 +13,26 @@
 
 typedef struct String {
     size_t size;
-    size_t capacity;
-    char *data;
+    bool storage_allocated;
+    union {
+        struct {
+            char data[STRING_ALLOC_THRESHOLD];
+        } internal;
+        struct {
+            size_t capacity;
+            char *data;
+        } external;
+    } data;
 } String;
 
 #define String_size(S) ((S)->slen)
 #define String_empty(S) ((S)->slen == 0)
+#define String_data(s) ( ((String*)s)->storage_allocated \
+                            ? ((String*)s)->data.external.data \
+                            : ((String*)s)->data.internal.data )
+#define String_capacity(s) ( ((String*)s)->storage_allocated \
+                                ? ((String*)s)->data.external.capacity \
+                                : STRING_ALLOC_THRESHOLD )
 
 int String_initialize(String *s);
 void String_destroy(void *s);

@@ -90,7 +90,7 @@ int test_vector_of_strings(void)
 
     String out;
     Vector_pop_back(V, &out);
-    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", out.data);
+    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", String_data(&out));
     String_destroy(&out);
 
     Vector_delete(V);

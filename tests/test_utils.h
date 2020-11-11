@@ -16,8 +16,9 @@ String *serialize_int(const void *ip)
     size_t size = 1 * sizeof(char);
     if (i) size = (size_t)(floor(log10(i)) + 1) * sizeof(char);
     check(!String_reserve(s, size + 1), "Failed to reserve memory in String.");
-    sprintf(s->data, "%d", i);
-    s->data[size] = '\0';
+    char *s_data = String_data(s);
+    sprintf(s_data, "%d", i);
+    s_data[size] = 0;
     s->size = size;
     return s;
 error:

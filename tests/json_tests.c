@@ -19,7 +19,7 @@ int test_serialize_list_of_ints(void)
     String *json = List_to_json(L, serialize_int);
     test(json != NULL, "Failed to serialize list of ints.");
     test(String_compare(expected, json) == 0,
-            "json is not what we expect: '%s'", json->data);
+            "json is not what we expect: '%s'", String_data(json));
 
     List_delete(L);
     String_delete(expected);
@@ -42,7 +42,8 @@ int test_serialize_list_of_strings(void)
 
     String *json = List_to_json(L, serialize_string);
     test(json != NULL, "Failed to serialize list of strings.");
-    test(String_compare(json, expected) == 0, "expected != json = '%s'", json->data);
+    test(String_compare(json, expected) == 0, "expected != json = '%s'",
+            String_data(json));
 
     List_delete(L);
     String_delete(s);
