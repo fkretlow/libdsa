@@ -11,16 +11,16 @@ error:
     return -1;
 }
 
-static inline _stack_node *_stack_node_new(void)
+static inline StackNode *StackNode_new(void)
 {
-    _stack_node *n = calloc(1, sizeof(*n));
+    StackNode *n = calloc(1, sizeof(*n));
     check_alloc(n);
     return n;
 error:
     return NULL;
 }
 
-static inline void _stack_node_delete(const Stack *S, _stack_node *n)
+static inline void StackNode_delete(const Stack *S, StackNode *n)
 {
     if (n) {
         if (n->data && S) {
@@ -31,7 +31,7 @@ static inline void _stack_node_delete(const Stack *S, _stack_node *n)
     free(n);
 }
 
-static int _stack_node_set(const Stack *S, _stack_node *n, const void *in)
+static int StackNode_set(const Stack *S, StackNode *n, const void *in)
 {
     check_ptr(S);
     check_ptr(n);
@@ -51,7 +51,7 @@ error:
     return -1;
 }
 
-static inline int _stack_node_get(const Stack *S, _stack_node *n, void *out)
+static inline int StackNode_get(const Stack *S, StackNode *n, void *out)
 {
     check_ptr(S);
     check_ptr(n);
@@ -104,12 +104,12 @@ void Stack_clear(Stack *S)
 {
     assert(!Stack_invariant(S));
 
-    _stack_node *cur;
-    _stack_node *next;
+    StackNode *cur;
+    StackNode *next;
 
     for (cur = S->top; cur != NULL; cur = next) {
         next = cur->next;
-        _stack_node_delete(S, cur);
+        StackNode_delete(S, cur);
     }
     S->top = NULL;
     S->size = 0;
@@ -121,9 +121,9 @@ int Stack_push(Stack *S, const void *in)
     assert(!Stack_invariant(S));
     check_ptr(in);
 
-    _stack_node *n = _stack_node_new();
+    StackNode *n = StackNode_new();
     check(n != NULL, "Failed to make new node.");
-    check(!_stack_node_set(S, n, in), "Failed to write data to new node.");
+    check(!StackNode_set(S, n, in), "Failed to write data to new node.");
 
     n->next = S->top;
     S->top = n;
@@ -142,14 +142,14 @@ int Stack_pop(Stack *S, void *out)
     check_ptr(out);
     check(S->size > 0, "Attempt to pop from empty stack.");
 
-    _stack_node *n = S->top;
+    StackNode *n = S->top;
 
-    check(!_stack_node_get(S, n, out), "Failed to hand out value.");
+    check(!StackNode_get(S, n, out), "Failed to hand out value.");
 
     S->top = n->next;
     --S->size;
 
-    _stack_node_delete(S, n);
+    StackNode_delete(S, n);
 
     assert(!Stack_invariant(S));
     return 0;

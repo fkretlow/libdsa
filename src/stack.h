@@ -7,14 +7,14 @@
 #include "debug.h"
 #include "type_interface.h"
 
-struct _stack_node;
-typedef struct _stack_node {
-    struct _stack_node *next;
+struct StackNode;
+typedef struct StackNode {
+    struct StackNode *next;
     char *data;
-} _stack_node;
+} StackNode;
 
 typedef struct Stack {
-    _stack_node *top;
+    StackNode *top;
     size_t size;
     TypeInterface *element_type;
 } Stack;
