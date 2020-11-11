@@ -41,7 +41,7 @@ int test_priority_queue_usage(void)
 int test_priority_queue_teardown(void)
 {
     PriorityQueue_clear(Q);
-    test(Q->vector.size == 0, "Q->vector.size = %lu (%lu)", Q->vector.size, 0lu);
+    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
     PriorityQueue_delete(Q);
     return TEST_OK;
 }

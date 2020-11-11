@@ -41,6 +41,8 @@ void Vector_destroy(Vector *V)
     if (V && V->data) {
         Vector_clear(V);
         free(V->data);
+        V->data = NULL;
+        V->size = 0;
     }
 }
 
