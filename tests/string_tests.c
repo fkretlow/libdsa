@@ -132,6 +132,31 @@ int test_string_push_pop_back(void)
     return TEST_OK;
 }
 
+int test_string_allocation(void)
+{
+    String *s = String_new();
+    test(s->storage_allocated == false, "s->storage_allocated = true (false)");
+
+    for (size_t i = 0; i < STRING_ALLOC_THRESHOLD - 1; ++i) {
+        String_push_back(s, 'x');
+    }
+    test(s->storage_allocated == false, "s->storage_allocated = true (false)");
+
+    String_push_back(s, 'y');
+    test(s->storage_allocated == true, "s->storage_allocated = false (true)");
+    test(String_capacity(s) == 32, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
+
+    String_pop_back(s, NULL);
+    test(s->storage_allocated == true, "s->storage_allocated = false (true)");
+    test(String_capacity(s) == 32, "String_capacity(s) = %lu (%lu)", String_capacity(s), 32lu);
+
+    String_shrink_to_fit(s);
+    test(s->storage_allocated == false, "s->storage_allocated = true (false)");
+
+    String_delete(s);
+    return TEST_OK;
+}
+
 int test_string_hash(void)
 {
     String *s = String_from_cstr("Maurice Ravel");
@@ -179,6 +204,7 @@ int main(void)
     run_test(test_string_append);
     run_test(test_string_concat);
     run_test(test_string_push_pop_back);
+    run_test(test_string_allocation);
     run_test(test_string_hash);
     run_test(test_string_type_interface);
     test_suite_end();

@@ -53,17 +53,19 @@ int String_reserve(String *s, const size_t capacity)
     char *data;
     if (s->storage_allocated) {
         data = realloc(s->data.external.data, c * sizeof(char));
+        check_alloc(data);
     } else {
         data = malloc(c * sizeof(char));
+        check_alloc(data);
         memmove(data, s->data.internal.data, s->size + 1);
     }
-    check_alloc(data);
     s->data.external.data = data;
     s->data.external.capacity = c;
     s->storage_allocated = true;
 
     return 0;
 error:
+    if (data) free(data);
     return -1;
 }
 
