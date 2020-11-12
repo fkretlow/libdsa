@@ -8,16 +8,16 @@ typedef RBTree Set;
 
 #define Set_size(S) (S)->size
 
-#define Set_initialize(S, key_type) RBTree_initialize(S, key_type)
-Set *Set_new(TypeInterface *key_type);
+#define Set_initialize(S, element_type) RBTree_initialize(S, element_type, NULL)
+Set *Set_new(TypeInterface *element_type);
 void Set_delete(Set *S);
 #define Set_clear(S) RBTree_clear(S)
 
-#define Set_insert(S, v) RBTree_insert(S, v);
-#define Set_remove(S, v) RBTree_remove(S, v);
-#define Set_has(S, v) RBTree_has(S, v);
-#define Set_traverse(S, f, p) RBTree_traverse(S, f, p)
-#define Set_traverse_r(S, f, p) RBTree_traverse_r(S, f, p)
+#define Set_insert(S, e) RBTree_insert(S, e);
+#define Set_remove(S, e) RBTree_remove(S, e);
+#define Set_has(S, e) RBTree_has(S, e);
+#define Set_traverse(S, f, p) RBTree_traverse_keys(S, f, p)
+#define Set_traverse_r(S, f, p) RBTree_traverse_keys_r(S, f, p)
 
 Set *Set_copy(Set *S);
 Set *Set_union(Set *S1, Set *S2);

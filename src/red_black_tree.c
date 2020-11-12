@@ -3,149 +3,8 @@
 #include "debug.h"
 #include "red_black_tree.h"
 
-/***************************************************************************************
- *
- * static int RBTreeNode_traverse(RBTreeNode *n,
- *                               int (*f)(RBTreeNode *n, void *p),
- *                               void *p);
- * static int RBTreeNode_traverse_r(RBTreeNode *n,
- *                                 int (*f)(RBTreeNode *n, void *p),
- *                                 void *p);
- *
- * Walk through all the nodes of the sub-tree with the root n in ascending/descending
- * order.  Call f on every node with the additional parameter p. If f returns a non-zero
- * integer, abort and return it.
- *
- **************************************************************************************/
-
-static int RBTreeNode_traverse(RBTreeNode *n,
-                              int (*f)(RBTreeNode *n, void *p),
-                              void *p)
-{
-    int rc = 0;
-
-    if (n) {
-        if (n->left) {
-            rc = RBTreeNode_traverse(n->left, f, p);
-            if (rc != 0) return rc;
-        }
-
-        rc = f(n, p);
-        if (rc != 0) return rc;
-
-        if (n->right) {
-            rc = RBTreeNode_traverse(n->right, f, p);
-            if (rc != 0) return rc;
-        }
-    }
-
-    return rc;
-}
-
-static int RBTreeNode_traverse_r(RBTreeNode *n,
-                                int (*f)(RBTreeNode *n, void *p),
-                                void *p)
-{
-    int rc = 0;
-
-    if (n) {
-        if (n->right) {
-            rc = RBTreeNode_traverse_r(n->right, f, p);
-            if (rc != 0) return rc;
-        }
-
-        rc = f(n, p);
-        if (rc != 0) return rc;
-
-        if (n->left) {
-            rc = RBTreeNode_traverse_r(n->left, f, p);
-            if (rc != 0) return rc;
-        }
-    }
-
-    return rc;
-}
-
-/***************************************************************************************
- *
- * int RBTree_traverse(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
- * int RBTree_traverse_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
- *
- * Walk through all the nodes of the tree in ascending/descending order.  Call f on
- * every node with the additional parameter p. If f returns a non-zero integer, abort
- * and return it.
- *
- **************************************************************************************/
-
-int RBTree_traverse(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
-    if (T && T->root) {
-        return RBTreeNode_traverse(T->root, f, p);
-    }
-    return 0;
-}
-
-int RBTree_traverse_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
-    if (T && T->root) {
-        return RBTreeNode_traverse_r(T->root, f, p);
-    }
-    return 0;
-}
-
-int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
-{
-    if (n->color == RED) {
-        /* Check for adjacent red nodes. */
-        if ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)) {
-            debug("Invariant violated: Two adjacent red nodes.")
-            return -1;
-        }
-    }
-    if (!n->left || !n->right) {
-        /* This is a leaf node. Count black nodes on the path to the root. */
-        int count = 0;
-        while (n != NULL) {
-            if (n->color == BLACK) ++count;
-            n = n->parent;
-        }
-        if (*(int*)black_count == -1) {
-            *(int*)black_count = count;
-        } else if (count != *(int*)black_count) {
-            debug("Invariant violated: Unequal numbers of black nodes per path.");
-            return -2;
-        }
-    }
-
-    return 0;
-}
-
-int RBTree_invariant(const RBTree *T)
-{
-    int black_count = -1;
-    int rc = RBTreeNode_traverse(T->root, RBTreeNode_invariant, &black_count);
-    return rc;
-}
-
 /* static inline */
 RBTreeNode *RBTreeNode_new(void) { return calloc(1, sizeof(RBTreeNode)); }
-
-/***************************************************************************************
- *
- * void RBTreeNode_delete(const RBTree *T, RBTreeNode *n);
- *
- * Delete n, freeing any associated memory.
- * No edges are removed by this function, this is the responsibility of the caller.
- *
- **************************************************************************************/
-
-/* static inline */
-void RBTreeNode_delete(const RBTree *T, RBTreeNode *n)
-{
-    if (n) {
-        RBTreeNode_destroy_key(T, n);
-        RBTreeNode_destroy_value(T, n);
-        free(n);
-    }
-}
 
 /***************************************************************************************
  *
@@ -171,7 +30,7 @@ int RBTreeNode_set_key(const RBTree *T, RBTreeNode *n, const void *k)
 
     /* Store the key on the heap... */
     if (T->storage_allocated) {
-        if (n->data.external.key != NULL) sentinel("Key is already set. Why?");
+        assert(n->data.external.key == NULL);
         n->data.external.key = TypeInterface_allocate(T->key_type, 1);
         check_alloc(n->data.external.key);
         TypeInterface_copy(T->key_type, n->data.external.key, k);
@@ -246,7 +105,7 @@ int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v)
     else { /* T->storage_allocated == 0 */
         TypeInterface_copy(T->value_type,
                            n->data.internal.data + TypeInterface_size(T->key_type),
-                           k);
+                           v);
     }
 
     n->has_value = 1;
@@ -281,6 +140,25 @@ void RBTreeNode_destroy_value(RBTree *T, RBTreeNode *n)
     }
 }
 
+/***************************************************************************************
+ *
+ * void RBTreeNode_delete(const RBTree *T, RBTreeNode *n);
+ *
+ * Delete n, freeing any associated memory.
+ * No edges are removed by this function, this is the responsibility of the caller.
+ *
+ **************************************************************************************/
+
+/* static inline */
+void RBTreeNode_delete(RBTree *T, RBTreeNode *n)
+{
+    if (n) {
+        RBTreeNode_destroy_key(T, n);
+        RBTreeNode_destroy_value(T, n);
+        free(n);
+    }
+}
+
 /**************************************************************************************
  *
  * RBTreeNode *RBTreeNode_copy(const RBTree *T, const RBTreeNode *n)
@@ -290,7 +168,7 @@ void RBTreeNode_destroy_value(RBTree *T, RBTreeNode *n)
  *
  *************************************************************************************/
 
-int RBTreeNode_copy(const RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
+int RBTreeNode_copy(RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
 {
     check_ptr(T);
     if (src == NULL) {
@@ -842,8 +720,8 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
          * move on to remove succ (then stored in n) from the tree. */
         RBTreeNode_destroy_key(T, n);
         RBTreeNode_destroy_value(T, n);
-        memmove(n->data, succ->data, sizeof(union RBTreeData));
-        memset(succ->data, 0, sizeof(union RBTreeData));
+        memmove(&n->data, &succ->data, sizeof(union RBTreeData));
+        memset(&succ->data, 0, sizeof(union RBTreeData));
         n = succ;
     }
 
@@ -907,4 +785,304 @@ int RBTree_remove(RBTree *T, const void *k)
 error:
     return -1;
 
+}
+
+/***************************************************************************************
+ *
+ * static int RBTreeNode_traverse(RBTreeNode *n,
+ *                               int (*f)(RBTreeNode *n, void *p),
+ *                               void *p);
+ * static int RBTreeNode_traverse_r(RBTreeNode *n,
+ *                                 int (*f)(RBTreeNode *n, void *p),
+ *                                 void *p);
+ * static int RBTreeNode_traverse_keys(RBTree *T, RBTreeNode *n,
+ *                                     int (*f)(void *k, void *p),
+ *                                     void *p);
+ * static int RBTreeNode_traverse_keys_r(RBTree *T, RBTreeNode *n,
+ *                                       int (*f)(void *k, void *p),
+ *                                       void *p);
+ * static int RBTreeNode_traverse_values(RBTree *T, RBTreeNode *n,
+ *                                       int (*f)(void *v, void *p),
+ *                                       void *p);
+ * static int RBTreeNode_traverse_values_r(RBTree *T, RBTreeNode *n,
+ *                                         int (*f)(void *v, void *p),
+ *                                         void *p);
+ *
+ * Walk through all the nodes of the sub-tree with the root n in ascending/descending
+ * order. Call f on every node, key, or value with the additional parameter p. If f
+ * returns a non-zero integer, abort and return it.
+ *
+ * These functions are called by their counterparts RBTree_traverse... to do the actual
+ * work. There should be no need to call them directly from the outside.
+ *
+ **************************************************************************************/
+
+static int RBTreeNode_traverse(RBTreeNode *n,
+                              int (*f)(RBTreeNode *n, void *p),
+                              void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = RBTreeNode_traverse(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = RBTreeNode_traverse(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+static int RBTreeNode_traverse_r(RBTreeNode *n,
+                                int (*f)(RBTreeNode *n, void *p),
+                                void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = RBTreeNode_traverse_r(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = RBTreeNode_traverse_r(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+static int RBTreeNode_traverse_keys(RBTree *T, RBTreeNode *n,
+                                    int (*f)(void *k, void *p),
+                                    void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = RBTreeNode_traverse_keys(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(RBTreeNode_key(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = RBTreeNode_traverse_keys(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+static int RBTreeNode_traverse_keys_r(RBTree *T, RBTreeNode *n,
+                                      int (*f)(void *k, void *p),
+                                      void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = RBTreeNode_traverse_keys(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(RBTreeNode_key(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = RBTreeNode_traverse_keys(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+static int RBTreeNode_traverse_values(RBTree *T, RBTreeNode *n,
+                                      int (*f)(void *v, void *p),
+                                      void *p)
+{
+    assert(T->value_type);
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = RBTreeNode_traverse_values(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(RBTreeNode_value(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = RBTreeNode_traverse_values(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+static int RBTreeNode_traverse_values_r(RBTree *T, RBTreeNode *n,
+                                        int (*f)(void *v, void *p),
+                                        void *p)
+{
+    assert(T->value_type);
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = RBTreeNode_traverse_values(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(RBTreeNode_value(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = RBTreeNode_traverse_values(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+/***************************************************************************************
+ *
+ * int RBTree_traverse_nodes(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
+ * int RBTree_traverse_nodes_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
+ * int RBTree_traverse_keys(RBTree *T, int (*f)(void *k, void *p), void *p);
+ * int RBTree_traverse_keys_r(RBTree *T, int (*f)(void *k, void *p), void *p);
+ * int RBTree_traverse_values(RBTree *T, int (*f)(void *v, void *p), void *p);
+ * int RBTree_traverse_values_r(RBTree *T, int (*f)(void *v, void *p), void *p);
+ *
+ * Walk through all the nodes of the tree in ascending/descending order.  Call f on
+ * every node, key, or value with the additional parameter p. If f returns a non-zero
+ * integer, abort and return it.
+ *
+ **************************************************************************************/
+
+int RBTree_traverse_nodes(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
+    if (T && T->root) {
+        return RBTreeNode_traverse(T->root, f, p);
+    }
+    return 0;
+}
+
+int RBTree_traverse_nodes_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
+    if (T && T->root) {
+        return RBTreeNode_traverse_r(T->root, f, p);
+    }
+    return 0;
+}
+
+int RBTree_traverse_keys(RBTree *T, int (*f)(void *k, void *p), void *p) {
+    if (T && T->root) {
+        return RBTreeNode_traverse_keys(T, T->root, f, p);
+    }
+    return 0;
+}
+
+int RBTree_traverse_keys_r(RBTree *T, int (*f)(void *k, void *p), void *p) {
+    if (T && T->root) {
+        return RBTreeNode_traverse_keys_r(T, T->root, f, p);
+    }
+    return 0;
+}
+
+int RBTree_traverse_values(RBTree *T, int (*f)(void *v, void *p), void *p) {
+    check(T->value_type, "This tree doesn't store values."
+                         "Did you mean to traverse the keys?")
+    if (T && T->root) {
+        return RBTreeNode_traverse_values(T, T->root, f, p);
+    }
+    return 0;
+error:
+    return -1;
+}
+
+int RBTree_traverse_values_r(RBTree *T, int (*f)(void *v, void *p), void *p) {
+    check(T->value_type, "This tree doesn't store values."
+                         "Did you mean to traverse the keys?")
+    if (T && T->root) {
+        return RBTreeNode_traverse_values_r(T, T->root, f, p);
+    }
+    return 0;
+error:
+    return -1;
+}
+
+/***************************************************************************************
+ *
+ * int RBTreeNode_invariant(RBTreeNode *n, void *black_count);
+ *
+ * Check if n violates any of the red-black tree invariants. Traversal callback for
+ * RBTree_invariant.
+ *
+ * Return values: 0 on success
+ *               -1 if two adjacent red nodes are detected
+ *               -2 if n violates the same-depth of leaf nodes property
+ *
+ **************************************************************************************/
+
+int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
+{
+    if (n->color == RED) {
+        /* Check for adjacent red nodes. */
+        if ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)) {
+            debug("Invariant violated: Two adjacent red nodes.")
+            return -1;
+        }
+    }
+    if (!n->left || !n->right) {
+        /* This is a leaf node. Count black nodes on the path to the root. */
+        int count = 0;
+        while (n != NULL) {
+            if (n->color == BLACK) ++count;
+            n = n->parent;
+        }
+        if (*(int*)black_count == -1) {
+            *(int*)black_count = count;
+        } else if (count != *(int*)black_count) {
+            debug("Invariant violated: Unequal numbers of black nodes per path.");
+            return -2;
+        }
+    }
+
+    return 0;
+}
+
+/***************************************************************************************
+ *
+ * int RBTree_invariant(RBTree *T);
+ *
+ * Check if T is still intact and satisfies the red-black tree properties.
+ *
+ * Return values: 0 on success
+ *               -1 if two adjacent red nodes are detected
+ *               -2 if the same-depth of leaf nodes property is violated
+ *
+ **************************************************************************************/
+
+int RBTree_invariant(const RBTree *T)
+{
+    int black_count = -1;
+    int rc = RBTreeNode_traverse(T->root, RBTreeNode_invariant, &black_count);
+    return rc;
 }

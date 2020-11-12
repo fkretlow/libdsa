@@ -4,14 +4,14 @@
 #include "stack.h"
 #include "vector.h"
 
-Set *Set_new(TypeInterface *key_type)
+Set *Set_new(TypeInterface *element_type)
 {
-    check_ptr(key_type);
+    check_ptr(element_type);
 
     Set *S = malloc(sizeof(*S));
     check_alloc(S);
 
-    Set_initialize(S, key_type);
+    Set_initialize(S, element_type);
 
     return S;
 error:
@@ -54,9 +54,9 @@ Set *Set_copy(Set *S)
  *
  **************************************************************************************/
 
-static inline int _copy_data_into_otherRBTree(RBTreeNode *n, void *T)
+static inline int insert_into_set(void *e, void *S)
 {
-    int rc = RBTree_insert(T, n->key);
+    int rc = Set_insert(S, e);
     return rc >= 0 ? 0 : -1;
 }
 
@@ -66,7 +66,7 @@ Set *Set_union(Set *S1, Set *S2)
     Set *smaller = larger == S1 ? S2 : S1;
 
     Set *U = Set_copy(larger);
-    Set_traverse(smaller, _copy_data_into_otherRBTree, U);
+    Set_traverse(smaller, insert_into_set, U);
     return U;
 }
 
@@ -89,9 +89,9 @@ Set *Set_union(Set *S1, Set *S2)
  *
  **************************************************************************************/
 
-static inline int _push_data_pointer_to_vector(RBTreeNode *n, void *v)
+static inline int push_into_vector(void *e, void *V)
 {
-    return Vector_push_back(v, &n->key);
+    return Vector_push_back(V, e);
 }
 
 Set *Set_intersection(Set *S1, Set *S2)
@@ -112,8 +112,8 @@ Set *Set_intersection(Set *S1, Set *S2)
     Vector_reserve(&V1, Set_size(S1));
     Vector_reserve(&V2, Set_size(S2));
 
-    Set_traverse_r(S1, _push_data_pointer_to_vector, &V1);
-    Set_traverse_r(S2, _push_data_pointer_to_vector, &V2);
+    Set_traverse_r(S1, push_into_vector, &V1);
+    Set_traverse_r(S2, push_into_vector, &V2);
 
     Vector_pop_back(&V1, &e1);
     Vector_pop_back(&V2, &e2);
@@ -155,14 +155,15 @@ error:
  *
  **************************************************************************************/
 
-static int _remove_data_from_otherRBTree(RBTreeNode *n, void *T)
+static int remove_from_set(void *e, void *S)
 {
-    return RBTree_remove(T, n->key) >= 0 ? 0 : -1;
+    int rc = Set_remove(S, e);
+    return rc >= 0 ? 0 : 1;
 }
 
 Set *Set_difference(Set *S1, Set *S2)
 {
     Set *D = Set_copy(S1);
-    Set_traverse(S2, _remove_data_from_otherRBTree, D);
+    Set_traverse(S2, remove_from_set, D);
     return D;
 }
