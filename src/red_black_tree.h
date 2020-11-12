@@ -1,9 +1,10 @@
-#ifndef _rbt_h
-#define _rbt_h
+#ifndef _red_black_tree_h
+#define _red_black_tree_h
 
 #include <stdlib.h>
 #include <string.h>
 
+#include "data.h"
 #include "sort_tools.h"
 #include "type_interface.h"
 
@@ -11,16 +12,6 @@
 #define RED 1
 
 #define RBT_ALLOC_THRESHOLD (2 * sizeof(char*))
-
-union RBTreeData {
-    struct {
-        char data[RBT_ALLOC_THRESHOLD];
-    } internal;
-    struct {
-        char *key;
-        char *value;
-    } external;
-};
 
 struct RBTreeNode;
 typedef struct RBTreeNode {
@@ -30,8 +21,12 @@ typedef struct RBTreeNode {
     unsigned int color     : 1;
     unsigned int has_key   : 1;
     unsigned int has_value : 1;
-    union RBTreeData data;
+    union MappingData data;
 } RBTreeNode;
+
+#define RBTreeNode_color(n) ( (n)->flags & 0b10000000 ? RED : BLACK )
+#define RBTreeNode_has_key(n) ( (n)->flags & 0b01000000 )
+#define RBTreeNode_has_value(n) ( (n)->flags & 0b00100000 )
 
 typedef struct RBTree {
     RBTreeNode *root;
@@ -74,4 +69,4 @@ int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
         ? (n)->data.external.value \
         : (n)->data.internal.data + TypeInterface_size((T)->key_type) )
 
-#endif // _rbt_h
+#endif // _red_black_tree_h

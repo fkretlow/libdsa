@@ -720,8 +720,8 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
          * move on to remove succ (then stored in n) from the tree. */
         RBTreeNode_destroy_key(T, n);
         RBTreeNode_destroy_value(T, n);
-        memmove(&n->data, &succ->data, sizeof(union RBTreeData));
-        memset(&succ->data, 0, sizeof(union RBTreeData));
+        memmove(&n->data, &succ->data, sizeof(union MappingData));
+        memset(&succ->data, 0, sizeof(union MappingData));
         n = succ;
     }
 
