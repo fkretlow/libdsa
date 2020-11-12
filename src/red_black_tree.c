@@ -126,50 +126,167 @@ int RBTree_invariant(const RBTree *T)
 }
 
 /* static inline */
-RBTreeNode *RBTreeNode_new(void)
-{
-    return calloc(1, sizeof(RBTreeNode));
-}
+RBTreeNode *RBTreeNode_new(void) { return calloc(1, sizeof(RBTreeNode)); }
+
+/***************************************************************************************
+ *
+ * void RBTreeNode_delete(const RBTree *T, RBTreeNode *n);
+ *
+ * Delete n, freeing any associated memory.
+ * No edges are removed by this function, this is the responsibility of the caller.
+ *
+ **************************************************************************************/
 
 /* static inline */
 void RBTreeNode_delete(const RBTree *T, RBTreeNode *n)
 {
-    /* We don't remove any edges here. */
     if (n) {
-        if (n->key && T) {
-            TypeInterface_destroy(T->key_type, n->key);
-        }
-        free(n->key);
+        RBTreeNode_destroy_key(T, n);
+        RBTreeNode_destroy_value(T, n);
         free(n);
     }
 }
 
-/* static */
-int RBTreeNode_set(const RBTree *T, RBTreeNode *n, const void *v)
+/***************************************************************************************
+ *
+ * int RBTreeNode_set_key(const RBTree *T, RBTreeNode *n, const void *k)
+ *
+ * Set the key of n to the value of the key object pointed to by k.
+ * Since there is no use case where it makes sense to overwrite an existing key, we
+ * assume that no key is stored in n.
+ *
+ * Return values: 0 on success
+ *               -1 on error
+ *
+ * TODO: What about swapping nodes when deleting entries? => Swap RBTreeData objects
+ * wholesale.
+ *
+ **************************************************************************************/
+
+int RBTreeNode_set_key(const RBTree *T, RBTreeNode *n, const void *k)
+{
+    check_ptr(T);
+    check_ptr(n);
+    check_ptr(k);
+
+    /* Store the key on the heap... */
+    if (T->storage_allocated) {
+        if (n->data.external.key != NULL) sentinel("Key is already set. Why?");
+        n->data.external.key = TypeInterface_allocate(T->key_type, 1);
+        check_alloc(n->data.external.key);
+        TypeInterface_copy(T->key_type, n->data.external.key, k);
+    }
+
+    /* ... or within n itself. */
+    else { /* T->storage_allocated == 0 */
+        TypeInterface_copy(T->key_type, n->data.internal.data, k);
+    }
+
+    n->has_key = 1;
+
+    return 0;
+error:
+    if (n->data.external.key) free(n->data.external.key);
+    return -1;
+}
+
+/***************************************************************************************
+ *
+ * void RBTreeNode_destroy_key(RBTree *T, RBTreeNode *n);
+ *
+ * Destroy the key stored in n, freeing memory on the heap if necessary.
+ *
+ **************************************************************************************/
+
+void RBTreeNode_destroy_key(RBTree *T, RBTreeNode *n)
+{
+    if (n && n->has_key) {
+        if (T->storage_allocated && n->data.external.key != NULL) {
+            TypeInterface_destroy(T->key_type, n->data.external.key);
+            free(n->data.external.key);
+            n->data.external.key = NULL;
+        } else {
+            TypeInterface_destroy(T->key_type, n->data.internal.data);
+            memset(n->data.internal.data, 0, TypeInterface_size(T->key_type));
+        }
+        n->has_key = 0;
+    }
+}
+
+/***************************************************************************************
+ *
+ * int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v)
+ *
+ * Set the the value part of n to the value of the object pointed to by v.
+ * Other than with keys, it makes sense to overwrite existing values.
+ *
+ * Return values: 0 on success
+ *               -1 on error
+ *
+ **************************************************************************************/
+
+int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v)
 {
     check_ptr(T);
     check_ptr(n);
     check_ptr(v);
 
-    if (n->key) {
-        TypeInterface_destroy(T->key_type, n->key);
-    } else {
-        n->key = TypeInterface_allocate(T->key_type, 1);
-        check_alloc(n->key);
+    /* Store the value on the heap... */
+    if (T->storage_allocated) {
+        if (n->data.external.value != NULL) {
+            TypeInterface_destroy(T->value_type, n->data.external.value);
+        } else {
+            n->data.external.value = TypeInterface_allocate(T->value_type, 1);
+            check_alloc(n->data.external.value);
+        }
+        TypeInterface_copy(T->value_type, n->data.external.value, v);
     }
 
-    TypeInterface_copy(T->key_type, n->key, v);
+    /* ... or within n itself. */
+    else { /* T->storage_allocated == 0 */
+        TypeInterface_copy(T->value_type,
+                           n->data.internal.data + TypeInterface_size(T->key_type),
+                           k);
+    }
+
+    n->has_value = 1;
 
     return 0;
 error:
     return -1;
 }
 
+/***************************************************************************************
+ *
+ * void RBTreeNode_destroy_value(RBTree *T, RBTreeNode *n);
+ *
+ * Destroy the value stored in n, freeing memory on the heap if necessary.
+ *
+ **************************************************************************************/
+
+void RBTreeNode_destroy_value(RBTree *T, RBTreeNode *n)
+{
+    if (T->value_type && n && n->has_value) {
+        if (T->storage_allocated && n->data.external.value != NULL) {
+            TypeInterface_destroy(T->value_type, n->data.external.value);
+            free(n->data.external.value);
+            n->data.external.value = NULL;
+        } else {
+            void *value_location = n->data.internal.data
+                                   + TypeInterface_size(T->key_type);
+            TypeInterface_destroy(T->value_type, value_location);
+            memset(value_location, 0, TypeInterface_size(T->value_type));
+        }
+        n->has_value = 0;
+    }
+}
+
 /**************************************************************************************
  *
  * RBTreeNode *RBTreeNode_copy(const RBTree *T, const RBTreeNode *n)
  *
- * Recursively copy the tree rooted at src to dest.
+ * Recursively copy the tree rooted at src. Store a pointer to the copy at the pointer
+ * location pointed to by dest.
  *
  *************************************************************************************/
 
@@ -186,8 +303,14 @@ int RBTreeNode_copy(const RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
     RBTreeNode *c = RBTreeNode_new();
     check(c, "Failed to create new node.");
 
-    rc = RBTreeNode_set(T, c, src->key);
+    rc = RBTreeNode_set_key(T, c, RBTreeNode_key(T, src));
     check(rc == 0, "Failed to copy key to new node.");
+
+    if (T->value_type) {
+        rc = RBTreeNode_set_value(T, c, RBTreeNode_value(T, src));
+        check(rc == 0, "Failed to copy key to new node.");
+    }
+
     c->color = src->color;
 
     rc = RBTreeNode_copy(T, &c->left, src->left);
@@ -230,7 +353,6 @@ void RBTreeNode_replace_child(RBTree *T,
 /* static */
 int RBTreeNode_rotate_left(RBTree *T, RBTreeNode *n, RBTreeNode **node_out)
 {
-    /* if (n->key) debug("n = %d", *(int*)n->key); */
     check_ptr(n);
     assert(n->right);
 
@@ -252,7 +374,6 @@ error:
 /* static */
 int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out)
 {
-    /* if (n->key) debug("n = %d", *(int*)n->key); */
     check_ptr(n);
     assert(n->left);
 
@@ -271,15 +392,41 @@ error:
     return -1;
 }
 
-int RBTree_initialize(RBTree *T, TypeInterface *key_type)
+/***************************************************************************************
+ *
+ * int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type);
+ *
+ * Initialize T, which is assumed to be a pointer to a memory location with enough space
+ * for an RBTree. The key type is mandatory, the value type can be if single objects
+ * instead of key-value pairs should be stored.
+ *
+ * If the combined size of the key and value elements is less than RBT_ALLOC_THRESHOLD,
+ * both will be stored within the nodes themselves. Otherwise they're allocated and
+ * referenced with pointers.
+ *
+ * Return values: 0 on success
+ *               -1 on error
+ *
+ **************************************************************************************/
+
+int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type)
 {
     check_ptr(T);
     check_ptr(key_type);
-    check(key_type->compare, "No comparison function.");
+    check(key_type->compare, "No comparison function was given.");
 
     T->root = NULL;
     T->size = 0;
     T->key_type = key_type;
+    T->value_type = value_type;
+
+    if ( TypeInterface_size(key_type)
+            + ( value_type ? TypeInterface_size(value_type) : 0 )
+            > RBT_ALLOC_THRESHOLD ) {
+        T->storage_allocated = 1;
+    } else {
+        T->storage_allocated = 0;
+    }
 
     return 0;
 error:
@@ -415,16 +562,15 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
     }
 }
 
-static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
+static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
 {
-    /* debug("n = %d, v = %d", *(int*)n->key, *(int*)v); */
-    int comp = TypeInterface_compare(T->key_type, v, n->key);
+    int comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
     if (comp == 0) {
         return 1; /* found it, nothing to do */
     } else if (comp < 0 && n->left) {
-        return RBTreeNode_insert(T, n->left, v);
+        return RBTreeNode_insert(T, n->left, k);
     } else if (comp > 0 && n->right) {
-        return RBTreeNode_insert(T, n->right, v);
+        return RBTreeNode_insert(T, n->right, k);
     }
 
     /* Case 1: n is black */
@@ -432,14 +578,14 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
         if (comp < 0) {
             /* debug("Case 1 left"); */
             n->left = RBTreeNode_new();
-            RBTreeNode_set(T, n->left, v);
+            RBTreeNode_set_key(T, n->left, k);
             n->left->parent = n;
             n->left->color = RED;
             ++T->size;
         } else { /* comp > 0 */
             /* debug("Case 1 right"); */
             n->right = RBTreeNode_new();
-            RBTreeNode_set(T, n->right, v);
+            RBTreeNode_set_key(T, n->right, k);
             n->right->parent = n;
             n->right->color = RED;
             ++T->size;
@@ -455,7 +601,7 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
             /* debug("Case 2.1 p is full"); */
             RBTree_group_decrease_weight(T, p);
             /* Now n may be elsewhere. Go again. */
-            return RBTreeNode_insert(T, n, v);
+            return RBTreeNode_insert(T, n, k);
         }
 
         /* Case 2.2: p has 1 red child (n) */
@@ -465,7 +611,7 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
                 RBTreeNode_rotate_right(T, p, NULL);
                 n->left = RBTreeNode_new();
                 n->left->parent = n;
-                RBTreeNode_set(T, n->left, v);
+                RBTreeNode_set_key(T, n->left, k);
                 n->color = BLACK;
                 p->color = RED;
                 n->left->color = RED;
@@ -474,22 +620,22 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
                 RBTreeNode_rotate_left(T, p, NULL);
                 n->right = RBTreeNode_new();
                 n->right->parent = n;
-                RBTreeNode_set(T, n->right, v);
+                RBTreeNode_set_key(T, n->right, k);
                 n->color = BLACK;
                 p->color = RED;
                 n->right->color = RED;
             } else if (comp < 0 && n == p->right) {
                 /* debug("Case 2.2 right-left"); */
                 p->left = RBTreeNode_new();
-                RBTreeNode_set(T, p->left, p->key);
-                RBTreeNode_set(T, p, v);
+                RBTreeNode_set_key(T, p->left, RBTreeNode_key(T, p));
+                RBTreeNode_set_key(T, p, k);
                 p->left->parent = p;
                 p->left->color = RED;
             } else if (comp > 0 && n == p->left) {
                 /* debug("Case 2.2 left-right"); */
                 p->right = RBTreeNode_new();
-                RBTreeNode_set(T, p->right, p->key);
-                RBTreeNode_set(T, p, v);
+                RBTreeNode_set_key(T, p->right, RBTreeNode_key(T, p));
+                RBTreeNode_set_key(T, p, k);
                 p->right->parent = p;
                 p->right->color = RED;
             }
@@ -501,9 +647,9 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
 
 /**************************************************************************************
  *
- * int RBTree_insert(RBTree *T, const void *v)
+ * int RBTree_insert(RBTree *T, const void *k)
  *
- * Insert an element with the value v into the tree T.
+ * Insert an element with the key k into the tree T.
  *
  * Return values:
  *      1: The element was found and not added.
@@ -512,11 +658,10 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
  *
  *************************************************************************************/
 
-int RBTree_insert(RBTree *T, const void *v)
+int RBTree_insert(RBTree *T, const void *k)
 {
-    /* debug("v = %d", *(int*)v); */
     check_ptr(T);
-    check_ptr(v);
+    check_ptr(k);
     assert (!RBTree_invariant(T));
 
     int rc = 0;
@@ -524,12 +669,12 @@ int RBTree_insert(RBTree *T, const void *v)
     if (!T->root) {
         T->root = RBTreeNode_new();
         check(T->root != NULL, "RBTreeNode_new failed.");
-        rc = RBTreeNode_set(T, T->root, v);
-        check(rc == 0, "RBTreeNode_set failed.");
+        rc = RBTreeNode_set_key(T, T->root, k);
+        check(rc == 0, "RBTreeNode_set_key failed.");
         T->root->color = BLACK;
         ++T->size;
     } else {
-        rc = RBTreeNode_insert(T, T->root, v);
+        rc = RBTreeNode_insert(T, T->root, k);
         check(rc >= 0, "RBTreeNode_insert failed.");
     }
 
@@ -539,16 +684,16 @@ error:
     return -1;
 }
 
-int RBTree_has(const RBTree *T, const void *v)
+int RBTree_has(const RBTree *T, const void *k)
 {
     check_ptr(T);
-    check_ptr(v);
+    check_ptr(k);
 
     RBTreeNode *n = T->root;
     int comp;
 
     while (n) {
-        comp = TypeInterface_compare(T->key_type, v, n->key);
+        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
         if (comp > 0) {
             n = n->right;
         } else if (comp < 0) {
@@ -675,27 +820,30 @@ static void RBTree_group_increase_weight(RBTree *T, RBTreeNode *n)
     }
 }
 
-int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *v)
+int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
 {
     int comp;
     for ( ;; ) {
         if (!n) return 0; /* not found */
-        comp = TypeInterface_compare(T->key_type, v, n->key);
+        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
         if (comp == 0) break; /* found, go on */
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;
     }
 
     if (n->left && n->right) {
-        /* n is not in a leaf position. Swap with a node that is. */
+        /* n has two children. Find the node with the smallest key greater than the key
+         * of n. */
         RBTreeNode *succ = n->right;
         while (succ->left) succ = succ->left;
-        /* succ->key isn't needed for the deletion. Set it to NULL so the value isn't
-         * destroyed. This way we save a call to the value copy constructor. */
-        TypeInterface_destroy(T->key_type, n->key);
-        free(n->key);
-        n->key = succ->key;
-        succ->key = NULL;
+        /* The normal approach is to swap the payloads of n and succ at this point.
+         * However, we don't need succ->data to remove succ later, so we destroy n's
+         * payload now, move over succ->data to n wholesale, zero out succ->data and
+         * move on to remove succ (then stored in n) from the tree. */
+        RBTreeNode_destroy_key(T, n);
+        RBTreeNode_destroy_value(T, n);
+        memmove(n->data, succ->data, sizeof(union RBTreeData));
+        memset(succ->data, 0, sizeof(union RBTreeData));
         n = succ;
     }
 
@@ -733,9 +881,9 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *v)
 
 /**************************************************************************************
  *
- * int RBTree_remove(RBTree *T, const void *v)
+ * int RBTree_remove(RBTree *T, const void *k)
  *
- * Remove the element with the value v from the tree T.
+ * Remove the element with the value k from the tree T.
  *
  * Return values:
  *      1: The element was found and deleted.
@@ -744,16 +892,15 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *v)
  *
  *************************************************************************************/
 
-int RBTree_remove(RBTree *T, const void *v)
+int RBTree_remove(RBTree *T, const void *k)
 {
-    /* debug("v = %d", *(int*)v); */
     check_ptr(T);
-    check_ptr(v);
+    check_ptr(k);
     assert (!RBTree_invariant(T));
 
     int rc = 0;
 
-    if (T->root) rc = RBTreeNode_remove(T, T->root, v);
+    if (T->root) rc = RBTreeNode_remove(T, T->root, k);
 
     assert(!RBTree_invariant(T));
     return rc;

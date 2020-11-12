@@ -10,19 +10,35 @@
 #define BLACK 0
 #define RED 1
 
+#define RBT_ALLOC_THRESHOLD (2 * sizeof(char*))
+
+union RBTreeData {
+    struct {
+        char data[RBT_ALLOC_THRESHOLD];
+    } internal;
+    struct {
+        char *key;
+        char *value;
+    } external;
+};
+
 struct RBTreeNode;
 typedef struct RBTreeNode {
     struct RBTreeNode *parent;
     struct RBTreeNode *left;
     struct RBTreeNode *right;
-    char *key;
-    unsigned int color : 1;
+    unsigned int color     : 1;
+    unsigned int has_key   : 1;
+    unsigned int has_value : 1;
+    union RBTreeData data;
 } RBTreeNode;
 
 typedef struct RBTree {
     RBTreeNode *root;
     size_t size;
     TypeInterface *key_type;
+    TypeInterface *value_type;
+    unsigned int storage_allocated : 1;
 } RBTree;
 
 
@@ -43,5 +59,12 @@ void RBTreeNode_delete(const RBTree *T, RBTreeNode *n);
 int RBTreeNode_set(const RBTree *T, RBTreeNode *n, const void *value);
 int RBTreeNode_rotate_left(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
 int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
+
+#define RBTreeNode_key(T, n) ( (T)->storage_allocated \
+        ? (n)->data.external.key \
+        : (n)->data.internal.data )
+#define RBTreeNode_value(T, n) ( (T)->storage_allocated \
+        ? (n)->data.external.value \
+        : (n)->data.internal.data + TypeInterface_size((T)->key_type) )
 
 #endif // _rbt_h
