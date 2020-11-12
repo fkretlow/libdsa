@@ -67,7 +67,7 @@ void print_tree_stats(RBTree *T, const char *header)
         .longest = 0,
         .shortest = SIZE_MAX
     };
-    RBTree_traverse(T, RBTreeNode_get_stats, &s);
+    RBTree_traverse_nodes(T, RBTreeNode_get_stats, &s);
 
     printf("%s\n", "----------------------------------");
     if (header) printf("%s\n", header);
@@ -166,8 +166,9 @@ int test_rotations(void)
 
 int test_rbtree_initialize(void)
 {
-    rc = RBTree_initialize(&T, &int_type);
+    rc = RBTree_initialize(&T, &int_type, NULL);
     test(rc == 0, "rc = %d (%d)", rc, 0);
+    test(T.storage_allocated == 0, "T has storage allocated when it shouldn't.");
     test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
     test(T.key_type->size == sizeof(int), "T.key_type->size = %lu (%lu)",
             T.key_type->size, sizeof(int));
@@ -249,19 +250,23 @@ int test_rbtree_copy(void)
 
     RBTreeNode *r = C.root;
     test(r->color == BLACK, "r->color = %d (%d)", r->color, BLACK);
-    test(*(int*)r->key == 1, "r->key = %d (%d)", *(int*)r->key, 1);
+    test(*(int*)RBTreeNode_key(&C, r) == 1,
+            "r->key = %d (%d)", *(int*)RBTreeNode_key(&C, r), 1);
 
     RBTreeNode *rl = r->left;
     test(rl->color == BLACK, "rl->color = %d (%d)", rl->color, BLACK);
-    test(*(int*)rl->key == 0, "rl->key = %d (%d)", *(int*)rl->key, 0);
+    test(*(int*)RBTreeNode_key(&C, rl) == 0,
+            "rl->key = %d (%d)", *(int*)RBTreeNode_key(&C, rl), 0);
 
     RBTreeNode *rr = r->right;
     test(rr->color == BLACK, "rr->color = %d (%d)", rr->color, BLACK);
-    test(*(int*)rr->key == 2, "rr->key = %d (%d)", *(int*)rr->key, 2);
+    test(*(int*)RBTreeNode_key(&C, rr) == 2,
+            "rr->key = %d (%d)", *(int*)RBTreeNode_key(&C, rr), 2);
 
     RBTreeNode *rrr = rr->right;
     test(rrr->color == RED, "rrr->color = %d (%d)", rrr->color, RED);
-    test(*(int*)rrr->key == 3, "rrr->key = %d (%d)", *(int*)rrr->key, 3);
+    test(*(int*)RBTreeNode_key(&C, rrr) == 3,
+            "rrr->key = %d (%d)", *(int*)RBTreeNode_key(&C, rrr), 3);
 
     RBTree_clear(&C);
     RBTree_clear(&T);

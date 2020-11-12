@@ -897,7 +897,7 @@ static int RBTreeNode_traverse_keys_r(RBTree *T, RBTreeNode *n,
 
     if (n) {
         if (n->right) {
-            rc = RBTreeNode_traverse_keys(T, n->right, f, p);
+            rc = RBTreeNode_traverse_keys_r(T, n->right, f, p);
             if (rc != 0) return rc;
         }
 
@@ -905,7 +905,7 @@ static int RBTreeNode_traverse_keys_r(RBTree *T, RBTreeNode *n,
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = RBTreeNode_traverse_keys(T, n->left, f, p);
+            rc = RBTreeNode_traverse_keys_r(T, n->left, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -947,7 +947,7 @@ static int RBTreeNode_traverse_values_r(RBTree *T, RBTreeNode *n,
 
     if (n) {
         if (n->right) {
-            rc = RBTreeNode_traverse_values(T, n->right, f, p);
+            rc = RBTreeNode_traverse_values_r(T, n->right, f, p);
             if (rc != 0) return rc;
         }
 
@@ -955,7 +955,7 @@ static int RBTreeNode_traverse_values_r(RBTree *T, RBTreeNode *n,
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = RBTreeNode_traverse_values(T, n->left, f, p);
+            rc = RBTreeNode_traverse_values_r(T, n->left, f, p);
             if (rc != 0) return rc;
         }
     }

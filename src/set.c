@@ -89,9 +89,9 @@ Set *Set_union(Set *S1, Set *S2)
  *
  **************************************************************************************/
 
-static inline int push_into_vector(void *e, void *V)
+static inline int push_pointer_into_vector(void *e, void *V)
 {
-    return Vector_push_back(V, e);
+    return Vector_push_back(V, &e);
 }
 
 Set *Set_intersection(Set *S1, Set *S2)
@@ -112,8 +112,8 @@ Set *Set_intersection(Set *S1, Set *S2)
     Vector_reserve(&V1, Set_size(S1));
     Vector_reserve(&V2, Set_size(S2));
 
-    Set_traverse_r(S1, push_into_vector, &V1);
-    Set_traverse_r(S2, push_into_vector, &V2);
+    Set_traverse_r(S1, push_pointer_into_vector, &V1);
+    Set_traverse_r(S2, push_pointer_into_vector, &V2);
 
     Vector_pop_back(&V1, &e1);
     Vector_pop_back(&V2, &e2);
@@ -136,6 +136,7 @@ Set *Set_intersection(Set *S1, Set *S2)
 
     Vector_destroy(&V1);
     Vector_destroy(&V2);
+
     return I;
 
 error:
