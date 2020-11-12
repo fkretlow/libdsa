@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "debug.h"
-#include "rbt.h"
+#include "red_black_tree.h"
 #include "test_utils.h"
 #include "test.h"
 #include "type_interface.h"
@@ -11,7 +11,7 @@
 #define MAX_VALUE 1000
 #define N_VALUES 100
 
-static _rbt T;
+static RBTree T;
 static int rc;
 
 struct rbt_stats {
@@ -23,7 +23,7 @@ struct rbt_stats {
     size_t shortest;
 };
 
-int _rbt_node_get_stats(_rbt_node *n, void *stats)
+int RBTreeNode_get_stats(RBTreeNode *n, void *stats)
 {
     struct rbt_stats *s = stats;
     if (n->color == RED) {
@@ -57,7 +57,7 @@ int _rbt_node_get_stats(_rbt_node *n, void *stats)
     return 0;
 }
 
-void print_rbt_stats(_rbt *T, const char *header)
+void print_tree_stats(RBTree *T, const char *header)
 {
     struct rbt_stats s = {
         .red = 0,
@@ -67,7 +67,7 @@ void print_rbt_stats(_rbt *T, const char *header)
         .longest = 0,
         .shortest = SIZE_MAX
     };
-    _rbt_traverse(T, _rbt_node_get_stats, &s);
+    RBTree_traverse(T, RBTreeNode_get_stats, &s);
 
     printf("%s\n", "----------------------------------");
     if (header) printf("%s\n", header);
@@ -83,34 +83,34 @@ void print_rbt_stats(_rbt *T, const char *header)
     printf("%s\n", "----------------------------------");
 }
 
-/* static int print_node(_rbt_node *n, void *nothing)
+/* static int print_node(RBTreeNode *n, void *nothing)
 {
     nothing = nothing;
-    printf("%d %s\n", *(int*)n->data, n->color == RED ? "R" : "B");
+    printf("%d %s\n", *(int*)n->key, n->color == RED ? "R" : "B");
     return 0;
 } */
 
 int test_rotations(void)
 {
-    _rbt_node *p = _rbt_node_new();
-    _rbt_node *n = _rbt_node_new();
-    _rbt_node *l = _rbt_node_new();
-    _rbt_node *ll = _rbt_node_new();
-    _rbt_node *lr = _rbt_node_new();
-    _rbt_node *r = _rbt_node_new();
-    _rbt_node *rl = _rbt_node_new();
-    _rbt_node *rr = _rbt_node_new();
+    RBTreeNode *p = RBTreeNode_new();
+    RBTreeNode *n = RBTreeNode_new();
+    RBTreeNode *l = RBTreeNode_new();
+    RBTreeNode *ll = RBTreeNode_new();
+    RBTreeNode *lr = RBTreeNode_new();
+    RBTreeNode *r = RBTreeNode_new();
+    RBTreeNode *rl = RBTreeNode_new();
+    RBTreeNode *rr = RBTreeNode_new();
 
-    _rbt_node *res;
+    RBTreeNode *res;
 
-    test(p, "_rbt_node_new failed.");
-    test(n, "_rbt_node_new failed.");
-    test(l, "_rbt_node_new failed.");
-    test(ll, "_rbt_node_new failed.");
-    test(lr, "_rbt_node_new failed.");
-    test(r, "_rbt_node_new failed.");
-    test(rl, "_rbt_node_new failed.");
-    test(rr, "_rbt_node_new failed.");
+    test(p, "RBTreeNode_new failed.");
+    test(n, "RBTreeNode_new failed.");
+    test(l, "RBTreeNode_new failed.");
+    test(ll, "RBTreeNode_new failed.");
+    test(lr, "RBTreeNode_new failed.");
+    test(r, "RBTreeNode_new failed.");
+    test(rl, "RBTreeNode_new failed.");
+    test(rr, "RBTreeNode_new failed.");
 
     // construct the test tree
     p->left = n, n->parent = p;
@@ -122,7 +122,7 @@ int test_rotations(void)
     r->right = rr, rr->parent = r;
 
     // rotate right and check
-    test(!_rbt_node_rotate_right(&T, n, &res), "_rbt_node_rotate_right failed.");
+    test(!RBTreeNode_rotate_right(&T, n, &res), "RBTreeNode_rotate_right failed.");
     test(res == l, "res != l");
     test(p->left == l, "p->left != l");
     test(l->parent == p, "l->parent != p");
@@ -142,7 +142,7 @@ int test_rotations(void)
     r->right = rr, rr->parent = r;
 
     // rotate left and check
-    test(!_rbt_node_rotate_left(&T, n, &res), "_rbt_node_rotate_right failed.");
+    test(!RBTreeNode_rotate_left(&T, n, &res), "RBTreeNode_rotate_right failed.");
     test(res == r, "res != l");
     test(p->right == r, "p->right != r");
     test(r->parent == p, "r->parent != p");
@@ -152,119 +152,119 @@ int test_rotations(void)
     test(n->right == rl, "n->right != rl");
     test(rl->parent == n, "rl->parent != n");
 
-    _rbt_node_delete(&T, p);
-    _rbt_node_delete(&T, n);
-    _rbt_node_delete(&T, l);
-    _rbt_node_delete(&T, ll);
-    _rbt_node_delete(&T, lr);
-    _rbt_node_delete(&T, r);
-    _rbt_node_delete(&T, rl);
-    _rbt_node_delete(&T, rr);
+    RBTreeNode_delete(&T, p);
+    RBTreeNode_delete(&T, n);
+    RBTreeNode_delete(&T, l);
+    RBTreeNode_delete(&T, ll);
+    RBTreeNode_delete(&T, lr);
+    RBTreeNode_delete(&T, r);
+    RBTreeNode_delete(&T, rl);
+    RBTreeNode_delete(&T, rr);
 
     return TEST_OK;
 }
 
-int test_rbt_initialize(void)
+int test_rbtree_initialize(void)
 {
-    rc = _rbt_initialize(&T, &int_type);
+    rc = RBTree_initialize(&T, &int_type);
     test(rc == 0, "rc = %d (%d)", rc, 0);
     test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
-    test(T.element_type->size == sizeof(int), "T.element_type->size = %lu (%lu)",
-            T.element_type->size, sizeof(int));
+    test(T.key_type->size == sizeof(int), "T.key_type->size = %lu (%lu)",
+            T.key_type->size, sizeof(int));
     test(T.size == 0, "T.size = %lu (%lu)", T.size, 0lu);
 
     return TEST_OK;
 }
 
-int test_rbt_usage(void)
+int test_rbtree_usage(void)
 {
     int v;
 
     size_t size = 0;
     for (int i = 0; i < N_VALUES; ++i) {
-        rc = _rbt_insert(&T, &i);
+        rc = RBTree_insert(&T, &i);
         ++size;
         test(rc == 0, "rc = %d (%d)", rc, 0);
         test(T.size == size, "T.size = %lu (%lu)", T.size, size);
-        rc = _rbt_has(&T, &i);
+        rc = RBTree_has(&T, &i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
 
     v = -1;
-    rc = _rbt_has(&T, &v);
+    rc = RBTree_has(&T, &v);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    /* print_rbt_stats(&T, "sorted input"); */
+    /* print_tree_stats(&T, "sorted input"); */
 
     for (int i = 0; i < N_VALUES / 2; ++i) {
-        rc = _rbt_remove(&T, &i);
+        rc = RBTree_remove(&T, &i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
-        rc = _rbt_has(&T, &v);
+        rc = RBTree_has(&T, &v);
         test(rc == 0, "rc = %d (%d)" ,rc, 0);
     }
 
-    _rbt_clear(&T);
+    RBTree_clear(&T);
 
     int values[N_VALUES] = { 0 };
     for (int i = 0; i < N_VALUES; ++i) {
         v = (int)rand() % MAX_VALUE;
-        rc = _rbt_insert(&T, &v);
-        test(rc >= 0, "_rbt_insert failed");
+        rc = RBTree_insert(&T, &v);
+        test(rc >= 0, "RBTree_insert failed");
         if (rc == 1) {
             --i;
         } else {
             values[i] = v;
         }
         test(T.size == (size_t)i + 1, "T.size = %lu (%d)", T.size, i + 1);
-        rc = _rbt_has(&T, &v);
+        rc = RBTree_has(&T, &v);
         test(rc == 1, "rc = %d (%d)", rc, 1);
     }
 
-    /* print_rbt_stats(&T, "unsorted input"); */
-    /* _rbt_traverse(&T, print_node, NULL); */
+    /* print_tree_stats(&T, "unsorted input"); */
+    /* RBTree_traverse(&T, print_node, NULL); */
 
     for (int i = 0; i < N_VALUES; ++i) {
         /* debug("deleting unsorted values: loop i = %d", i); */
-        rc = _rbt_remove(&T, values + i);
+        rc = RBTree_remove(&T, values + i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
-        rc = _rbt_has(&T, values + i);
+        rc = RBTree_has(&T, values + i);
         test(rc == 0, "rc = %d (%d)", rc, 0);
     }
 
-    _rbt_clear(&T);
+    RBTree_clear(&T);
 
     return TEST_OK;
 }
 
-int test_rbt_copy(void)
+int test_rbtree_copy(void)
 {
     for (int i = 0; i < 4; ++i) {
-        _rbt_insert(&T, &i);
+        RBTree_insert(&T, &i);
     }
 
-    _rbt C = { 0 };
-    int rc = _rbt_copy(&C, &T);
+    RBTree C = { 0 };
+    int rc = RBTree_copy(&C, &T);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
-    _rbt_node *r = C.root;
+    RBTreeNode *r = C.root;
     test(r->color == BLACK, "r->color = %d (%d)", r->color, BLACK);
-    test(*(int*)r->data == 1, "r->data = %d (%d)", *(int*)r->data, 1);
+    test(*(int*)r->key == 1, "r->key = %d (%d)", *(int*)r->key, 1);
 
-    _rbt_node *rl = r->left;
+    RBTreeNode *rl = r->left;
     test(rl->color == BLACK, "rl->color = %d (%d)", rl->color, BLACK);
-    test(*(int*)rl->data == 0, "rl->data = %d (%d)", *(int*)rl->data, 0);
+    test(*(int*)rl->key == 0, "rl->key = %d (%d)", *(int*)rl->key, 0);
 
-    _rbt_node *rr = r->right;
+    RBTreeNode *rr = r->right;
     test(rr->color == BLACK, "rr->color = %d (%d)", rr->color, BLACK);
-    test(*(int*)rr->data == 2, "rr->data = %d (%d)", *(int*)rr->data, 2);
+    test(*(int*)rr->key == 2, "rr->key = %d (%d)", *(int*)rr->key, 2);
 
-    _rbt_node *rrr = rr->right;
+    RBTreeNode *rrr = rr->right;
     test(rrr->color == RED, "rrr->color = %d (%d)", rrr->color, RED);
-    test(*(int*)rrr->data == 3, "rrr->data = %d (%d)", *(int*)rrr->data, 3);
+    test(*(int*)rrr->key == 3, "rrr->key = %d (%d)", *(int*)rrr->key, 3);
 
-    _rbt_clear(&C);
-    _rbt_clear(&T);
+    RBTree_clear(&C);
+    RBTree_clear(&T);
     return TEST_OK;
 }
 
@@ -278,8 +278,8 @@ int main(void)
     /* debug("random seed was %u", seed); */
 
     run_test(test_rotations);
-    run_test(test_rbt_initialize);
-    run_test(test_rbt_usage);
-    run_test(test_rbt_copy);
+    run_test(test_rbtree_initialize);
+    run_test(test_rbtree_usage);
+    run_test(test_rbtree_copy);
     test_suite_end();
 }

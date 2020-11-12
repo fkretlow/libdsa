@@ -4,14 +4,14 @@
 #include "stack.h"
 #include "vector.h"
 
-Set *Set_new(TypeInterface *element_type)
+Set *Set_new(TypeInterface *key_type)
 {
-    check_ptr(element_type);
+    check_ptr(key_type);
 
     Set *S = malloc(sizeof(*S));
     check_alloc(S);
 
-    Set_initialize(S, element_type);
+    Set_initialize(S, key_type);
 
     return S;
 error:
@@ -21,7 +21,7 @@ error:
 void Set_delete(Set *S)
 {
     if (S) {
-        _rbt_clear(S);
+        RBTree_clear(S);
         free(S);
     }
 }
@@ -30,14 +30,14 @@ void Set_delete(Set *S)
  *
  * Set *Set_copy(Set *S);
  *
- * Return an exact copy of the given set. Adapter for _rbt_copy.
+ * Return an exact copy of the given set. Adapter for RBTree_copy.
  *
  **************************************************************************************/
 
 Set *Set_copy(Set *S)
 {
-    Set *C = Set_new(S->element_type);
-    _rbt_copy(C, S);
+    Set *C = Set_new(S->key_type);
+    RBTree_copy(C, S);
     return C;
 }
 
@@ -54,9 +54,9 @@ Set *Set_copy(Set *S)
  *
  **************************************************************************************/
 
-static inline int _copy_data_into_other_rbt(_rbt_node *n, void *T)
+static inline int _copy_data_into_otherRBTree(RBTreeNode *n, void *T)
 {
-    int rc = _rbt_insert(T, n->data);
+    int rc = RBTree_insert(T, n->key);
     return rc >= 0 ? 0 : -1;
 }
 
@@ -66,7 +66,7 @@ Set *Set_union(Set *S1, Set *S2)
     Set *smaller = larger == S1 ? S2 : S1;
 
     Set *U = Set_copy(larger);
-    Set_traverse(smaller, _copy_data_into_other_rbt, U);
+    Set_traverse(smaller, _copy_data_into_otherRBTree, U);
     return U;
 }
 
@@ -89,9 +89,9 @@ Set *Set_union(Set *S1, Set *S2)
  *
  **************************************************************************************/
 
-static inline int _push_data_pointer_to_vector(_rbt_node *n, void *v)
+static inline int _push_data_pointer_to_vector(RBTreeNode *n, void *v)
 {
-    return Vector_push_back(v, &n->data);
+    return Vector_push_back(v, &n->key);
 }
 
 Set *Set_intersection(Set *S1, Set *S2)
@@ -103,9 +103,9 @@ Set *Set_intersection(Set *S1, Set *S2)
 
     check_ptr(S1);
     check_ptr(S2);
-    check(S1->element_type == S2->element_type, "Element types don't match.");
+    check(S1->key_type == S2->key_type, "Element types don't match.");
 
-    I = Set_new(S1->element_type);
+    I = Set_new(S1->key_type);
     Vector_initialize(&V1, &pointer_type);
     Vector_initialize(&V2, &pointer_type);
 
@@ -119,7 +119,7 @@ Set *Set_intersection(Set *S1, Set *S2)
     Vector_pop_back(&V2, &e2);
 
     for ( ;; ) {
-        comp = TypeInterface_compare(S1->element_type, e1, e2);
+        comp = TypeInterface_compare(S1->key_type, e1, e2);
         if (comp < 0) {
             if (Vector_size(&V1) == 0) break;
             Vector_pop_back(&V1, &e1);
@@ -155,14 +155,14 @@ error:
  *
  **************************************************************************************/
 
-static int _remove_data_from_other_rbt(_rbt_node *n, void *T)
+static int _remove_data_from_otherRBTree(RBTreeNode *n, void *T)
 {
-    return _rbt_remove(T, n->data) >= 0 ? 0 : -1;
+    return RBTree_remove(T, n->key) >= 0 ? 0 : -1;
 }
 
 Set *Set_difference(Set *S1, Set *S2)
 {
     Set *D = Set_copy(S1);
-    Set_traverse(S2, _remove_data_from_other_rbt, D);
+    Set_traverse(S2, _remove_data_from_otherRBTree, D);
     return D;
 }

@@ -1,15 +1,15 @@
 #include <assert.h>
 
 #include "debug.h"
-#include "rbt.h"
+#include "red_black_tree.h"
 
 /***************************************************************************************
  *
- * static int _rbt_node_traverse(_rbt_node *n,
- *                               int (*f)(_rbt_node *n, void *p),
+ * static int RBTreeNode_traverse(RBTreeNode *n,
+ *                               int (*f)(RBTreeNode *n, void *p),
  *                               void *p);
- * static int _rbt_node_traverse_r(_rbt_node *n,
- *                                 int (*f)(_rbt_node *n, void *p),
+ * static int RBTreeNode_traverse_r(RBTreeNode *n,
+ *                                 int (*f)(RBTreeNode *n, void *p),
  *                                 void *p);
  *
  * Walk through all the nodes of the sub-tree with the root n in ascending/descending
@@ -18,15 +18,15 @@
  *
  **************************************************************************************/
 
-static int _rbt_node_traverse(_rbt_node *n,
-                              int (*f)(_rbt_node *n, void *p),
+static int RBTreeNode_traverse(RBTreeNode *n,
+                              int (*f)(RBTreeNode *n, void *p),
                               void *p)
 {
     int rc = 0;
 
     if (n) {
         if (n->left) {
-            rc = _rbt_node_traverse(n->left, f, p);
+            rc = RBTreeNode_traverse(n->left, f, p);
             if (rc != 0) return rc;
         }
 
@@ -34,7 +34,7 @@ static int _rbt_node_traverse(_rbt_node *n,
         if (rc != 0) return rc;
 
         if (n->right) {
-            rc = _rbt_node_traverse(n->right, f, p);
+            rc = RBTreeNode_traverse(n->right, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -42,15 +42,15 @@ static int _rbt_node_traverse(_rbt_node *n,
     return rc;
 }
 
-static int _rbt_node_traverse_r(_rbt_node *n,
-                                int (*f)(_rbt_node *n, void *p),
+static int RBTreeNode_traverse_r(RBTreeNode *n,
+                                int (*f)(RBTreeNode *n, void *p),
                                 void *p)
 {
     int rc = 0;
 
     if (n) {
         if (n->right) {
-            rc = _rbt_node_traverse_r(n->right, f, p);
+            rc = RBTreeNode_traverse_r(n->right, f, p);
             if (rc != 0) return rc;
         }
 
@@ -58,7 +58,7 @@ static int _rbt_node_traverse_r(_rbt_node *n,
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = _rbt_node_traverse_r(n->left, f, p);
+            rc = RBTreeNode_traverse_r(n->left, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -68,8 +68,8 @@ static int _rbt_node_traverse_r(_rbt_node *n,
 
 /***************************************************************************************
  *
- * int _rbt_traverse(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p);
- * int _rbt_traverse_r(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p);
+ * int RBTree_traverse(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
+ * int RBTree_traverse_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p);
  *
  * Walk through all the nodes of the tree in ascending/descending order.  Call f on
  * every node with the additional parameter p. If f returns a non-zero integer, abort
@@ -77,21 +77,21 @@ static int _rbt_node_traverse_r(_rbt_node *n,
  *
  **************************************************************************************/
 
-int _rbt_traverse(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
+int RBTree_traverse(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
     if (T && T->root) {
-        return _rbt_node_traverse(T->root, f, p);
+        return RBTreeNode_traverse(T->root, f, p);
     }
     return 0;
 }
 
-int _rbt_traverse_r(_rbt *T, int (*f)(_rbt_node *n, void *p), void *p) {
+int RBTree_traverse_r(RBTree *T, int (*f)(RBTreeNode *n, void *p), void *p) {
     if (T && T->root) {
-        return _rbt_node_traverse_r(T->root, f, p);
+        return RBTreeNode_traverse_r(T->root, f, p);
     }
     return 0;
 }
 
-int _rbt_node_invariant(_rbt_node *n, void *black_count)
+int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
 {
     if (n->color == RED) {
         /* Check for adjacent red nodes. */
@@ -118,47 +118,47 @@ int _rbt_node_invariant(_rbt_node *n, void *black_count)
     return 0;
 }
 
-int _rbt_invariant(const _rbt *T)
+int RBTree_invariant(const RBTree *T)
 {
     int black_count = -1;
-    int rc = _rbt_node_traverse(T->root, _rbt_node_invariant, &black_count);
+    int rc = RBTreeNode_traverse(T->root, RBTreeNode_invariant, &black_count);
     return rc;
 }
 
 /* static inline */
-_rbt_node *_rbt_node_new(void)
+RBTreeNode *RBTreeNode_new(void)
 {
-    return calloc(1, sizeof(_rbt_node));
+    return calloc(1, sizeof(RBTreeNode));
 }
 
 /* static inline */
-void _rbt_node_delete(const _rbt *T, _rbt_node *n)
+void RBTreeNode_delete(const RBTree *T, RBTreeNode *n)
 {
     /* We don't remove any edges here. */
     if (n) {
-        if (n->data && T) {
-            TypeInterface_destroy(T->element_type, n->data);
+        if (n->key && T) {
+            TypeInterface_destroy(T->key_type, n->key);
         }
-        free(n->data);
+        free(n->key);
         free(n);
     }
 }
 
 /* static */
-int _rbt_node_set(const _rbt *T, _rbt_node *n, const void *v)
+int RBTreeNode_set(const RBTree *T, RBTreeNode *n, const void *v)
 {
     check_ptr(T);
     check_ptr(n);
     check_ptr(v);
 
-    if (n->data) {
-        TypeInterface_destroy(T->element_type, n->data);
+    if (n->key) {
+        TypeInterface_destroy(T->key_type, n->key);
     } else {
-        n->data = TypeInterface_allocate(T->element_type, 1);
-        check_alloc(n->data);
+        n->key = TypeInterface_allocate(T->key_type, 1);
+        check_alloc(n->key);
     }
 
-    TypeInterface_copy(T->element_type, n->data, v);
+    TypeInterface_copy(T->key_type, n->key, v);
 
     return 0;
 error:
@@ -167,13 +167,13 @@ error:
 
 /**************************************************************************************
  *
- * _rbt_node *_rbt_node_copy(const _rbt *T, const _rbt_node *n)
+ * RBTreeNode *RBTreeNode_copy(const RBTree *T, const RBTreeNode *n)
  *
  * Recursively copy the tree rooted at src to dest.
  *
  *************************************************************************************/
 
-int _rbt_node_copy(const _rbt *T, _rbt_node **dest, const _rbt_node *src)
+int RBTreeNode_copy(const RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
 {
     check_ptr(T);
     if (src == NULL) {
@@ -183,34 +183,34 @@ int _rbt_node_copy(const _rbt *T, _rbt_node **dest, const _rbt_node *src)
 
     int rc;
 
-    _rbt_node *c = _rbt_node_new();
+    RBTreeNode *c = RBTreeNode_new();
     check(c, "Failed to create new node.");
 
-    rc = _rbt_node_set(T, c, src->data);
-    check(rc == 0, "Failed to copy data to new node.");
+    rc = RBTreeNode_set(T, c, src->key);
+    check(rc == 0, "Failed to copy key to new node.");
     c->color = src->color;
 
-    rc = _rbt_node_copy(T, &c->left, src->left);
+    rc = RBTreeNode_copy(T, &c->left, src->left);
     check(rc == 0, "Failed to copy left subtree.");
     if (c->left) c->left->parent = c;
 
-    rc = _rbt_node_copy(T, &c->right, src->right);
+    rc = RBTreeNode_copy(T, &c->right, src->right);
     check(rc == 0, "Failed to copy right subtree.");
     if (c->right) c->right->parent = c;
 
     *dest = c;
     return 0;
 error:
-    if (c) _rbt_node_delete(T, c);
+    if (c) RBTreeNode_delete(T, c);
     return -1;
 }
 
 /* Replace the child in a node after the child was rotated. */
 static inline
-void _rbt_node_replace_child(_rbt *T,
-                             _rbt_node *parent,
-                             _rbt_node *old_child,
-                             _rbt_node *new_child)
+void RBTreeNode_replace_child(RBTree *T,
+                             RBTreeNode *parent,
+                             RBTreeNode *old_child,
+                             RBTreeNode *new_child)
 {
     if (!parent) {
         assert(old_child == T->root);
@@ -228,20 +228,20 @@ void _rbt_node_replace_child(_rbt *T,
 /* The rotation routines don't recolor the nodes. That is done in the insertion and
  * deletion algorithms according to the way different rotations are combined. */
 /* static */
-int _rbt_node_rotate_left(_rbt *T, _rbt_node *n, _rbt_node **node_out)
+int RBTreeNode_rotate_left(RBTree *T, RBTreeNode *n, RBTreeNode **node_out)
 {
-    /* if (n->data) debug("n = %d", *(int*)n->data); */
+    /* if (n->key) debug("n = %d", *(int*)n->key); */
     check_ptr(n);
     assert(n->right);
 
-    _rbt_node *p  = n->parent;
-    _rbt_node *r  = n->right;
-    _rbt_node *rl = r->left;
+    RBTreeNode *p  = n->parent;
+    RBTreeNode *r  = n->right;
+    RBTreeNode *rl = r->left;
 
     r->left = n, n->parent = r;
     n->right = rl;
     if (rl) rl->parent = n;
-    _rbt_node_replace_child(T, p, n, r);
+    RBTreeNode_replace_child(T, p, n, r);
 
     if (node_out) *node_out = r;
     return 0;
@@ -250,20 +250,20 @@ error:
 }
 
 /* static */
-int _rbt_node_rotate_right(_rbt *T, _rbt_node *n, _rbt_node **node_out)
+int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out)
 {
-    /* if (n->data) debug("n = %d", *(int*)n->data); */
+    /* if (n->key) debug("n = %d", *(int*)n->key); */
     check_ptr(n);
     assert(n->left);
 
-    _rbt_node *p  = n->parent;
-    _rbt_node *l  = n->left;
-    _rbt_node *lr = l->right;
+    RBTreeNode *p  = n->parent;
+    RBTreeNode *l  = n->left;
+    RBTreeNode *lr = l->right;
 
     l->right = n, n->parent = l;
     n->left = lr;
     if (lr) lr->parent = n;
-    _rbt_node_replace_child(T, p, n, l);
+    RBTreeNode_replace_child(T, p, n, l);
 
     if (node_out) *node_out = l;
     return 0;
@@ -271,72 +271,72 @@ error:
     return -1;
 }
 
-int _rbt_initialize(_rbt *T, TypeInterface *element_type)
+int RBTree_initialize(RBTree *T, TypeInterface *key_type)
 {
     check_ptr(T);
-    check_ptr(element_type);
-    check(element_type->compare, "No comparison function.");
+    check_ptr(key_type);
+    check(key_type->compare, "No comparison function.");
 
     T->root = NULL;
     T->size = 0;
-    T->element_type = element_type;
+    T->key_type = key_type;
 
     return 0;
 error:
     return -1;
 }
 
-static inline void _rbt_node_clear(_rbt *T, _rbt_node *n)
+static inline void RBTreeNode_clear(RBTree *T, RBTreeNode *n)
 {
     if (n) {
-        if (n->left) _rbt_node_clear(T, n->left);
-        if (n->right) _rbt_node_clear(T, n->right);
-        _rbt_node_delete(T, n);
+        if (n->left) RBTreeNode_clear(T, n->left);
+        if (n->right) RBTreeNode_clear(T, n->right);
+        RBTreeNode_delete(T, n);
     }
 }
 
-void _rbt_clear(_rbt *T)
+void RBTree_clear(RBTree *T)
 {
-    if (T) _rbt_node_clear(T, T->root);
+    if (T) RBTreeNode_clear(T, T->root);
     T->root = NULL;
     T->size = 0;
 }
 
 /**************************************************************************************
  *
- * int _rbt_copy(_rbt *dest, const _rbt *src)
+ * int RBTree_copy(RBTree *dest, const RBTree *src)
  *
  * Recursively copy a tree from src to dest.
  * Assumes that dest points to an initialized rbt.
  *
  *************************************************************************************/
 
-int _rbt_copy(_rbt *dest, const _rbt *src)
+int RBTree_copy(RBTree *dest, const RBTree *src)
 {
     check_ptr(dest);
     check_ptr(src);
-    assert(!_rbt_invariant(src));
+    assert(!RBTree_invariant(src));
 
     int rc;
 
-    if (dest->size > 0) _rbt_clear(dest);
-    dest->element_type = src->element_type;
+    if (dest->size > 0) RBTree_clear(dest);
+    dest->key_type = src->key_type;
 
     if (src->size > 0) {
-        rc = _rbt_node_copy(dest, &dest->root, src->root);
+        rc = RBTreeNode_copy(dest, &dest->root, src->root);
         check(rc == 0, "Failed to copy nodes.");
         dest->root->parent = NULL;
         dest->size = src->size;
     }
 
-    assert(!_rbt_invariant(dest));
+    assert(!RBTree_invariant(dest));
     return 0;
 error:
     return -1;
 }
 
 /* Return the weight of the group that contains n. n can be any node in the group. */
-static inline unsigned short _rbt_group_weight(_rbt_node *n)
+static inline unsigned short RBTree_group_weight(RBTreeNode *n)
 {
     if (!n) return 0;
     if (n->color == RED) n = n->parent;
@@ -346,14 +346,14 @@ static inline unsigned short _rbt_group_weight(_rbt_node *n)
     return w;
 }
 
-static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
+static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 {
-    _rbt_node *p = n->parent;
-    _rbt_node *pp = p ? p->parent : NULL;
-    _rbt_node *l = n->left;
-    _rbt_node *r = n->right;
+    RBTreeNode *p = n->parent;
+    RBTreeNode *pp = p ? p->parent : NULL;
+    RBTreeNode *l = n->left;
+    RBTreeNode *r = n->right;
 
-    assert(_rbt_group_weight(n) == 3);
+    assert(RBTree_group_weight(n) == 3);
 
     /* Case 1: n is the root of the tree. */
     if (n == T->root) {
@@ -372,7 +372,7 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
     else if (p->color == RED) {
 
         /* Case 3.1: pp has 1 red child (p) */
-        _rbt_node *ps = p == pp->left ? pp->right : pp->left;
+        RBTreeNode *ps = p == pp->left ? pp->right : pp->left;
         assert(ps);
         if (ps->color == BLACK) {
 
@@ -380,9 +380,9 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
             if (n == pp->right->right || n == pp->left->left) {
                 /* debug("Case 3.1a straight ancestor chain"); */
                 if (n == pp->right->right) {
-                    _rbt_node_rotate_left(T, pp, NULL);
+                    RBTreeNode_rotate_left(T, pp, NULL);
                 } else {
-                    _rbt_node_rotate_right(T, pp, NULL);
+                    RBTreeNode_rotate_right(T, pp, NULL);
                 }
                 pp->color = RED;
                 p->color = BLACK;
@@ -394,11 +394,11 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
             else {
                 /* debug("Case 3.1b: right-left or left-right ancestor chain"); */
                 if (n == pp->right->left) {
-                    _rbt_node_rotate_right(T, p, NULL);
-                    _rbt_node_rotate_left(T, pp, NULL);
+                    RBTreeNode_rotate_right(T, p, NULL);
+                    RBTreeNode_rotate_left(T, pp, NULL);
                 } else {
-                    _rbt_node_rotate_left(T, p, NULL);
-                    _rbt_node_rotate_right(T, pp, NULL);
+                    RBTreeNode_rotate_left(T, p, NULL);
+                    RBTreeNode_rotate_right(T, pp, NULL);
                 }
                 pp->color = RED;
                 l->color = r->color = BLACK;
@@ -408,38 +408,38 @@ static void _rbt_group_decrease_weight(_rbt *T, _rbt_node *n)
         /* Case 3.2: pp has 2 red children */
         else {
             /* debug("Case 3.2: pp is full."); */
-            _rbt_group_decrease_weight(T, pp);
+            RBTree_group_decrease_weight(T, pp);
             /* Things may have changed. Go again. */
-            _rbt_group_decrease_weight(T, n);
+            RBTree_group_decrease_weight(T, n);
         }
     }
 }
 
-static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
+static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *v)
 {
-    /* debug("n = %d, v = %d", *(int*)n->data, *(int*)v); */
-    int comp = TypeInterface_compare(T->element_type, v, n->data);
+    /* debug("n = %d, v = %d", *(int*)n->key, *(int*)v); */
+    int comp = TypeInterface_compare(T->key_type, v, n->key);
     if (comp == 0) {
         return 1; /* found it, nothing to do */
     } else if (comp < 0 && n->left) {
-        return _rbt_node_insert(T, n->left, v);
+        return RBTreeNode_insert(T, n->left, v);
     } else if (comp > 0 && n->right) {
-        return _rbt_node_insert(T, n->right, v);
+        return RBTreeNode_insert(T, n->right, v);
     }
 
     /* Case 1: n is black */
     if (n->color == BLACK) {
         if (comp < 0) {
             /* debug("Case 1 left"); */
-            n->left = _rbt_node_new();
-            _rbt_node_set(T, n->left, v);
+            n->left = RBTreeNode_new();
+            RBTreeNode_set(T, n->left, v);
             n->left->parent = n;
             n->left->color = RED;
             ++T->size;
         } else { /* comp > 0 */
             /* debug("Case 1 right"); */
-            n->right = _rbt_node_new();
-            _rbt_node_set(T, n->right, v);
+            n->right = RBTreeNode_new();
+            RBTreeNode_set(T, n->right, v);
             n->right->parent = n;
             n->right->color = RED;
             ++T->size;
@@ -448,48 +448,48 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
 
     /* Case 2: n is red */
     else {
-        _rbt_node *p = n->parent;
+        RBTreeNode *p = n->parent;
 
         /* Case 2.1: p has 2 red children */
-        if (_rbt_group_weight(p) == 3) {
+        if (RBTree_group_weight(p) == 3) {
             /* debug("Case 2.1 p is full"); */
-            _rbt_group_decrease_weight(T, p);
+            RBTree_group_decrease_weight(T, p);
             /* Now n may be elsewhere. Go again. */
-            return _rbt_node_insert(T, n, v);
+            return RBTreeNode_insert(T, n, v);
         }
 
         /* Case 2.2: p has 1 red child (n) */
         else { /* weight(p) = 1 is handled in case 1 */
             if (comp < 0 && n == p->left) {
                 /* debug("Case 2.2 left-left"); */
-                _rbt_node_rotate_right(T, p, NULL);
-                n->left = _rbt_node_new();
+                RBTreeNode_rotate_right(T, p, NULL);
+                n->left = RBTreeNode_new();
                 n->left->parent = n;
-                _rbt_node_set(T, n->left, v);
+                RBTreeNode_set(T, n->left, v);
                 n->color = BLACK;
                 p->color = RED;
                 n->left->color = RED;
             } else if (comp > 0 && n == p->right) {
                 /* debug("Case 2.2 right-right"); */
-                _rbt_node_rotate_left(T, p, NULL);
-                n->right = _rbt_node_new();
+                RBTreeNode_rotate_left(T, p, NULL);
+                n->right = RBTreeNode_new();
                 n->right->parent = n;
-                _rbt_node_set(T, n->right, v);
+                RBTreeNode_set(T, n->right, v);
                 n->color = BLACK;
                 p->color = RED;
                 n->right->color = RED;
             } else if (comp < 0 && n == p->right) {
                 /* debug("Case 2.2 right-left"); */
-                p->left = _rbt_node_new();
-                _rbt_node_set(T, p->left, p->data);
-                _rbt_node_set(T, p, v);
+                p->left = RBTreeNode_new();
+                RBTreeNode_set(T, p->left, p->key);
+                RBTreeNode_set(T, p, v);
                 p->left->parent = p;
                 p->left->color = RED;
             } else if (comp > 0 && n == p->left) {
                 /* debug("Case 2.2 left-right"); */
-                p->right = _rbt_node_new();
-                _rbt_node_set(T, p->right, p->data);
-                _rbt_node_set(T, p, v);
+                p->right = RBTreeNode_new();
+                RBTreeNode_set(T, p->right, p->key);
+                RBTreeNode_set(T, p, v);
                 p->right->parent = p;
                 p->right->color = RED;
             }
@@ -501,7 +501,7 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
 
 /**************************************************************************************
  *
- * int _rbt_insert(_rbt *T, const void *v)
+ * int RBTree_insert(RBTree *T, const void *v)
  *
  * Insert an element with the value v into the tree T.
  *
@@ -512,43 +512,43 @@ static int _rbt_node_insert(_rbt *T, _rbt_node *n, const void *v)
  *
  *************************************************************************************/
 
-int _rbt_insert(_rbt *T, const void *v)
+int RBTree_insert(RBTree *T, const void *v)
 {
     /* debug("v = %d", *(int*)v); */
     check_ptr(T);
     check_ptr(v);
-    assert (!_rbt_invariant(T));
+    assert (!RBTree_invariant(T));
 
     int rc = 0;
 
     if (!T->root) {
-        T->root = _rbt_node_new();
-        check(T->root != NULL, "_rbt_node_new failed.");
-        rc = _rbt_node_set(T, T->root, v);
-        check(rc == 0, "_rbt_node_set failed.");
+        T->root = RBTreeNode_new();
+        check(T->root != NULL, "RBTreeNode_new failed.");
+        rc = RBTreeNode_set(T, T->root, v);
+        check(rc == 0, "RBTreeNode_set failed.");
         T->root->color = BLACK;
         ++T->size;
     } else {
-        rc = _rbt_node_insert(T, T->root, v);
-        check(rc >= 0, "_rbt_node_insert failed.");
+        rc = RBTreeNode_insert(T, T->root, v);
+        check(rc >= 0, "RBTreeNode_insert failed.");
     }
 
-    assert(!_rbt_invariant(T));
+    assert(!RBTree_invariant(T));
     return rc;
 error:
     return -1;
 }
 
-int _rbt_has(const _rbt *T, const void *v)
+int RBTree_has(const RBTree *T, const void *v)
 {
     check_ptr(T);
     check_ptr(v);
 
-    _rbt_node *n = T->root;
+    RBTreeNode *n = T->root;
     int comp;
 
     while (n) {
-        comp = TypeInterface_compare(T->element_type, v, n->data);
+        comp = TypeInterface_compare(T->key_type, v, n->key);
         if (comp > 0) {
             n = n->right;
         } else if (comp < 0) {
@@ -566,7 +566,7 @@ error:
 
 /***************************************************************************************
  *
- * static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
+ * static void RBTree_group_increase_weight(RBTree *T, RBTreeNode *n)
  *
  * Increase the weight of the group with the head n. It is assumed that n is the head of
  * an empty group, i.o.w. n->color == BLACK && !n->left && !n->right.  After the
@@ -576,20 +576,20 @@ error:
  *
  **************************************************************************************/
 
-static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
+static void RBTree_group_increase_weight(RBTree *T, RBTreeNode *n)
 {
-    _rbt_node *p = n->parent;
-    _rbt_node *s = p ? (n == p->left ? p->right : p->left) : NULL;
-    _rbt_node *so = NULL; /* outer child of s */
+    RBTreeNode *p = n->parent;
+    RBTreeNode *s = p ? (n == p->left ? p->right : p->left) : NULL;
+    RBTreeNode *so = NULL; /* outer child of s */
 
     /* Case 1: ancestor group is not empty. */
-    if (_rbt_group_weight(p) > 1) {
+    if (RBTree_group_weight(p) > 1) {
         if (p->color == BLACK) {
             if (n == p->right) {
-                _rbt_node_rotate_right(T, p, NULL);
+                RBTreeNode_rotate_right(T, p, NULL);
                 s = p->left;
             } else {
-                _rbt_node_rotate_left(T, p, NULL);
+                RBTreeNode_rotate_left(T, p, NULL);
                 s = p->right;
             }
             p->parent->color = BLACK;
@@ -599,7 +599,7 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
         assert(p->color == RED);
 
         /* Case 1.1: s is empty. */
-        if (_rbt_group_weight(s) == 1) {
+        if (RBTree_group_weight(s) == 1) {
             p->color = BLACK;
             n->color = s->color = RED;
         }
@@ -608,12 +608,12 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
         else {
             /* Ensure that s has an outer child. */
             if (s == p->left && (!s->left || s->left->color == BLACK)) {
-                _rbt_node_rotate_left(T, s, &s); /* Note that s is updated. */
+                RBTreeNode_rotate_left(T, s, &s); /* Note that s is updated. */
                 so = s->left;
                 s->color = BLACK;
                 so->color = RED;
             } else if (s == p->right && (!s->right || s->right->color == BLACK)) {
-                _rbt_node_rotate_right(T, s, &s); /* Note that s is updated. */
+                RBTreeNode_rotate_right(T, s, &s); /* Note that s is updated. */
                 so = s->right;
                 s->color = BLACK;
                 so->color = RED;
@@ -622,9 +622,9 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
             }
 
             if (n == p->right) {
-                _rbt_node_rotate_right(T, p, NULL);
+                RBTreeNode_rotate_right(T, p, NULL);
             } else {
-                _rbt_node_rotate_left(T, p, NULL);
+                RBTreeNode_rotate_left(T, p, NULL);
             }
 
             p->color = BLACK;
@@ -634,28 +634,28 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
     }
 
     /* Case 2: ancestor group is empty. */
-    else { /* _rbt_group_weight(p) <= 1 */
+    else { /* RBTree_group_weight(p) <= 1 */
 
         /* Case 2.1: s is empty. */
-        if (_rbt_group_weight(s) == 1) {
+        if (RBTree_group_weight(s) == 1) {
             if (p == T->root) {
                 n->color = s->color = RED;
             } else {
-                _rbt_group_increase_weight(T, p);
-                return _rbt_group_increase_weight(T, n);
+                RBTree_group_increase_weight(T, p);
+                return RBTree_group_increase_weight(T, n);
             }
         }
 
         /* Case 2.2: s is not empty. Like 1.2 with different color changes. */
-        else { /* _rbt_group_weight(s) > 1 */
+        else { /* RBTree_group_weight(s) > 1 */
             /* Ensure that s has an outer child. */
             if (s == p->left && (!s->left || s->left->color == BLACK)) {
-                _rbt_node_rotate_left(T, s, &s); /* Note that s is updated. */
+                RBTreeNode_rotate_left(T, s, &s); /* Note that s is updated. */
                 so = s->left;
                 s->color = BLACK;
                 so->color = RED;
             } else if (s == p->right && (!s->right || s->right->color == BLACK)) {
-                _rbt_node_rotate_right(T, s, &s); /* Note that s is updated. */
+                RBTreeNode_rotate_right(T, s, &s); /* Note that s is updated. */
                 so = s->right;
                 s->color = BLACK;
                 so->color = RED;
@@ -664,9 +664,9 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
             }
 
             if (n == p->right) {
-                _rbt_node_rotate_right(T, p, NULL);
+                RBTreeNode_rotate_right(T, p, NULL);
             } else {
-                _rbt_node_rotate_left(T, p, NULL);
+                RBTreeNode_rotate_left(T, p, NULL);
             }
 
             n->color = RED;
@@ -675,12 +675,12 @@ static void _rbt_group_increase_weight(_rbt *T, _rbt_node *n)
     }
 }
 
-int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
+int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *v)
 {
     int comp;
     for ( ;; ) {
         if (!n) return 0; /* not found */
-        comp = TypeInterface_compare(T->element_type, v, n->data);
+        comp = TypeInterface_compare(T->key_type, v, n->key);
         if (comp == 0) break; /* found, go on */
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;
@@ -688,31 +688,31 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
 
     if (n->left && n->right) {
         /* n is not in a leaf position. Swap with a node that is. */
-        _rbt_node *succ = n->right;
+        RBTreeNode *succ = n->right;
         while (succ->left) succ = succ->left;
-        /* succ->data isn't needed for the deletion. Set it to NULL so the value isn't
+        /* succ->key isn't needed for the deletion. Set it to NULL so the value isn't
          * destroyed. This way we save a call to the value copy constructor. */
-        TypeInterface_destroy(T->element_type, n->data);
-        free(n->data);
-        n->data = succ->data;
-        succ->data = NULL;
+        TypeInterface_destroy(T->key_type, n->key);
+        free(n->key);
+        n->key = succ->key;
+        succ->key = NULL;
         n = succ;
     }
 
     assert(!n->right || !n->left);
 
-    if (n->color == BLACK && n != T->root && _rbt_group_weight(n) == 1) {
-        _rbt_group_increase_weight(T, n);
-        assert(_rbt_group_weight(n) > 1);
+    if (n->color == BLACK && n != T->root && RBTree_group_weight(n) == 1) {
+        RBTree_group_increase_weight(T, n);
+        assert(RBTree_group_weight(n) > 1);
     }
 
     if (n->color == BLACK) {
         if (n->left) {
-            _rbt_node_rotate_right(T, n, NULL);
+            RBTreeNode_rotate_right(T, n, NULL);
             n->color = RED;
             n->parent->color = BLACK;
         } else if (n->right) {
-            _rbt_node_rotate_left(T, n, NULL);
+            RBTreeNode_rotate_left(T, n, NULL);
             n->color = RED;
             n->parent->color = BLACK;
         }
@@ -725,7 +725,7 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
     } else {
         n->parent->right = NULL;
     }
-    _rbt_node_delete(T, n);
+    RBTreeNode_delete(T, n);
     --T->size;
 
     return 1; /* found it, deleted it */
@@ -733,7 +733,7 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
 
 /**************************************************************************************
  *
- * int _rbt_remove(_rbt *T, const void *v)
+ * int RBTree_remove(RBTree *T, const void *v)
  *
  * Remove the element with the value v from the tree T.
  *
@@ -744,18 +744,18 @@ int _rbt_node_remove(_rbt *T, _rbt_node *n, const void *v)
  *
  *************************************************************************************/
 
-int _rbt_remove(_rbt *T, const void *v)
+int RBTree_remove(RBTree *T, const void *v)
 {
     /* debug("v = %d", *(int*)v); */
     check_ptr(T);
     check_ptr(v);
-    assert (!_rbt_invariant(T));
+    assert (!RBTree_invariant(T));
 
     int rc = 0;
 
-    if (T->root) rc = _rbt_node_remove(T, T->root, v);
+    if (T->root) rc = RBTreeNode_remove(T, T->root, v);
 
-    assert(!_rbt_invariant(T));
+    assert(!RBTree_invariant(T));
     return rc;
 error:
     return -1;
