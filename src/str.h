@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "data.h"
+#include "node_data.h"
 #include "hash.h"
 
 #define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))

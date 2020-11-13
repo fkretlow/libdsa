@@ -1,6 +1,8 @@
 #ifndef _node_data_h
 #define _node_data_h
 
+#include "type_interface.h"
+
 union VariableSizeData {
     struct {
         char data[sizeof(size_t) + sizeof(char*)];
@@ -20,7 +22,7 @@ union FixedSizeData {
     } external;
 };
 
-union MappingData {
+typedef union MappingData {
     struct {
         char data[2 * sizeof(char*)];
     } internal;
@@ -28,7 +30,7 @@ union MappingData {
         char *key;
         char *value;
     } external;
-};
+} MappingData;
 
 int MappingData_set_key(MappingData *d, int external,
                         TypeInterface *key_type,
