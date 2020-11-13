@@ -105,14 +105,14 @@ void RBTreeNode_delete(RBTree *T, RBTreeNode *n)
 
 /**************************************************************************************
  *
- * RBTreeNode *RBTreeNode_copy(const RBTree *T, const RBTreeNode *n)
+ * RBTreeNode *RBTreeNode_copy(const RBTree *T, RBTreeNode *n)
  *
  * Recursively copy the tree rooted at src. Store a pointer to the copy at the pointer
  * location pointed to by dest.
  *
  *************************************************************************************/
 
-int RBTreeNode_copy(RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
+int RBTreeNode_copy(RBTree *T, RBTreeNode **dest, RBTreeNode *src)
 {
     check_ptr(T);
     if (src == NULL) {
@@ -125,11 +125,11 @@ int RBTreeNode_copy(RBTree *T, RBTreeNode **dest, const RBTreeNode *src)
     RBTreeNode *c = RBTreeNode_new();
     check(c, "Failed to create new node.");
 
-    rc = RBTreeNode_set_key(T, c, RBTreeNode_key(T, src));
+    rc = RBTreeNode_set_key(T, c, RBTreeNode_key_address(T, src));
     check(rc == 0, "Failed to copy key to new node.");
 
     if (T->value_type) {
-        rc = RBTreeNode_set_value(T, c, RBTreeNode_value(T, src));
+        rc = RBTreeNode_set_value(T, c, RBTreeNode_value_address(T, src));
         check(rc == 0, "Failed to copy key to new node.");
     }
 
@@ -386,7 +386,7 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
 static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
 {
-    int comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
+    int comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
     if (comp == 0) {
         return 1; /* found it, nothing to do */
     } else if (comp < 0 && n->left) {
@@ -449,14 +449,14 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
             } else if (comp < 0 && n == p->right) {
                 /* debug("Case 2.2 right-left"); */
                 p->left = RBTreeNode_new();
-                RBTreeNode_set_key(T, p->left, RBTreeNode_key(T, p));
+                RBTreeNode_set_key(T, p->left, RBTreeNode_key_address(T, p));
                 RBTreeNode_set_key(T, p, k);
                 p->left->parent = p;
                 p->left->color = RED;
             } else if (comp > 0 && n == p->left) {
                 /* debug("Case 2.2 left-right"); */
                 p->right = RBTreeNode_new();
-                RBTreeNode_set_key(T, p->right, RBTreeNode_key(T, p));
+                RBTreeNode_set_key(T, p->right, RBTreeNode_key_address(T, p));
                 RBTreeNode_set_key(T, p, k);
                 p->right->parent = p;
                 p->right->color = RED;
@@ -515,7 +515,7 @@ int RBTree_has(const RBTree *T, const void *k)
     int comp;
 
     while (n) {
-        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
+        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
         if (comp > 0) {
             n = n->right;
         } else if (comp < 0) {
@@ -647,7 +647,7 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
     int comp;
     for ( ;; ) {
         if (!n) return 0; /* not found */
-        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key(T, n));
+        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
         if (comp == 0) break; /* found, go on */
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;
@@ -822,7 +822,7 @@ static int RBTreeNode_traverse_keys(RBTree *T, RBTreeNode *n,
             if (rc != 0) return rc;
         }
 
-        rc = f(RBTreeNode_key(T, n), p);
+        rc = f(RBTreeNode_key_address(T, n), p);
         if (rc != 0) return rc;
 
         if (n->right) {
@@ -846,7 +846,7 @@ static int RBTreeNode_traverse_keys_r(RBTree *T, RBTreeNode *n,
             if (rc != 0) return rc;
         }
 
-        rc = f(RBTreeNode_key(T, n), p);
+        rc = f(RBTreeNode_key_address(T, n), p);
         if (rc != 0) return rc;
 
         if (n->left) {
@@ -871,7 +871,7 @@ static int RBTreeNode_traverse_values(RBTree *T, RBTreeNode *n,
             if (rc != 0) return rc;
         }
 
-        rc = f(RBTreeNode_value(T, n), p);
+        rc = f(RBTreeNode_value_address(T, n), p);
         if (rc != 0) return rc;
 
         if (n->right) {
@@ -896,7 +896,7 @@ static int RBTreeNode_traverse_values_r(RBTree *T, RBTreeNode *n,
             if (rc != 0) return rc;
         }
 
-        rc = f(RBTreeNode_value(T, n), p);
+        rc = f(RBTreeNode_value_address(T, n), p);
         if (rc != 0) return rc;
 
         if (n->left) {

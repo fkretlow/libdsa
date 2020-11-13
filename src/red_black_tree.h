@@ -58,11 +58,9 @@ int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v);
 int RBTreeNode_rotate_left(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
 int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
 
-#define RBTreeNode_key(T, n) ( (T)->external_storage \
-        ? (n)->data.external.key \
-        : (n)->data.internal.data )
-#define RBTreeNode_value(T, n) ( (T)->external_storage \
-        ? (n)->data.external.value \
-        : (n)->data.internal.data + TypeInterface_size((T)->key_type) )
+#define RBTreeNode_key_address(T, n) \
+    MappingData_key_address(&(n)->data, (T)->external_storage)
+#define RBTreeNode_value_address(T, n) \
+    MappingData_value_address(&(n)->data, (T)->external_storage, (T)->key_type)
 
 #endif // _red_black_tree_h

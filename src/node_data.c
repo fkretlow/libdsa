@@ -5,8 +5,8 @@
 
 /***************************************************************************************
  *
- * int MappingData_set_key(MappingData *data, int external,
- *                         TypeInterface *key_type,
+ * int MappingData_set_key(MappingData *data, const int external,
+ *                         const TypeInterface *key_type,
  *                         const void *key);
  *
  * Set the key in the key-value pair stored in data to the object pointed to by key by
@@ -24,8 +24,8 @@
  *
  **************************************************************************************/
 
-int MappingData_set_key(MappingData *data, int external,
-                        TypeInterface *key_type,
+int MappingData_set_key(MappingData *data, const int external,
+                        const TypeInterface *key_type,
                         const void *key)
 {
     check_ptr(data);
@@ -53,8 +53,8 @@ error:
 
 /***************************************************************************************
  *
- * void MappingData_get_key(MappingData *data, int external,
- *                          TypeInterface *key_type,
+ * void MappingData_get_key(const MappingData *data, const int external,
+ *                          const TypeInterface *key_type,
  *                          void *key_out);
  *
  * Copy the key saved in data to the address pointed to by key_out. It's assumed that
@@ -62,8 +62,8 @@ error:
  *
  **************************************************************************************/
 
-void MappingData_get_key(MappingData *data, int external,
-                         TypeInterface *key_type,
+void MappingData_get_key(const MappingData *data, const int external,
+                         const TypeInterface *key_type,
                          void *key_out)
 {
     if (external) {
@@ -75,15 +75,16 @@ void MappingData_get_key(MappingData *data, int external,
 
 /***************************************************************************************
  *
- * void MappingData_destroy_key(MappingData *data, int external,
- *                              TypeInterface *key_type);
+ * void MappingData_destroy_key(MappingData *data, const int external,
+ *                              const TypeInterface *key_type);
  *
  * Destroy the key saved in data, freeing any associated memory. Zero out the space
  * where it was saved in data. It's assumed that there actually is a key.
  *
  **************************************************************************************/
 
-void MappingData_destroy_key(MappingData *data, int external, TypeInterface *key_type)
+void MappingData_destroy_key(MappingData *data, const int external,
+                             const TypeInterface *key_type)
 {
     assert(data && key_type);
     if (external) {
@@ -99,7 +100,7 @@ void MappingData_destroy_key(MappingData *data, int external, TypeInterface *key
 
 /***************************************************************************************
  *
- * void *MappingData_key_address(MappingData *data, int external);
+ * void *MappingData_key_address(const MappingData *data, const int external);
  *
  * Return the memory address of the key stored in data, which is either inside data or
  * on the
@@ -107,7 +108,7 @@ void MappingData_destroy_key(MappingData *data, int external, TypeInterface *key
  *
  **************************************************************************************/
 
-void *MappingData_key_address(MappingData *data, int external)
+void *MappingData_key_address(MappingData *data, const int external)
 {
     assert(data);
     if (external) return data->external.key;
@@ -116,8 +117,9 @@ void *MappingData_key_address(MappingData *data, int external)
 
 /***************************************************************************************
  *
- * int MappingData_set_value(MappingData *data, int external,
- *                           TypeInterface *key_type, TypeInterface *value_type,
+ * int MappingData_set_value(MappingData *data, const int external,
+ *                           const TypeInterface *key_type,
+ *                           const TypeInterface *value_type,
  *                           const void *value);
  *
  * Set the value in the key-value pair stored in data to the object pointed to by value
@@ -133,8 +135,9 @@ void *MappingData_key_address(MappingData *data, int external)
  *
  **************************************************************************************/
 
-int MappingData_set_value(MappingData *data, int external,
-                          TypeInterface *key_type, TypeInterface *value_type,
+int MappingData_set_value(MappingData *data, const int external,
+                          const TypeInterface *key_type,
+                          const TypeInterface *value_type,
                           const void *value)
 {
     check_ptr(data);
@@ -165,8 +168,9 @@ error:
 
 /***************************************************************************************
  *
- * void MappingData_get_value(MappingData *data, int external,
- *                            TypeInterface *key_type, TypeInterface *value_type,
+ * void MappingData_get_value(const MappingData *data, const int external,
+ *                            const TypeInterface *key_type,
+ *                            const TypeInterface *value_type,
  *                            void *value_out);
  *
  * Copy the value saved in data to the address pointed to by value_out. It's assumed
@@ -174,8 +178,9 @@ error:
  *
  **************************************************************************************/
 
-void MappingData_get_value(MappingData *data, int external,
-                           TypeInterface *key_type, TypeInterface *value_type,
+void MappingData_get_value(const MappingData *data, const int external,
+                           const TypeInterface *key_type,
+                           const TypeInterface *value_type,
                            void *value_out)
 {
     if (external) {
@@ -188,16 +193,18 @@ void MappingData_get_value(MappingData *data, int external,
 
 /***************************************************************************************
  *
- * void MappingData_destroy_value(MappingData *data, int external,
- *                                TypeInterface *key_type, TypeInterface *value_type);
+ * void MappingData_destroy_value(MappingData *data, const int external,
+ *                                const TypeInterface *key_type,
+ *                                const TypeInterface *value_type);
  *
  * Destroy the value saved in data, freeing any associated memory. Zero out the space
  * where it was saved in data. It's assumed that there actually is a value.
  *
  **************************************************************************************/
 
-void MappingData_destroy_value(MappingData *data, int external,
-                               TypeInterface *key_type, TypeInterface *value_type)
+void MappingData_destroy_value(MappingData *data, const int external,
+                               const TypeInterface *key_type,
+                               const TypeInterface *value_type)
 {
     assert(data && value_type && key_type);
     if (external) {
@@ -215,16 +222,19 @@ void MappingData_destroy_value(MappingData *data, int external,
 
 /***************************************************************************************
  *
- * void *MappingData_value_address(MappingData *data, int external,
- *                                 TypeInterface *key_type);
+ * void *MappingData_value_address(const MappingData *data, const int external,
+ *                                 const TypeInterface *key_type);
  *
  * Return the memory address of the value stored in data, which is either inside data or
  * on the heap. It's assumed that a value was previously saved in data.
  *
+ * Note that key_type is not a typo. We need the size of a key object to compute the
+ * offset of the value object in the internal storage.
+ *
  **************************************************************************************/
 
-void *MappingData_value_address(MappingData *data, int external,
-                                TypeInterface *key_type)
+void *MappingData_value_address(MappingData *data, const int external,
+                                const TypeInterface *key_type)
 {
     assert(data);
     if (external) return data->external.value;

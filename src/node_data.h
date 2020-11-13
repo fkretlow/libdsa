@@ -32,22 +32,27 @@ typedef union MappingData {
     } external;
 } MappingData;
 
-int MappingData_set_key(MappingData *data, int external,
-                        TypeInterface *key_type,
+int MappingData_set_key(MappingData *data, const int external,
+                        const TypeInterface *key_type,
                         const void *key);
-void MappingData_get_key(MappingData *data, int external,
-                         TypeInterface *key_type,
+void MappingData_get_key(const MappingData *data, const int external,
+                         const TypeInterface *key_type,
                          void *key_out);
-void MappingData_destroy_key(MappingData *data, int external, TypeInterface *key_type);
-void *MappingData_key_address(MappingData *data, int external);
-int MappingData_set_value(MappingData *data, int external,
-                          TypeInterface *key_type, TypeInterface *value_type,
+void MappingData_destroy_key(MappingData *data, const int external,
+                             const TypeInterface *key_type);
+void *MappingData_key_address(MappingData *data, const int external);
+
+int MappingData_set_value(MappingData *data, const int external,
+                          const TypeInterface *key_type,
+                          const TypeInterface *value_type,
                           const void *value);
-void MappingData_get_value(MappingData *data, int external,
-                           TypeInterface *key_type, TypeInterface *value_type,
+void MappingData_get_value(const MappingData *data, const int external,
+                           const TypeInterface *key_type,
+                           const TypeInterface *value_type,
                            void *value_out);
-void MappingData_destroy_value(MappingData *data, int external,
-                               TypeInterface *key_type, TypeInterface *value_type);
-void *MappingData_value_address(MappingData *data, int external,
-                                TypeInterface *key_type);
-#endif // _node_data_h
+void MappingData_destroy_value(MappingData *data, const int external,
+                               const TypeInterface *key_type,
+                               const TypeInterface *value_type);
+void *MappingData_value_address(MappingData *data, const int external,
+                                const TypeInterface *key_type);
+#endif // _node_data_ha

@@ -9,7 +9,7 @@
 #include "type_interface.h"
 
 #define MAX_VALUE 1000
-#define N_VALUES 1000
+#define N_VALUES 100
 
 static RBTree T;
 static int rc;
@@ -253,23 +253,23 @@ int test_rbtree_copy(void)
 
     RBTreeNode *r = C.root;
     test(r->color == BLACK, "r->color = %d (%d)", r->color, BLACK);
-    test(*(int*)RBTreeNode_key(&C, r) == 1,
-            "r->key = %d (%d)", *(int*)RBTreeNode_key(&C, r), 1);
+    test(*(int*)RBTreeNode_key_address(&C, r) == 1,
+            "r->key = %d (%d)", *(int*)RBTreeNode_key_address(&C, r), 1);
 
     RBTreeNode *rl = r->left;
     test(rl->color == BLACK, "rl->color = %d (%d)", rl->color, BLACK);
-    test(*(int*)RBTreeNode_key(&C, rl) == 0,
-            "rl->key = %d (%d)", *(int*)RBTreeNode_key(&C, rl), 0);
+    test(*(int*)RBTreeNode_key_address(&C, rl) == 0,
+            "rl->key = %d (%d)", *(int*)RBTreeNode_key_address(&C, rl), 0);
 
     RBTreeNode *rr = r->right;
     test(rr->color == BLACK, "rr->color = %d (%d)", rr->color, BLACK);
-    test(*(int*)RBTreeNode_key(&C, rr) == 2,
-            "rr->key = %d (%d)", *(int*)RBTreeNode_key(&C, rr), 2);
+    test(*(int*)RBTreeNode_key_address(&C, rr) == 2,
+            "rr->key = %d (%d)", *(int*)RBTreeNode_key_address(&C, rr), 2);
 
     RBTreeNode *rrr = rr->right;
     test(rrr->color == RED, "rrr->color = %d (%d)", rrr->color, RED);
-    test(*(int*)RBTreeNode_key(&C, rrr) == 3,
-            "rrr->key = %d (%d)", *(int*)RBTreeNode_key(&C, rrr), 3);
+    test(*(int*)RBTreeNode_key_address(&C, rrr) == 3,
+            "rrr->key = %d (%d)", *(int*)RBTreeNode_key_address(&C, rrr), 3);
 
     RBTree_clear(&C);
     RBTree_clear(&T);

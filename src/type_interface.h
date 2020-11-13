@@ -23,12 +23,12 @@ typedef struct TypeInterface {
     print_f print;
 } TypeInterface;
 
-void *TypeInterface_allocate(TypeInterface *T, size_t n);
-void TypeInterface_copy(TypeInterface *T, void *dest, const void *src);
-void TypeInterface_destroy(TypeInterface *T, void *obj);
-int TypeInterface_compare(TypeInterface *T, const void *a, const void *b);
-unsigned long TypeInterface_hash(TypeInterface *T, const void *obj);
-void TypeInterface_print(TypeInterface *T, FILE *stream, const void *obj);
+void *TypeInterface_allocate(const TypeInterface *T, size_t n);
+void TypeInterface_copy(const TypeInterface *T, void *dest, const void *src);
+void TypeInterface_destroy(const TypeInterface *T, void *obj);
+int TypeInterface_compare(const TypeInterface *T, const void *a, const void *b);
+unsigned long TypeInterface_hash(const TypeInterface *T, const void *obj);
+void TypeInterface_print(const TypeInterface *T, FILE *stream, const void *obj);
 
 #define TypeInterface_size(T) (T)->size
 

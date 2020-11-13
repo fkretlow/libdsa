@@ -1,7 +1,7 @@
 #include "str.h"
 #include "type_interface.h"
 
-void *TypeInterface_allocate(TypeInterface *T, size_t n)
+void *TypeInterface_allocate(const TypeInterface *T, size_t n)
 {
     void *obj = malloc(n * T->size);
     check_alloc(obj);
@@ -10,7 +10,7 @@ error:
     return NULL;
 }
 
-void TypeInterface_copy(TypeInterface *T, void *dest, const void *src)
+void TypeInterface_copy(const TypeInterface *T, void *dest, const void *src)
 {
     if (T->copy) {
         T->copy(dest, src);
@@ -19,17 +19,17 @@ void TypeInterface_copy(TypeInterface *T, void *dest, const void *src)
     }
 }
 
-void TypeInterface_destroy(TypeInterface *T, void *obj)
+void TypeInterface_destroy(const TypeInterface *T, void *obj)
 {
     if (T->destroy) T->destroy(obj);
 }
 
-int TypeInterface_compare(TypeInterface *T, const void *a, const void *b)
+int TypeInterface_compare(const TypeInterface *T, const void *a, const void *b)
 {
     return T->compare(a, b);
 }
 
-unsigned long TypeInterface_hash(TypeInterface *T, const void *obj)
+unsigned long TypeInterface_hash(const TypeInterface *T, const void *obj)
 {
     if (T->hash) {
         return T->hash(obj);
@@ -38,7 +38,7 @@ unsigned long TypeInterface_hash(TypeInterface *T, const void *obj)
     }
 }
 
-void TypeInterface_print(TypeInterface *T, FILE *stream, const void *obj)
+void TypeInterface_print(const TypeInterface *T, FILE *stream, const void *obj)
 {
     if (T->print) T->print(stream, obj);
 }
