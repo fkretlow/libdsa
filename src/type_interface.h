@@ -7,7 +7,6 @@
 
 #include "debug.h"
 #include "hash.h"
-#include "str.h"
 
 typedef void (*copy_f)(void *dest, const void *src);
 typedef void (*destroy_f)(void *obj);

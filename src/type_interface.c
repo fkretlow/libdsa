@@ -1,3 +1,4 @@
+#include "str.h"
 #include "type_interface.h"
 
 void *TypeInterface_allocate(TypeInterface *T, size_t n)

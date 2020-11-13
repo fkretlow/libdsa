@@ -24,28 +24,11 @@ RBTreeNode *RBTreeNode_new(void) { return calloc(1, sizeof(RBTreeNode)); }
 
 int RBTreeNode_set_key(const RBTree *T, RBTreeNode *n, const void *k)
 {
-    check_ptr(T);
-    check_ptr(n);
-    check_ptr(k);
-
-    /* Store the key on the heap... */
-    if (T->storage_allocated) {
-        assert(n->data.external.key == NULL);
-        n->data.external.key = TypeInterface_allocate(T->key_type, 1);
-        check_alloc(n->data.external.key);
-        TypeInterface_copy(T->key_type, n->data.external.key, k);
-    }
-
-    /* ... or within n itself. */
-    else { /* T->storage_allocated == 0 */
-        TypeInterface_copy(T->key_type, n->data.internal.data, k);
-    }
-
+    int rc = MappingData_set_key(&n->data, T->external_storage, T->key_type, k);
+    check(rc == 0, "Failed to set key.");
     n->has_key = 1;
-
     return 0;
 error:
-    if (n->data.external.key) free(n->data.external.key);
     return -1;
 }
 
@@ -59,17 +42,8 @@ error:
 
 void RBTreeNode_destroy_key(RBTree *T, RBTreeNode *n)
 {
-    if (n && n->has_key) {
-        if (T->storage_allocated && n->data.external.key != NULL) {
-            TypeInterface_destroy(T->key_type, n->data.external.key);
-            free(n->data.external.key);
-            n->data.external.key = NULL;
-        } else {
-            TypeInterface_destroy(T->key_type, n->data.internal.data);
-            memset(n->data.internal.data, 0, TypeInterface_size(T->key_type));
-        }
-        n->has_key = 0;
-    }
+    MappingData_destroy_key(&n->data, T->external_storage, T->key_type);
+    n->has_key = 0;
 }
 
 /***************************************************************************************
@@ -86,30 +60,10 @@ void RBTreeNode_destroy_key(RBTree *T, RBTreeNode *n)
 
 int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v)
 {
-    check_ptr(T);
-    check_ptr(n);
-    check_ptr(v);
-
-    /* Store the value on the heap... */
-    if (T->storage_allocated) {
-        if (n->data.external.value != NULL) {
-            TypeInterface_destroy(T->value_type, n->data.external.value);
-        } else {
-            n->data.external.value = TypeInterface_allocate(T->value_type, 1);
-            check_alloc(n->data.external.value);
-        }
-        TypeInterface_copy(T->value_type, n->data.external.value, v);
-    }
-
-    /* ... or within n itself. */
-    else { /* T->storage_allocated == 0 */
-        TypeInterface_copy(T->value_type,
-                           n->data.internal.data + TypeInterface_size(T->key_type),
-                           v);
-    }
-
-    n->has_value = 1;
-
+    int rc = MappingData_set_value(&n->data, T->external_storage,
+                                   T->key_type, T->value_type, v);
+    check(rc == 0, "Failed to set value.");
+    n->has_key = 1;
     return 0;
 error:
     return -1;
@@ -125,19 +79,9 @@ error:
 
 void RBTreeNode_destroy_value(RBTree *T, RBTreeNode *n)
 {
-    if (T->value_type && n && n->has_value) {
-        if (T->storage_allocated && n->data.external.value != NULL) {
-            TypeInterface_destroy(T->value_type, n->data.external.value);
-            free(n->data.external.value);
-            n->data.external.value = NULL;
-        } else {
-            void *value_location = n->data.internal.data
-                                   + TypeInterface_size(T->key_type);
-            TypeInterface_destroy(T->value_type, value_location);
-            memset(value_location, 0, TypeInterface_size(T->value_type));
-        }
-        n->has_value = 0;
-    }
+    MappingData_destroy_value(&n->data, T->external_storage,
+                              T->key_type, T->value_type);
+    n->has_value = 0;
 }
 
 /***************************************************************************************
@@ -154,7 +98,7 @@ void RBTreeNode_delete(RBTree *T, RBTreeNode *n)
 {
     if (n) {
         RBTreeNode_destroy_key(T, n);
-        RBTreeNode_destroy_value(T, n);
+        if (T->value_type) RBTreeNode_destroy_value(T, n);
         free(n);
     }
 }
@@ -301,9 +245,9 @@ int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_t
     if ( TypeInterface_size(key_type)
             + ( value_type ? TypeInterface_size(value_type) : 0 )
             > RBT_ALLOC_THRESHOLD ) {
-        T->storage_allocated = 1;
+        T->external_storage = 1;
     } else {
-        T->storage_allocated = 0;
+        T->external_storage = 0;
     }
 
     return 0;
@@ -719,7 +663,8 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
          * payload now, move over succ->data to n wholesale, zero out succ->data and
          * move on to remove succ (then stored in n) from the tree. */
         RBTreeNode_destroy_key(T, n);
-        RBTreeNode_destroy_value(T, n);
+        /* TODO: bundle both in RBTreeNode_destroy_data? */
+        if (T->value_type) RBTreeNode_destroy_value(T, n);
         memmove(&n->data, &succ->data, sizeof(union MappingData));
         memset(&succ->data, 0, sizeof(union MappingData));
         n = succ;

@@ -1,4 +1,6 @@
+#include <assert.h>
 #include <string.h>
+
 #include "node_data.h"
 
 /***************************************************************************************
@@ -67,7 +69,7 @@ void MappingData_get_key(MappingData *data, int external,
     if (external) {
         TypeInterface_copy(key_type, key_out, data->external.key);
     } else {
-        TypeInterface_copy(key_type, key_out, data->internal.data)
+        TypeInterface_copy(key_type, key_out, data->internal.data);
     }
 }
 
@@ -133,7 +135,7 @@ void *MappingData_key_address(MappingData *data, int external)
 
 int MappingData_set_value(MappingData *data, int external,
                           TypeInterface *key_type, TypeInterface *value_type,
-                          const void *value);
+                          const void *value)
 {
     check_ptr(data);
     check_ptr(key_type);
@@ -172,9 +174,9 @@ error:
  *
  **************************************************************************************/
 
-int MappingData_get_value(MappingData *data, int external,
-                          TypeInterface *key_type, TypeInterface *value_type,
-                          void *value_out);
+void MappingData_get_value(MappingData *data, int external,
+                           TypeInterface *key_type, TypeInterface *value_type,
+                           void *value_out)
 {
     if (external) {
         TypeInterface_copy(value_type, value_out, data->external.value);
@@ -194,8 +196,8 @@ int MappingData_get_value(MappingData *data, int external,
  *
  **************************************************************************************/
 
-int MappingData_destroy_value(MappingData *data, int external,
-                              TypeInterface *key_type, TypeInterface *value_type);
+void MappingData_destroy_value(MappingData *data, int external,
+                               TypeInterface *key_type, TypeInterface *value_type)
 {
     assert(data && value_type && key_type);
     if (external) {
@@ -222,7 +224,7 @@ int MappingData_destroy_value(MappingData *data, int external,
  **************************************************************************************/
 
 void *MappingData_value_address(MappingData *data, int external,
-                                TypeInterface *key_type);
+                                TypeInterface *key_type)
 {
     assert(data);
     if (external) return data->external.value;

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "data.h"
+#include "node_data.h"
 #include "sort_tools.h"
 #include "type_interface.h"
 
@@ -24,16 +24,12 @@ typedef struct RBTreeNode {
     union MappingData data;
 } RBTreeNode;
 
-#define RBTreeNode_color(n) ( (n)->flags & 0b10000000 ? RED : BLACK )
-#define RBTreeNode_has_key(n) ( (n)->flags & 0b01000000 )
-#define RBTreeNode_has_value(n) ( (n)->flags & 0b00100000 )
-
 typedef struct RBTree {
     RBTreeNode *root;
     size_t size;
     TypeInterface *key_type;
     TypeInterface *value_type;
-    unsigned int storage_allocated : 1;
+    unsigned int external_storage : 1;
 } RBTree;
 
 
@@ -62,10 +58,10 @@ int RBTreeNode_set_value(const RBTree *T, RBTreeNode *n, const void *v);
 int RBTreeNode_rotate_left(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
 int RBTreeNode_rotate_right(RBTree *T, RBTreeNode *n, RBTreeNode **node_out);
 
-#define RBTreeNode_key(T, n) ( (T)->storage_allocated \
+#define RBTreeNode_key(T, n) ( (T)->external_storage \
         ? (n)->data.external.key \
         : (n)->data.internal.data )
-#define RBTreeNode_value(T, n) ( (T)->storage_allocated \
+#define RBTreeNode_value(T, n) ( (T)->external_storage \
         ? (n)->data.external.value \
         : (n)->data.internal.data + TypeInterface_size((T)->key_type) )
 

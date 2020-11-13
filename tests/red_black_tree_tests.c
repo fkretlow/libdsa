@@ -9,7 +9,7 @@
 #include "type_interface.h"
 
 #define MAX_VALUE 1000
-#define N_VALUES 100
+#define N_VALUES 1000
 
 static RBTree T;
 static int rc;
@@ -152,6 +152,8 @@ int test_rotations(void)
     test(n->right == rl, "n->right != rl");
     test(rl->parent == n, "rl->parent != n");
 
+    /* Lazy fix: The node destructors need a key type in some situations... */
+    T.key_type = &int_type;
     RBTreeNode_delete(&T, p);
     RBTreeNode_delete(&T, n);
     RBTreeNode_delete(&T, l);
@@ -168,10 +170,11 @@ int test_rbtree_initialize(void)
 {
     rc = RBTree_initialize(&T, &int_type, NULL);
     test(rc == 0, "rc = %d (%d)", rc, 0);
-    test(T.storage_allocated == 0, "T has storage allocated when it shouldn't.");
+    test(T.external_storage == 0, "T has storage allocated when it shouldn't.");
     test(T.root == NULL, "T.root = %p (%p)", T.root, NULL);
     test(T.key_type->size == sizeof(int), "T.key_type->size = %lu (%lu)",
             T.key_type->size, sizeof(int));
+    test(T.value_type == NULL, "T.value_type != NULL");
     test(T.size == 0, "T.size = %lu (%lu)", T.size, 0lu);
 
     return TEST_OK;
