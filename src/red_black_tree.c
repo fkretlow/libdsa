@@ -219,8 +219,8 @@ error:
  * int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type);
  *
  * Initialize T, which is assumed to be a pointer to a memory location with enough space
- * for an RBTree. The key type is mandatory, the value type can be if single objects
- * instead of key-value pairs should be stored.
+ * for an RBTree. The key type is mandatory, the value type can be NULL if single
+ * objects instead of key-value pairs should be stored.
  *
  * If the combined size of the key and value elements is less than RBT_ALLOC_THRESHOLD,
  * both will be stored within the nodes themselves. Otherwise they're allocated and
@@ -990,7 +990,7 @@ int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
 {
     if (n->color == RED) {
         /* Check for adjacent red nodes. */
-        if ((n->left && n->left->color == RED) || (n->right && n->right->color == RED)) {
+        if (n->parent && n->parent->color == RED) {
             debug("Invariant violated: Two adjacent red nodes.")
             return -1;
         }
