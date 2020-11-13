@@ -5,6 +5,50 @@
 
 /***************************************************************************************
  *
+ * unsigned char MappingData_generate_memory_scheme(const TypeInterface *key_type,
+ *                                                  const TypeInterface *value_type);
+ *
+ * Decide whether to store keys and values internally or externally. The key type is
+ * mandatory, the value type can be omitted (be NULL) if no values are going to be
+ * stored.
+ *
+ * Return value: Returns an integer where the first bit is set if the key is stored
+ * externally, and the second if the value is stored externally.
+ *
+ **************************************************************************************/
+
+unsigned char MappingData_generate_memory_scheme(const TypeInterface *key_type,
+                                                 const TypeInterface *value_type)
+{
+    assert(key_type);
+    unsigned char scheme = 0;
+
+    if (value_type) {
+        if (TypeInterface_size(key_type) + TypeInterface_size(value_type)
+                <= 2 * sizeof(char*)) {
+            /* Nothing to do. */
+        } else {
+            if (TypeInterface_size(key_type) <= sizeof(char*)) {
+                scheme |= MAPPING_DATA_VALUE_EXTERNAL;
+            } else if (TypeInterface_size(value_type) <= sizeof(char*)) {
+                scheme |= MAPPING_DATA_KEY_EXTERNAL;
+            } else {
+                scheme |= MAPPING_DATA_KEY_EXTERNAL | MAPPING_DATA_VALUE_EXTERNAL;
+            }
+        }
+    } else {
+        if (TypeInterface_size(key_type) <= 2 * sizeof(char*)) {
+            /* Nothing to do. */
+        } else {
+            scheme |= MAPPING_DATA_KEY_EXTERNAL;
+        }
+    }
+
+    return scheme;
+}
+
+/***************************************************************************************
+ *
  * int MappingData_set_key(MappingData *data, const int external,
  *                         const TypeInterface *key_type,
  *                         const void *key);

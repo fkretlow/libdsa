@@ -3,15 +3,21 @@
 
 #include <stddef.h>
 
-#include "data.h"
+#include "node_data.h"
+#include "type_interface.h"
+
+struct BinaryTreeNodeFlags {
+    unsigned char has_key   : 1;
+    unsigned char has_value : 1;
+};
 
 struct BinaryTreeNode;
 typedef struct BinaryTreeNode {
     struct BinaryTreeNode *parent;
     struct BinaryTreeNode *left;
     struct BinaryTreeNode *right;
-    unsigned int flags : 8;
-    union MappingData data;
+    struct BinaryTreeNodeFlags flags;
+    MappingData data;
 } BinaryTreeNode;
 
 #define BinaryTreeNode_key(T, n) \
@@ -21,13 +27,16 @@ typedef struct BinaryTreeNode {
     ( (T)->storage_allocated ? (n)->data.external.value \
                              : (n)->data.internal.data + TypeInterface_size((T)->key_size) )
 
-typedef struct BinaryTree {
+struct BinaryTreeFlags {
+    unsigned char memory_scheme : 2;
+};
+
+typedef struct {
     BinaryTreeNode *root;
     size_t size;
     TypeInterface *key_type;
     TypeInterface *value_type;
-    unsigned int storage_allocated : 1;
-    unsigned int flags             : 7;
+    struct BinaryTreeFlags flags;
 } BinaryTree;
 
 int BinaryTree_initialize(BinaryTree *T, TypeInterface *key_type, TypeInterface *value_type);

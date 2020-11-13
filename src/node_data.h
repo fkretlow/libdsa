@@ -32,6 +32,12 @@ typedef union MappingData {
     } external;
 } MappingData;
 
+#define MAPPING_DATA_KEY_EXTERNAL   1
+#define MAPPING_DATA_VALUE_EXTERNAL 2
+
+unsigned char MappingData_generate_memory_scheme(const TypeInterface *key_type,
+                                                 const TypeInterface *value_type);
+
 int MappingData_set_key(MappingData *data, const int external,
                         const TypeInterface *key_type,
                         const void *key);
@@ -55,4 +61,4 @@ void MappingData_destroy_value(MappingData *data, const int external,
                                const TypeInterface *value_type);
 void *MappingData_value_address(MappingData *data, const int external,
                                 const TypeInterface *key_type);
-#endif // _node_data_ha
+#endif // _node_data_h
