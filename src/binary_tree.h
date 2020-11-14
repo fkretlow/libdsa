@@ -11,37 +11,47 @@ struct BinaryTreeNodeFlags {
     unsigned char has_value : 1;
 };
 
+struct RBTreeNodeFlags {
+    unsigned char has_key   : 1;
+    unsigned char has_value : 1;
+    unsigned char color     : 1;
+};
+
+struct AVLTreeNodeFlags {
+    unsigned char has_key   : 1;
+    unsigned char has_value : 1;
+    char balance            : 3;
+};
+
 struct BinaryTreeNode;
 typedef struct BinaryTreeNode {
     struct BinaryTreeNode *parent;
     struct BinaryTreeNode *left;
     struct BinaryTreeNode *right;
-    struct BinaryTreeNodeFlags flags;
-    MappingData data;
+    union {
+        struct BinaryTreeNodeFlags plain;
+        struct RBTreeNodeFlags red_black;
+        struct AVLTreeNodeFlags avl;
+    } flags;
+    char data[MAPPING_DATA_SIZE];
 } BinaryTreeNode;
 
-#define BinaryTreeNode_key(T, n) \
-    ( (T)->storage_allocated ? (n)->data.external.key \
-                             : (n)->data.internal.data )
-#define BinaryTreeNode_value(T, n) \
-    ( (T)->storage_allocated ? (n)->data.external.value \
-                             : (n)->data.internal.data + TypeInterface_size((T)->key_size) )
-
-struct BinaryTreeFlags {
-    unsigned char memory_scheme : 2;
-};
+#define NONE 0
+#define RED_BLACK_TREE 1
+#define AVL_TREE 2
 
 typedef struct {
     BinaryTreeNode *root;
-    size_t size;
-    TypeInterface *key_type;
-    TypeInterface *value_type;
-    struct BinaryTreeFlags flags;
+    size_t count;
+    MemoryScheme memory_scheme;
+    int balancing_strategy;
 } BinaryTree;
 
-int BinaryTree_initialize(BinaryTree *T, TypeInterface *key_type, TypeInterface *value_type);
+int BinaryTree_initialize(BinaryTree *T, int balancing_strategy,
+                          TypeInterface *key_type, TypeInterface *value_type);
+BinaryTree *BinaryTree_new(int balancing_strategy,
+                           TypeInterface *key_type, TypeInterface *value_type);
 void BinaryTree_destroy(BinaryTree *T);
-BinaryTree *BinaryTree_new(TypeInterface *key_type, TypeInterface *value_type);
 void BinaryTree_delete(BinaryTree *T);
 
 BinaryTree *BinaryTree_copy(BinaryTree *dest, BinaryTree *src);
@@ -52,13 +62,13 @@ int BinaryTree_set(BinaryTree *T, const void *k, const void *v);
 int BinaryTree_get(BinaryTree *T, const void *k, void *v_out);
 void BinaryTree_clear(BinaryTree *T);
 
-int BinaryTree_traverse_keys (BinaryTree *T, int (*f)(void *k, void *p), void *p);
-int BinaryTree_traverse_keys_r (BinaryTree *T, int (*f)(void *k, void *p), void *p);
-int BinaryTree_traverse_values (BinaryTree *T, int (*f)(void *v, void *p), void *p);
+int BinaryTree_traverse_keys(BinaryTree *T, int (*f)(void *k, void *p), void *p);
+int BinaryTree_traverse_keys_r(BinaryTree *T, int (*f)(void *k, void *p), void *p);
+int BinaryTree_traverse_values(BinaryTree *T, int (*f)(void *v, void *p), void *p);
 int BinaryTree_traverse_values_r(BinaryTree *T, int (*f)(void *v, void *p), void *p);
-int BinaryTree_traverse_nodes (BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
-int BinaryTree_traverse_nodes_r (BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
+int BinaryTree_traverse_nodes(BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
+int BinaryTree_traverse_nodes_r(BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
 
-#define BinaryTree_size(T) (T)->size
+#define BinaryTree_count(T) (T)->count
 
 #endif // _binary_tree_h

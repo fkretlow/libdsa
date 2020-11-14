@@ -18,10 +18,8 @@ typedef struct RBTreeNode {
     struct RBTreeNode *parent;
     struct RBTreeNode *left;
     struct RBTreeNode *right;
-    unsigned int color     : 1;
-    unsigned int has_key   : 1;
-    unsigned int has_value : 1;
-    union MappingData data;
+    struct RBTreeNodeFlags flags;
+    char data[MAPPING_DATA_SIZE];
 } RBTreeNode;
 
 typedef struct RBTree {

@@ -22,43 +22,28 @@ union FixedSizeData {
     } external;
 };
 
-typedef union MappingData {
-    struct {
-        char data[2 * sizeof(char*)];
-    } internal;
-    struct {
-        char *key;
-        char *value;
-    } external;
-} MappingData;
-
+#define MAPPING_DATA_SIZE (2 * sizeof(void*))
 #define MAPPING_DATA_KEY_EXTERNAL   1
 #define MAPPING_DATA_VALUE_EXTERNAL 2
 
-unsigned char MappingData_generate_memory_scheme(const TypeInterface *key_type,
-                                                 const TypeInterface *value_type);
+typedef struct {
+    TypeInterface *key_type;
+    TypeInterface *value_type;
+    unsigned char key_external   : 1;
+    unsigned char value_external : 1;
+    unsigned char value_offset   : 6; /* offset <= 16, so 6 bits are enough. */
+} MemoryScheme;
 
-int MappingData_set_key(MappingData *data, const int external,
-                        const TypeInterface *key_type,
-                        const void *key);
-void MappingData_get_key(const MappingData *data, const int external,
-                         const TypeInterface *key_type,
-                         void *key_out);
-void MappingData_destroy_key(MappingData *data, const int external,
-                             const TypeInterface *key_type);
-void *MappingData_key_address(MappingData *data, const int external);
+MemoryScheme MappingData_make_memory_scheme(const TypeInterface *key_type,
+                                            const TypeInterface *value_type);
 
-int MappingData_set_value(MappingData *data, const int external,
-                          const TypeInterface *key_type,
-                          const TypeInterface *value_type,
-                          const void *value);
-void MappingData_get_value(const MappingData *data, const int external,
-                           const TypeInterface *key_type,
-                           const TypeInterface *value_type,
-                           void *value_out);
-void MappingData_destroy_value(MappingData *data, const int external,
-                               const TypeInterface *key_type,
-                               const TypeInterface *value_type);
-void *MappingData_value_address(MappingData *data, const int external,
-                                const TypeInterface *key_type);
+int MappingData_set_key(char *data, const MemoryScheme *scheme, const void *key);
+void MappingData_get_key(const char *data, const MemoryScheme *scheme, void *key_out);
+void MappingData_destroy_key(char *data, const MemoryScheme *scheme);
+void *MappingData_key_address(char *data, const MemoryScheme *scheme);
+
+int MappingData_set_value(char *data, const MemoryScheme *scheme, const void *value);
+void MappingData_get_value(const char *data, const MemoryScheme *scheme, void *value_out);
+void MappingData_destroy_value(char *data, const MemoryScheme *scheme);
+void *MappingData_value_address(char *data, const MemoryScheme *scheme);
 #endif // _node_data_h
