@@ -1,74 +1,92 @@
 #ifndef _binary_tree_h
 #define _binary_tree_h
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include "node_data.h"
 #include "type_interface.h"
 
-struct BinaryTreeNodeFlags {
+struct bstn_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
 };
 
-struct RBTreeNodeFlags {
+struct rbtn_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
     unsigned char color     : 1;
 };
 
-struct AVLTreeNodeFlags {
+struct avltn_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
     char balance            : 3;
 };
 
-struct BinaryTreeNode;
-typedef struct BinaryTreeNode {
-    struct BinaryTreeNode *parent;
-    struct BinaryTreeNode *left;
-    struct BinaryTreeNode *right;
+struct bstn;
+typedef struct bstn {
+    struct bstn *parent;
+    struct bstn *left;
+    struct bstn *right;
     union {
-        struct BinaryTreeNodeFlags plain;
-        struct RBTreeNodeFlags red_black;
-        struct AVLTreeNodeFlags avl;
+        struct bstn_flags  plain;
+        struct rbtn_flags  red_black;
+        struct avltn_flags avl;
     } flags;
     char data[MAPPING_DATA_SIZE];
-} BinaryTreeNode;
+} bstn;
 
 #define NONE 0
-#define RED_BLACK_TREE 1
-#define AVL_TREE 2
+#define RED_BLACK 1
+#define AVL 2
 
 typedef struct {
-    BinaryTreeNode *root;
-    size_t count;
-    MemoryScheme memory_scheme;
-    int balancing_strategy;
-} BinaryTree;
+    bstn *root;
+    uint32_t count;
+    struct mem_scheme memory_scheme;
+    uint8_t flavor;
+} bst;
 
-int BinaryTree_initialize(BinaryTree *T, int balancing_strategy,
-                          TypeInterface *key_type, TypeInterface *value_type);
-BinaryTree *BinaryTree_new(int balancing_strategy,
-                           TypeInterface *key_type, TypeInterface *value_type);
-void BinaryTree_destroy(BinaryTree *T);
-void BinaryTree_delete(BinaryTree *T);
+/* Interface */
 
-BinaryTree *BinaryTree_copy(BinaryTree *dest, BinaryTree *src);
+int     bst_initialize          (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
+bst *   bst_new                 (        uint8_t flavor, t_intf *kt, t_intf *vt);
+void    bst_destroy             (bst *T);
+void    bst_delete              (bst *T);
 
-int BinaryTree_insert(BinaryTree *T, const void *k);
-int BinaryTree_remove(BinaryTree *T, const void *k);
-int BinaryTree_set(BinaryTree *T, const void *k, const void *v);
-int BinaryTree_get(BinaryTree *T, const void *k, void *v_out);
-void BinaryTree_clear(BinaryTree *T);
+int     bst_copy                (bst *dest, bst *src);
+void    bst_clear               (bst *T);
 
-int BinaryTree_traverse_keys(BinaryTree *T, int (*f)(void *k, void *p), void *p);
-int BinaryTree_traverse_keys_r(BinaryTree *T, int (*f)(void *k, void *p), void *p);
-int BinaryTree_traverse_values(BinaryTree *T, int (*f)(void *v, void *p), void *p);
-int BinaryTree_traverse_values_r(BinaryTree *T, int (*f)(void *v, void *p), void *p);
-int BinaryTree_traverse_nodes(BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
-int BinaryTree_traverse_nodes_r(BinaryTree *T, int (*f)(BinaryTreeNode *n, void *p), void *p);
+int     bst_insert              (bst *T, const void *k);
+int     bst_remove              (bst *T, const void *k);
+int     bst_set                 (bst *T, const void *k, const void *v);
+void *  bst_get                 (bst *T, const void *k);
+int     bst_has                 (bst *T, const void *k);
 
-#define BinaryTree_count(T) (T)->count
+int     bst_traverse_keys       (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_keys_r     (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_values     (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_values_r   (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_nodes      (bst *T, int (*f)(bstn *n, void *p), void *p);
+int     bst_traverse_nodes_r    (bst *T, int (*f)(bstn *n, void *p), void *p);
+
+#define bst_count(T) (T)->count
+
+/* Node subroutines */
+
+bstn *  bstn_new                (void);
+void    bstn_delete             (bst *T, bstn *n);
+
+int     bstn_set_key            (const bst *T, bstn *n, const void *k);
+void *  bstn_get_key            (const bst *T, const bstn *n);
+void    bstn_destroy_key        (const bst *T, bstn *n);
+
+int     bstn_set_value          (const bst *T, bstn *n, const void *v);
+void *  bstn_get_value          (const bst *T, const bstn *n);
+void    bstn_destroy_value      (const bst *T, bstn *n);
+
+void    bstn_rotate_left        (bst *T, bstn *n);
+void    bstn_rotate_right       (bst *T, bstn *n);
+void    bstn_replace_child      (bst *T, bstn *p, bstn *c, bstn *s);
 
 #endif // _binary_tree_h

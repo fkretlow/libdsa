@@ -1,40 +1,46 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "binary_tree.h"
 
 /***************************************************************************************
  *
- * int BinaryTree_initialize(BinaryTree *T, int balancing_strategy,
- *                           TypeInterface *key_type, TypeInterface *value_type);
+ * int bst_initialize(bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
  *
- * Initialize T, which is assumed to be a pointer to a memory location with enough space
- * for a binary tree. The key type is mandatory, the value type can be NULL if single
- * objects instead of key-value pairs should be stored. The balancing strategy must be
- * one of 0 (no balancing), 1 (red-black tree), or 2 (AVL tree).
+ * Arguments:
+ * bst *T           Address of the tree.
+ * uint8_t flavor   Balancing strategy, one of NONE, RED_BLACK, and AVL.
+ * t_intf *kt       Type interface for key objects.
+ * t_intf *vt       Type interface for value objects. Can be NULL.
  *
- * Depending on the size of the key and value objects they will be stored inside the
- * tree nodes themselves, or on the heap and referenced by pointers.
+ * Description:
+ * Initializes a struct bst at the address pointed to by T. Sufficient space is assumed.
+ * The type interface for keys is required and must contain a at least a size and a
+ * comparison function. The type interface for values can be NULL if the tree is going
+ * to store single elements.
  *
- * Return values: 0 on success
- *               -1 on error
+ * Return values:
+ * 0 on success, -1 on error.
  *
  **************************************************************************************/
 
-int BinaryTree_initialize(BinaryTree *T, int balancing_strategy,
-                          TypeInterface *key_type,
-                          TypeInterface *value_type)
+int bst_initialize(bst *T, uint8_t flavor, t_intf *kt, t_intf *vt)
 {
-    check_ptr(T);
-    check(0 <= balancing_strategy && balancing_strategy <= 2, "Bad strategy.");
-    check_ptr(key_type);
-    check(key_type->compare, "No comparison function was given.");
+    log_call("T=%p, flavor=%u, kt=%p, vt=%p", T, flavor, kt, vt);
+
+    check(T != NULL, "T == NULL");
+    check(0 <= flavor && flavor != 2, "flavor == %u", flavor);
+    check(kt != NULL, "kt == NULL");
+    check(kt->compare != NULL, "kt->compare == NULL");
+    check(kt->size > 0, "kt->size == 0");
+    check(!vt || vt->size > 0, "vt->size == 0");
 
     T->root = NULL;
     T->count = 0;
-    T->balancing_strategy = balancing_strategy;
+    T->flavor = flavor;
 
-    int rc = MemoryScheme_initialize(&T->memory_scheme, key_type, value_type);
-    check(rc == 0, "Failed to initialize memory scheme.");
+    int rc = generate_mem_scheme(&T->memory_scheme, kt, vt);
+    check_rc(rc, "generate_mem_scheme");
 
     return 0;
 error:
@@ -43,27 +49,61 @@ error:
 
 /***************************************************************************************
  *
- * BinaryTree *BinaryTree_new(int balancing_strategy,
- *                            TypeInterface *key_type, TypeInterface *value_type);
+ * bst *bst_new(uint8_t flavor, t_intf *kt, t_intf *vt);
  *
- * Allocate a binary tree and initialize it. See BinaryTree_initialize for further
- * details.
+ * Arguments:
+ * uint8_t flavor   Balancing strategy, one of NONE, RED_BLACK, and AVL.
+ * t_intf *kt       Type interface for key objects.
+ * t_intf *vt       Type interface for value objects. Can be NULL.
  *
- * Return values: T    on success
- *                NULL on error
+ * Description:
+ * Returns a pointer to a new bst that is allocated on the heap and initialized by
+ * calling bst_initialize with the provided arguments (see there for further details).
+ * It's the caller's responsibility to call bst_delete (or bst_destroy and free) on the
+ * pointer to return the memory.
+ *
+ * Return values:
+ * A pointer to an initialized bst on the heap or NULL on error.
  *
  **************************************************************************************/
 
-BinaryTree *BinaryTree_new(int balancing_strategy,
-                           TypeInterface *key_type, TypeInterface *value_type)
+bst *bst_new(uint8_t flavor, t_intf *kt, t_intf *vt);
 {
-    BinaryTree *T = calloc(1, sizeof(*T));
+    log_call("flavor=%u, kt=%p, vt=%p", flavor, kt, vt);
+
+    bst *T = calloc(1, sizeof(*T));
     check_alloc(T);
 
-    int rc = BinaryTree_initialize(T, balancing_strategy, key_type, value_type);
-    check(rc == 0, "Failed to initialize new binary tree.");
+    int rc = bst_initialize(T, flavor, kt, vt);
+    check_rc(rc, "bst_initialize");
 
     return T;
 error:
+    if (T) free(T);
     return NULL;
+}
+
+/***************************************************************************************
+ *
+ * void bst_destroy(bst *T);
+ * void bst_delete(bst *T);
+ *
+ * Destroy T, freeing any associated memory. bst_delete also calls free on T.
+ *
+ **************************************************************************************/
+
+void bst_destroy(bst *T)
+{
+    if (T) {
+        if (T->root) bstn_delete(T, T->root);
+        memset(T, 0, sizeof(*T));
+    }
+}
+
+void bst_delete(bst *T)
+{
+    if (T) {
+        bst_destroy(T);
+        free(T);
+    }
 }
