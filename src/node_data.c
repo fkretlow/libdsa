@@ -5,8 +5,8 @@
 
 /***************************************************************************************
  *
- * MemoryScheme MappingData_generate_memory_scheme(const TypeInterface *key_type,
- *                                                 const TypeInterface *value_type);
+ * MemoryScheme MappingData_generate_memory_scheme(TypeInterface *key_type,
+ *                                                 TypeInterface *value_type);
  *
  * Decide whether to store keys and values internally or externally. The key type is
  * mandatory, the value type can be omitted (be NULL) if no values are going to be
@@ -18,8 +18,8 @@
  *
  **************************************************************************************/
 
-MemoryScheme MappingData_generate_memory_scheme(const TypeInterface *key_type,
-                                                const TypeInterface *value_type)
+MemoryScheme MappingData_generate_memory_scheme(TypeInterface *key_type,
+                                                TypeInterface *value_type)
 {
     assert(key_type);
     MemoryScheme scheme = {
@@ -80,7 +80,7 @@ MemoryScheme MappingData_generate_memory_scheme(const TypeInterface *key_type,
 int MappingData_set_key(char *data, const MemoryScheme *scheme, const void *key)
 {
     check_ptr(data);
-    check_ptr(key_type);
+    check_ptr(scheme->key_type);
     check_ptr(key);
 
     if (scheme->key_external) {
@@ -88,11 +88,11 @@ int MappingData_set_key(char *data, const MemoryScheme *scheme, const void *key)
         assert(*key_address == NULL);
         *key_address = TypeInterface_allocate(scheme->key_type, 1);
         check_alloc(*key_address);
-        TypeInterface_copy(key_type, *key_address, key);
+        TypeInterface_copy(scheme->key_type, *key_address, key);
     }
 
     else {
-        TypeInterface_copy(key_type, data, key);
+        TypeInterface_copy(scheme->key_type, data, key);
     }
 
     return 0;
@@ -115,9 +115,9 @@ void MappingData_get_key(const char *data, const MemoryScheme *scheme, void *key
     if (scheme->key_external) {
         void **key_address = (void**)data;
         assert(*key_address != NULL);
-        TypeInterface_copy(key_type, key_out, *key_address);
+        TypeInterface_copy(scheme->key_type, key_out, *key_address);
     } else {
-        TypeInterface_copy(key_type, key_out, data);
+        TypeInterface_copy(scheme->key_type, key_out, data);
     }
 }
 
@@ -136,12 +136,12 @@ void MappingData_destroy_key(char *data, const MemoryScheme *scheme)
     if (scheme->key_external) {
         void **key_address = (void**)data;
         assert(*key_address != NULL);
-        TypeInterface_destroy(key_type, *key_address);
+        TypeInterface_destroy(scheme->key_type, *key_address);
         free(*key_address);
         *key_address = NULL;
     } else {
-        TypeInterface_destroy(key_type, data);
-        memset(data, 0, TypeInterface_size(key_type));
+        TypeInterface_destroy(scheme->key_type, data);
+        memset(data, 0, TypeInterface_size(scheme->key_type));
     }
 }
 
@@ -181,8 +181,8 @@ void *MappingData_key_address(char *data, const MemoryScheme *scheme)
 int MappingData_set_value(char *data, const MemoryScheme *scheme, const void *value)
 {
     check_ptr(data);
-    check_ptr(key_type);
-    check_ptr(value_type);
+    check_ptr(scheme->key_type);
+    check_ptr(scheme->value_type);
     check_ptr(value);
 
     if (scheme->value_external) {
@@ -190,11 +190,11 @@ int MappingData_set_value(char *data, const MemoryScheme *scheme, const void *va
         assert(*value_address == NULL);
         *value_address = TypeInterface_allocate(scheme->value_type, 1);
         check_alloc(*value_address);
-        TypeInterface_copy(value_type, *value_address, value);
+        TypeInterface_copy(scheme->value_type, *value_address, value);
     }
 
     else {
-        TypeInterface_copy(value_type, data+ scheme->value_offset, value);
+        TypeInterface_copy(scheme->value_type, data+ scheme->value_offset, value);
     }
 
     return 0;
@@ -218,9 +218,9 @@ void MappingData_get_value(const char *data, const MemoryScheme *scheme,
     if (scheme->value_external) {
         void **value_address = (void**)(data + scheme->value_offset);
         assert(*value_address != NULL);
-        TypeInterface_copy(value_type, value_out, *value_address);
+        TypeInterface_copy(scheme->value_type, value_out, *value_address);
     } else {
-        TypeInterface_copy(value_type, value_out, *value_address);
+        TypeInterface_copy(scheme->value_type, value_out, data + scheme->value_offset);
     }
 }
 
@@ -238,13 +238,13 @@ void MappingData_destroy_value(char *data, const MemoryScheme *scheme)
     assert(data && scheme->value_type);
     if (scheme->value_external) {
         void **value_address = (void**)(data + scheme->value_offset);
-        assert(*data_address != NULL);
-        TypeInterface_destroy(value_type, *data_address);
-        free(*data_address);
-        *data_address = NULL;
+        assert(*value_address != NULL);
+        TypeInterface_destroy(scheme->value_type, *value_address);
+        free(*value_address);
+        *value_address = NULL;
     } else {
-        TypeInterface_destroy(value_type, data + scheme->value_offset);
-        memset(data + scheme->value_offset, 0, TypeInterface_size(value_type));
+        TypeInterface_destroy(scheme->value_type, data + scheme->value_offset);
+        memset(data + scheme->value_offset, 0, TypeInterface_size(scheme->value_type));
     }
 }
 
@@ -260,7 +260,7 @@ void MappingData_destroy_value(char *data, const MemoryScheme *scheme)
  *
  **************************************************************************************/
 
-void *MappingData_value_address(char *data, const MemoryScheme *scheme);
+void *MappingData_value_address(char *data, const MemoryScheme *scheme)
 {
     assert(data);
     return scheme->value_external

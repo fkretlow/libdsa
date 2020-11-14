@@ -34,8 +34,8 @@ typedef struct {
     unsigned char value_offset   : 6; /* offset <= 16, so 6 bits are enough. */
 } MemoryScheme;
 
-MemoryScheme MappingData_make_memory_scheme(const TypeInterface *key_type,
-                                            const TypeInterface *value_type);
+MemoryScheme MappingData_make_memory_scheme(TypeInterface *key_type,
+                                            TypeInterface *value_type);
 
 int MappingData_set_key(char *data, const MemoryScheme *scheme, const void *key);
 void MappingData_get_key(const char *data, const MemoryScheme *scheme, void *key_out);
