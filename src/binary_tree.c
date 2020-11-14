@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "binary_tree.h"
 
 /***************************************************************************************
@@ -10,8 +12,8 @@
  * objects instead of key-value pairs should be stored. The balancing strategy must be
  * one of 0 (no balancing), 1 (red-black tree), or 2 (AVL tree).
  *
- * Depending on the size of the key and value objects they are stored inside the tree
- * nodes themselves, or on the heap and referenced by pointers.
+ * Depending on the size of the key and value objects they will be stored inside the
+ * tree nodes themselves, or on the heap and referenced by pointers.
  *
  * Return values: 0 on success
  *               -1 on error
@@ -29,10 +31,39 @@ int BinaryTree_initialize(BinaryTree *T, int balancing_strategy,
 
     T->root = NULL;
     T->count = 0;
-    T->memory_scheme = MappingData_make_memory_scheme(key_type, value_type);
     T->balancing_strategy = balancing_strategy;
+
+    int rc = MemoryScheme_initialize(&T->memory_scheme, key_type, value_type);
+    check(rc == 0, "Failed to initialize memory scheme.");
 
     return 0;
 error:
     return -1;
+}
+
+/***************************************************************************************
+ *
+ * BinaryTree *BinaryTree_new(int balancing_strategy,
+ *                            TypeInterface *key_type, TypeInterface *value_type);
+ *
+ * Allocate a binary tree and initialize it. See BinaryTree_initialize for further
+ * details.
+ *
+ * Return values: T    on success
+ *                NULL on error
+ *
+ **************************************************************************************/
+
+BinaryTree *BinaryTree_new(int balancing_strategy,
+                           TypeInterface *key_type, TypeInterface *value_type)
+{
+    BinaryTree *T = calloc(1, sizeof(*T));
+    check_alloc(T);
+
+    int rc = BinaryTree_initialize(T, balancing_strategy, key_type, value_type);
+    check(rc == 0, "Failed to initialize new binary tree.");
+
+    return T;
+error:
+    return NULL;
 }

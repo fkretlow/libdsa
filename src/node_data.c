@@ -5,57 +5,66 @@
 
 /***************************************************************************************
  *
- * MemoryScheme MappingData_generate_memory_scheme(TypeInterface *key_type,
- *                                                 TypeInterface *value_type);
+ * int MemoryScheme_initialize(MemoryScheme *scheme,
+                               TypeInterface *key_type, TypeInterface *value_type);
+
+ * Decide whether to store keys and values internally or externally and store the
+ * decisions together with both type interfaces in the struct MemoryScheme pointed to by
+ * scheme. The key type is mandatory, the value type can be omitted (be NULL) if no
+ * values are going to be stored in the container.
  *
- * Decide whether to store keys and values internally or externally. The key type is
- * mandatory, the value type can be omitted (be NULL) if no values are going to be
- * stored.
+ * The internal storage for pairs in a mapping is assumed to be no greater than 2 *
+ * sizeof(void*). For instance, assuming the size of a pointer is 8 bytes on a typical
+ * 64bit machine, this leads to the following decisions depending on the sizes of key
+ * and value objects:
  *
- * Return value: Returns a MemoryScheme, which is a struct that combines the two type
- * interfaces with information about the particular memory strategy. The idea is to
- * store this struct once in the container and pass it to the memory handler functions.
+ * key + value <= 16 -> store both internally
+ * key + value > 16
+ *      key <= 8     -> store key internally, value externally
+ *      value <= 8   -> store key externally, value internally
+ *      both > 8     -> store both externally
+ *
+ * Return values: 0 on success
+ *               -1 on error
  *
  **************************************************************************************/
 
-MemoryScheme MappingData_generate_memory_scheme(TypeInterface *key_type,
-                                                TypeInterface *value_type)
+int MemoryScheme_initialize(MemoryScheme *scheme,
+                            TypeInterface *key_type, TypeInterface *value_type)
 {
-    assert(key_type);
-    MemoryScheme scheme = {
-        .key_type = key_type,
-        .value_type = value_type,
-        .key_external = 0,
-        .value_external = 0,
-        .value_offset = 0
-    };
+    check_ptr(key_type);
+    scheme->key_type = key_type;
+    scheme->value_type = value_type;
+    scheme->key_external = scheme->value_external = scheme->value_offset = 0;
 
     if (value_type) {
         if (TypeInterface_size(key_type) + TypeInterface_size(value_type)
                 <= 2 * sizeof(char*)) {
-            scheme.value_offset = TypeInterface_size(key_type);
+            scheme->value_offset = TypeInterface_size(key_type);
         } else {
             if (TypeInterface_size(key_type) <= sizeof(char*)) {
-                scheme.value_external = 1;
-                scheme.value_offset = TypeInterface_size(key_type);
+                scheme->value_external = 1;
+                scheme->value_offset = TypeInterface_size(key_type);
             } else if (TypeInterface_size(value_type) <= sizeof(char*)) {
-                scheme.key_external = 1;
-                scheme.value_offset = sizeof(char*);
+                scheme->key_external = 1;
+                scheme->value_offset = sizeof(char*);
             } else {
-                scheme.key_external = 1;
-                scheme.value_external = 1;
-                scheme.value_offset = sizeof(char*);
+                scheme->key_external = 1;
+                scheme->value_external = 1;
+                scheme->value_offset = sizeof(char*);
             }
         }
     } else {
         if (TypeInterface_size(key_type) <= 2 * sizeof(char*)) {
             /* Nothing to do. */
         } else {
-            scheme.key_external = 1;
+            scheme->key_external = 1;
         }
     }
 
-    return scheme;
+    return 0;
+error:
+    return -1;
 }
 
 /***************************************************************************************
