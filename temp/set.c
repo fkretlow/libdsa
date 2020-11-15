@@ -4,7 +4,7 @@
 #include "stack.h"
 #include "vector.h"
 
-Set *Set_new(TypeInterface *element_type)
+Set *Set_new(t_intf *element_type)
 {
     check_ptr(element_type);
 
@@ -119,7 +119,7 @@ Set *Set_intersection(Set *S1, Set *S2)
     Vector_pop_back(&V2, &e2);
 
     for ( ;; ) {
-        comp = TypeInterface_compare(S1->key_type, e1, e2);
+        comp = t_compare(S1->key_type, e1, e2);
         if (comp < 0) {
             if (Vector_size(&V1) == 0) break;
             Vector_pop_back(&V1, &e1);

@@ -25,13 +25,13 @@ typedef struct RBTreeNode {
 typedef struct RBTree {
     RBTreeNode *root;
     size_t size;
-    TypeInterface *key_type;
-    TypeInterface *value_type;
+    t_intf *key_type;
+    t_intf *value_type;
     unsigned int external_storage : 1;
 } RBTree;
 
 
-int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type);
+int RBTree_initialize(RBTree *T, t_intf *key_type, t_intf *value_type);
 void RBTree_clear(RBTree *T);
 int RBTree_copy(RBTree *dest, const RBTree *src);
 

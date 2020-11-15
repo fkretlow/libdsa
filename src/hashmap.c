@@ -16,9 +16,9 @@ error:
 static inline void HashmapNode_delete(const Hashmap *M, HashmapNode *n)
 {
     if (n) {
-        if (n->key && M) TypeInterface_destroy(M->key_type, n->key);
+        if (n->key && M) t_destroy(M->key_type, n->key);
         free(n->key);
-        if (n->value && M) TypeInterface_destroy(M->value_type, n->value);
+        if (n->value && M) t_destroy(M->value_type, n->value);
         free(n->value);
         free(n);
     }
@@ -33,9 +33,9 @@ static int HashmapNode_set_key(const Hashmap *M, HashmapNode *n, const void *key
     /* Why would we ever overwrite an existing key? */
     assert(!n->key);
 
-    n->key = TypeInterface_allocate(M->key_type, 1);
+    n->key = t_allocate(M->key_type, 1);
     check(n->key != NULL, "Failed to allocate memory for key.");
-    TypeInterface_copy(M->key_type, (void*)n->key, key);
+    t_copy(M->key_type, (void*)n->key, key);
 
     return 0;
 error:
@@ -52,13 +52,13 @@ static int HashmapNode_set_value(const Hashmap *M, HashmapNode *n, const void *v
     assert(n->key);
 
     if (!n->value) {
-        n->value = TypeInterface_allocate(M->value_type, 1);
+        n->value = t_allocate(M->value_type, 1);
         check(n->value != NULL, "Failed to allocate memory for value.");
     } else {
-        TypeInterface_destroy(M->value_type, n->value);
+        t_destroy(M->value_type, n->value);
     }
 
-    TypeInterface_copy(M->value_type, (void*)n->value, value);
+    t_copy(M->value_type, (void*)n->value, value);
 
     return 0;
 error:
@@ -73,14 +73,14 @@ static int HashmapNode_get_value(const Hashmap *M, HashmapNode *n, void *out)
 
     assert(n->value);
 
-    TypeInterface_copy(M->value_type, out, (void*)n->value);
+    t_copy(M->value_type, out, (void*)n->value);
 
     return 0;
 error:
     return -1;
 }
 
-int Hashmap_initialize(Hashmap *M, TypeInterface *key_type, TypeInterface *value_type)
+int Hashmap_initialize(Hashmap *M, t_intf *key_type, t_intf *value_type)
 {
     check_ptr(key_type);
     check_ptr(value_type);
@@ -99,7 +99,7 @@ error:
     return -1;
 }
 
-Hashmap *Hashmap_new(TypeInterface *key_type, TypeInterface *value_type)
+Hashmap *Hashmap_new(t_intf *key_type, t_intf *value_type)
 {
     Hashmap *M = calloc(1, sizeof(*M));
     check_alloc(M);
@@ -151,7 +151,7 @@ HashmapNode *Hashmap_find_node(const Hashmap *M, const void *key, size_t bucket_
         return NULL;
     } else {
         while (n != NULL) {
-            if (TypeInterface_compare(M->key_type, n->key, key) == 0) {
+            if (t_compare(M->key_type, n->key, key) == 0) {
                 return n;
             }
             n = n->next;
@@ -169,7 +169,7 @@ int Hashmap_set(Hashmap *M, const void *key, const void *value)
 {
     check_ptr(M);
 
-    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
+    size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
     HashmapNode *node = Hashmap_find_node(M, key, bucket_index);
 
     if (node) {
@@ -197,7 +197,7 @@ int Hashmap_has(const Hashmap *M, const void *key)
     check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
+    size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
     HashmapNode *n = Hashmap_find_node(M, key, bucket_index);
 
     return n ? 1 : 0;
@@ -214,7 +214,7 @@ int Hashmap_get(const Hashmap *M, const void *key, void *value_out)
     check_ptr(key);
     check_ptr(value_out);
 
-    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
+    size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
     HashmapNode *n = Hashmap_find_node(M, key, bucket_index);
 
     if (n) {
@@ -236,12 +236,12 @@ int Hashmap_remove(Hashmap *M, const void *key)
     check_ptr(M);
     check_ptr(key);
 
-    size_t bucket_index = TypeInterface_hash(M->key_type, key) % MAP_N_BUCKETS;
+    size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
 
     HashmapNode *node = M->buckets[bucket_index];
     HashmapNode *prev = NULL;
 
-    while (node && TypeInterface_compare(M->key_type, node->key, key) != 0) {
+    while (node && t_compare(M->key_type, node->key, key) != 0) {
         prev = node;
         node = node->next;
     }

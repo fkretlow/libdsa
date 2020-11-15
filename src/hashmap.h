@@ -20,12 +20,12 @@ typedef struct HashmapNode {
 typedef struct Hashmap {
     HashmapNode **buckets;
     size_t n_buckets;
-    TypeInterface *key_type;
-    TypeInterface *value_type;
+    t_intf *key_type;
+    t_intf *value_type;
 } Hashmap;
 
-int Hashmap_initialize(Hashmap *M, TypeInterface *key_type, TypeInterface *value_type);
-Hashmap *Hashmap_new(TypeInterface *key_type, TypeInterface *value_type);
+int Hashmap_initialize(Hashmap *M, t_intf *key_type, t_intf *value_type);
+Hashmap *Hashmap_new(t_intf *key_type, t_intf *value_type);
 void Hashmap_delete(Hashmap *M);
 void Hashmap_clear(Hashmap *M);
 

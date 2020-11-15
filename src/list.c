@@ -24,7 +24,7 @@ static inline void ListNode_delete(const List *L, ListNode *n)
 {
     if (n) {
         if (n->data && L) {
-            TypeInterface_destroy(L->element_type, n->data);
+            t_destroy(L->element_type, n->data);
         }
         free(n->data);
         free(n);
@@ -38,13 +38,13 @@ static int ListNode_set(const List *L, ListNode *n, const void *in)
     check_ptr(in);
 
     if (n->data) {
-        TypeInterface_destroy(L->element_type, n->data);
+        t_destroy(L->element_type, n->data);
     } else {
-        n->data = TypeInterface_allocate(L->element_type, 1);
+        n->data = t_allocate(L->element_type, 1);
         check(n->data != NULL, "Failed to allocate memory for new element.");
     }
 
-    TypeInterface_copy(L->element_type, n->data, in);
+    t_copy(L->element_type, n->data, in);
 
     return 0;
 error:
@@ -57,14 +57,14 @@ static inline int ListNode_get(const List *L, ListNode *n, void *out)
     check_ptr(n);
     check_ptr(out);
 
-    TypeInterface_copy(L->element_type, out, n->data);
+    t_copy(L->element_type, out, n->data);
 
     return 0;
 error:
     return -1;
 }
 
-int List_initialize(List *L, TypeInterface *element_type)
+int List_initialize(List *L, t_intf *element_type)
 {
     check_ptr(element_type);
 
@@ -78,7 +78,7 @@ error:
     return -1;
 }
 
-List *List_new(TypeInterface *element_type)
+List *List_new(t_intf *element_type)
 {
     List *L = malloc(sizeof(*L));
     check_alloc(L);

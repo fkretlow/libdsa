@@ -10,16 +10,16 @@ typedef struct {
     char *data;
     size_t size;
     size_t capacity;
-    TypeInterface *element_type;
+    t_intf *element_type;
 } Vector;
 
 #define Vector_capacity(V) (V)->capacity
 #define Vector_size(V) (V)->size
 #define Vector_empty(V) ((V)->size == 0)
 
-int Vector_initialize(Vector *V, TypeInterface *element_type);
+int Vector_initialize(Vector *V, t_intf *element_type);
 void Vector_destroy(Vector *V);
-Vector *Vector_new(TypeInterface *element_type);
+Vector *Vector_new(t_intf *element_type);
 void Vector_delete(Vector *V);
 
 int Vector_reserve(Vector *V, const size_t capacity);

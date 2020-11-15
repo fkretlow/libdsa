@@ -17,12 +17,12 @@ int PriorityQueue_enqueue(PriorityQueue *Q, const void *in)
 
     /* Move it upwards until the heap property is satisfied. */
     if (PriorityQueue_size(Q) > 1) {
-        temp = malloc(TypeInterface_size(Q->element_type));
+        temp = malloc(t_size(Q->element_type));
         check_alloc(temp);
-        Heap_bubble_up(Q->data, TypeInterface_size(Q->element_type),
+        Heap_bubble_up(Q->data, t_size(Q->element_type),
                        Q->size - 1, Q->element_type->compare, temp);
         assert(is_heap(Q->data, Q->size,
-                       TypeInterface_size(Q->element_type),
+                       t_size(Q->element_type),
                        Q->element_type->compare));
         free(temp);
     }
@@ -44,21 +44,21 @@ int PriorityQueue_dequeue(PriorityQueue *Q, void *out)
     /* Copy the last element to the top, assuming that nested types remain
      * intact when only the top level data is moved. */
     memmove(Q->data,
-            Q->data + (Q->size - 1) * TypeInterface_size(Q->element_type),
-            TypeInterface_size(Q->element_type));
+            Q->data + (Q->size - 1) * t_size(Q->element_type),
+            t_size(Q->element_type));
 
     /* Remove the now obsolete duplicate at the end. */
     Vector_pop_back(Q, NULL);
 
     /* Repair the heap. */
     if (Q->size > 1) {
-        temp = malloc(TypeInterface_size(Q->element_type));
+        temp = malloc(t_size(Q->element_type));
         check_alloc(temp);
         Heap_sift_down(Q->data, Q->size,
-                       TypeInterface_size(Q->element_type), 0,
+                       t_size(Q->element_type), 0,
                        Q->element_type->compare, temp);
         assert(is_heap(Q->data, Q->size,
-                       TypeInterface_size(Q->element_type),
+                       t_size(Q->element_type),
                        Q->element_type->compare));
         free(temp);
     }

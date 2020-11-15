@@ -11,30 +11,30 @@
 typedef void (*copy_f)(void *dest, const void *src);
 typedef void (*destroy_f)(void *obj);
 typedef int (*compare_f)(const void *a, const void *b);
-typedef unsigned long (*hash_f)(const void *obj);
+typedef uint32_t (*hash_f)(const void *obj);
 typedef void (*print_f)(FILE *stream, const void *obj);
 
-typedef struct TypeInterface {
+typedef struct t_intf {
     size_t size;
     copy_f copy;
     destroy_f destroy;
     compare_f compare;
     hash_f hash;
     print_f print;
-} TypeInterface;
+} t_intf;
 
-void *TypeInterface_allocate(const TypeInterface *T, size_t n);
-void TypeInterface_copy(const TypeInterface *T, void *dest, const void *src);
-void TypeInterface_destroy(const TypeInterface *T, void *obj);
-int TypeInterface_compare(const TypeInterface *T, const void *a, const void *b);
-unsigned long TypeInterface_hash(const TypeInterface *T, const void *obj);
-void TypeInterface_print(const TypeInterface *T, FILE *stream, const void *obj);
+void        *t_allocate (const t_intf *T, size_t n);
+void        t_copy      (const t_intf *T, void *dest, const void *src);
+void        t_destroy   (const t_intf *T, void *obj);
+int         t_compare   (const t_intf *T, const void *a, const void *b);
+uint32_t    t_hash      (const t_intf *T, const void *obj);
+void        t_print     (const t_intf *T, FILE *stream, const void *obj);
 
-#define TypeInterface_size(T) (T)->size
+#define t_size(T) (T)->size
 
 /* Predefined type interfaces: */
-TypeInterface String_type;
-TypeInterface int_type;
-TypeInterface pointer_type;
+t_intf String_type;
+t_intf int_type;
+t_intf pointer_type;
 
 #endif // _type_interface_h

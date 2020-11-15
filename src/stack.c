@@ -24,7 +24,7 @@ static inline void StackNode_delete(const Stack *S, StackNode *n)
 {
     if (n) {
         if (n->data && S) {
-            TypeInterface_destroy(S->element_type, n->data);
+            t_destroy(S->element_type, n->data);
         }
     }
     free(n->data);
@@ -38,13 +38,13 @@ static int StackNode_set(const Stack *S, StackNode *n, const void *in)
     check_ptr(in);
 
     if (n->data) {
-        TypeInterface_destroy(S->element_type, n->data);
+        t_destroy(S->element_type, n->data);
     } else {
-        n->data = TypeInterface_allocate(S->element_type, 1);
+        n->data = t_allocate(S->element_type, 1);
         check(n->data != NULL, "Failed to allocate memory for new element.");
     }
 
-    TypeInterface_copy(S->element_type, n->data, in);
+    t_copy(S->element_type, n->data, in);
 
     return 0;
 error:
@@ -57,14 +57,14 @@ static inline int StackNode_get(const Stack *S, StackNode *n, void *out)
     check_ptr(n);
     check_ptr(out);
 
-    TypeInterface_copy(S->element_type, out, n->data);
+    t_copy(S->element_type, out, n->data);
 
     return 0;
 error:
     return -1;
 }
 
-int Stack_initialize(Stack *S, TypeInterface *element_type)
+int Stack_initialize(Stack *S, t_intf *element_type)
 {
     check_ptr(element_type);
 
@@ -77,7 +77,7 @@ error:
     return -1;
 }
 
-Stack *Stack_new(TypeInterface *element_type)
+Stack *Stack_new(t_intf *element_type)
 {
     Stack *S = malloc(sizeof(*S));
     check_alloc(S);

@@ -1,7 +1,7 @@
 #include "str.h"
 #include "type_interface.h"
 
-void *TypeInterface_allocate(const TypeInterface *T, size_t n)
+void *t_allocate(const t_intf *T, size_t n)
 {
     void *obj = malloc(n * T->size);
     check_alloc(obj);
@@ -10,7 +10,7 @@ error:
     return NULL;
 }
 
-void TypeInterface_copy(const TypeInterface *T, void *dest, const void *src)
+void t_copy(const t_intf *T, void *dest, const void *src)
 {
     if (T->copy) {
         T->copy(dest, src);
@@ -19,17 +19,17 @@ void TypeInterface_copy(const TypeInterface *T, void *dest, const void *src)
     }
 }
 
-void TypeInterface_destroy(const TypeInterface *T, void *obj)
+void t_destroy(const t_intf *T, void *obj)
 {
     if (T->destroy) T->destroy(obj);
 }
 
-int TypeInterface_compare(const TypeInterface *T, const void *a, const void *b)
+int t_compare(const t_intf *T, const void *a, const void *b)
 {
     return T->compare(a, b);
 }
 
-unsigned long TypeInterface_hash(const TypeInterface *T, const void *obj)
+uint32_t t_hash(const t_intf *T, const void *obj)
 {
     if (T->hash) {
         return T->hash(obj);
@@ -38,14 +38,14 @@ unsigned long TypeInterface_hash(const TypeInterface *T, const void *obj)
     }
 }
 
-void TypeInterface_print(const TypeInterface *T, FILE *stream, const void *obj)
+void t_print(const t_intf *T, FILE *stream, const void *obj)
 {
     if (T->print) T->print(stream, obj);
 }
 
 /* Predefined type interfaces: */
 
-TypeInterface String_type = {
+t_intf String_type = {
     .size = sizeof(String),
     .copy = String_copy_to,
     .destroy = String_destroy,
@@ -61,7 +61,7 @@ int int_compare(const void *a, const void *b)
     return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
 }
 
-unsigned long int_hash(const void *i)
+uint32_t int_hash(const void *i)
 {
     return jenkins_hash(i, sizeof(int));
 }
@@ -71,7 +71,7 @@ void int_print(FILE *stream, const void *i)
     fprintf(stream, "%d", *(int*)i);
 }
 
-TypeInterface int_type = {
+t_intf int_type = {
     .size = sizeof(int),
     .copy = NULL,
     .destroy = NULL,
@@ -85,7 +85,7 @@ int pointer_compare(const void *a, const void *b)
     return a < b ? -1 : a > b ? 1 : 0;
 }
 
-TypeInterface pointer_type = {
+t_intf pointer_type = {
     .size = sizeof(void*),
     .copy = NULL,
     .destroy = NULL,

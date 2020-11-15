@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "node_data.h"
+#include "memory_scheme.h"
 #include "hash.h"
 
 #define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))
@@ -45,7 +45,7 @@ int String_append_cstr(String *s, const char *cstr);
 int String_push_back(String *s, const char c);
 int String_pop_back(String *s, char *out);
 String *String_concat(const String *s1, const String *s2);
-unsigned long String_hash(const void *s);
+uint32_t String_hash(const void *s);
 void String_printf(FILE *stream, const void *s);
 
 #endif // _str_h

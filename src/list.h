@@ -18,7 +18,7 @@ typedef struct List {
     ListNode *first;
     ListNode *last;
     size_t size;
-    TypeInterface *element_type;
+    t_intf *element_type;
 } List;
 
 #define List_first(L) ((L)->first ? (L)->first->data : NULL)
@@ -26,8 +26,8 @@ typedef struct List {
 #define List_size(L) (L)->size
 #define List_empty(L) ((L)->size == 0)
 
-int List_initialize(List *L, TypeInterface *element_type);
-List *List_new(TypeInterface *element_type);
+int List_initialize(List *L, t_intf *element_type);
+List *List_new(t_intf *element_type);
 void List_delete(List *L);
 void List_clear(List *L);
 

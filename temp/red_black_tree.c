@@ -216,7 +216,7 @@ error:
 
 /***************************************************************************************
  *
- * int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type);
+ * int RBTree_initialize(RBTree *T, t_intf *key_type, t_intf *value_type);
  *
  * Initialize T, which is assumed to be a pointer to a memory location with enough space
  * for an RBTree. The key type is mandatory, the value type can be NULL if single
@@ -231,7 +231,7 @@ error:
  *
  **************************************************************************************/
 
-int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_type)
+int RBTree_initialize(RBTree *T, t_intf *key_type, t_intf *value_type)
 {
     check_ptr(T);
     check_ptr(key_type);
@@ -242,8 +242,8 @@ int RBTree_initialize(RBTree *T, TypeInterface *key_type, TypeInterface *value_t
     T->key_type = key_type;
     T->value_type = value_type;
 
-    if ( TypeInterface_size(key_type)
-            + ( value_type ? TypeInterface_size(value_type) : 0 )
+    if ( t_size(key_type)
+            + ( value_type ? t_size(value_type) : 0 )
             > RBT_ALLOC_THRESHOLD ) {
         T->external_storage = 1;
     } else {
@@ -386,7 +386,7 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
 static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
 {
-    int comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
+    int comp = t_compare(T->key_type, k, RBTreeNode_key_address(T, n));
     if (comp == 0) {
         return 1; /* found it, nothing to do */
     } else if (comp < 0 && n->left) {
@@ -515,7 +515,7 @@ int RBTree_has(const RBTree *T, const void *k)
     int comp;
 
     while (n) {
-        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
+        comp = t_compare(T->key_type, k, RBTreeNode_key_address(T, n));
         if (comp > 0) {
             n = n->right;
         } else if (comp < 0) {
@@ -647,7 +647,7 @@ int RBTreeNode_remove(RBTree *T, RBTreeNode *n, const void *k)
     int comp;
     for ( ;; ) {
         if (!n) return 0; /* not found */
-        comp = TypeInterface_compare(T->key_type, k, RBTreeNode_key_address(T, n));
+        comp = t_compare(T->key_type, k, RBTreeNode_key_address(T, n));
         if (comp == 0) break; /* found, go on */
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;

@@ -9,7 +9,7 @@ typedef RBTree Set;
 #define Set_size(S) (S)->size
 
 #define Set_initialize(S, element_type) RBTree_initialize(S, element_type, NULL)
-Set *Set_new(TypeInterface *element_type);
+Set *Set_new(t_intf *element_type);
 void Set_delete(Set *S);
 #define Set_clear(S) RBTree_clear(S)
 

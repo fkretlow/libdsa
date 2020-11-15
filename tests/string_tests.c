@@ -185,23 +185,23 @@ int test_string_type_interface(void)
     String *s1 = String_from_cstr("Debussy");
     String *s2 = String_from_cstr("Debussy");
 
-    /* TypeInterface_print(&String_type, stdout, &s1); */
+    /* t_print(&String_type, stdout, &s1); */
 
-    rc = TypeInterface_compare(&String_type, s1, s2);
+    rc = t_compare(&String_type, s1, s2);
     test(rc == 0, "rc = %d (%d)", rc, 0);
 
     unsigned long h1, h2;
-    h1 = TypeInterface_hash(&String_type, s1);
-    h2 = TypeInterface_hash(&String_type, s2);
+    h1 = t_hash(&String_type, s1);
+    h2 = t_hash(&String_type, s2);
     test(h1 == h2, "h1 != h2");
 
     String dest;
-    TypeInterface_copy(&String_type, &dest, s1);
+    t_copy(&String_type, &dest, s1);
     rc = String_compare(&dest, s1);
     test(rc == 0, "rc = %d (%d)", rc, 0);
     test(dest.size == s1->size, "dest->size != s1->size");
 
-    TypeInterface_destroy(&String_type, &dest);
+    t_destroy(&String_type, &dest);
 
     String_delete(s1);
     String_delete(s2);
