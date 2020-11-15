@@ -43,7 +43,7 @@ int generate_memory_scheme(mscheme *s, t_intf *kt, t_intf *vt)
 
     check(s != NULL, "s == NULL");
     check(kt && kt->size > 0, "kt == NULL or kt->size == 0");
-    check(vt && vt->size > 0, "vt == NULL or vt->size == 0");
+    check(vt == NULL || vt->size > 0, "vt->size == 0");
 
     s->key_type = kt;
     s->value_type = vt;

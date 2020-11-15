@@ -93,7 +93,7 @@ error:
  *
  **************************************************************************************/
 
-void bt_destroy(bt *T)
+/* void bt_destroy(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
@@ -109,4 +109,4 @@ void bt_delete(bt *T)
         if (T->root) btn_delete(T, T->root);
         free(T);
     }
-}
+} */
