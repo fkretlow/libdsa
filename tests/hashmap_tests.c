@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "log.h"
 #include "hash.h"
 #include "hashmap.h"
 #include "str.h"

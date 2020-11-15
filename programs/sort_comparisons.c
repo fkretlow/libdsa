@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "debug.h"
+#include "check.h"
 #include "sort.h"
 #include "stats.h"
 

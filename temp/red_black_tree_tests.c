@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "debug.h"
+#include "check.h"
 #include "red_black_tree.h"
 #include "test_utils.h"
 #include "test.h"
@@ -229,7 +229,7 @@ int test_rbtree_usage(void)
     /* RBTree_traverse(&T, print_node, NULL); */
 
     for (int i = 0; i < N_VALUES; ++i) {
-        /* debug("deleting unsorted values: loop i = %d", i); */
+        /* log_info("deleting unsorted values: loop i = %d", i); */
         rc = RBTree_remove(&T, values + i);
         test(rc == 1, "rc = %d (%d)", rc, 1);
         rc = RBTree_has(&T, values + i);
@@ -283,7 +283,7 @@ int main(void)
     unsigned seed = (unsigned)time(NULL);
     /* unsigned seed = 1604388022; */
     srand(seed);
-    /* debug("random seed was %u", seed); */
+    /* log_info("random seed was %u", seed); */
 
     run_test(test_rotations);
     run_test(test_rbtree_initialize);

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include "check.h"
 #include "list.h"
 
 static inline int List_invariant(const List *L)

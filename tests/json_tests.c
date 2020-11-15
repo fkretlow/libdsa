@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "debug.h"
+#include "log.h"
 #include "list.h"
 #include "json.h"
 #include "str.h"

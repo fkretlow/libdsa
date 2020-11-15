@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "container_tools.h"
-#include "debug.h"
+#include "check.h"
 #include "str.h"
 #include "type_interface.h"
 

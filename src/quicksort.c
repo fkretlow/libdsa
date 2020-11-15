@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
 #include "sort_tools.h"
 
 static size_t _partition(char *base,

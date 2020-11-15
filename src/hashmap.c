@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "debug.h"
+#include "check.h"
 #include "hashmap.h"
 
 static inline HashmapNode *HashmapNode_new(void)

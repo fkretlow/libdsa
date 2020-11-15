@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "debug.h"
+#include "check.h"
 #include "red_black_tree.h"
 
 /* static inline */
@@ -326,13 +326,13 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
     /* Case 1: n is the root of the tree. */
     if (n == T->root) {
-        /* debug("Case 1: n is the root"); */
+        /* log_info("Case 1: n is the root"); */
         l->color = r->color = BLACK;
     }
 
     /* Case 2: p is black. */
     else if (p->color == BLACK) {
-        /* debug("Case 2: p is black"); */
+        /* log_info("Case 2: p is black"); */
         n->color = RED;
         l->color = r->color = BLACK;
     }
@@ -347,7 +347,7 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
             /* Case 3.1a: left-left or right-right ancestor chain. */
             if (n == pp->right->right || n == pp->left->left) {
-                /* debug("Case 3.1a straight ancestor chain"); */
+                /* log_info("Case 3.1a straight ancestor chain"); */
                 if (n == pp->right->right) {
                     RBTreeNode_rotate_left(T, pp, NULL);
                 } else {
@@ -361,7 +361,7 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
             /* Case 3.1b: right-left or left-right ancestor chain. */
             else {
-                /* debug("Case 3.1b: right-left or left-right ancestor chain"); */
+                /* log_info("Case 3.1b: right-left or left-right ancestor chain"); */
                 if (n == pp->right->left) {
                     RBTreeNode_rotate_right(T, p, NULL);
                     RBTreeNode_rotate_left(T, pp, NULL);
@@ -376,7 +376,7 @@ static void RBTree_group_decrease_weight(RBTree *T, RBTreeNode *n)
 
         /* Case 3.2: pp has 2 red children */
         else {
-            /* debug("Case 3.2: pp is full."); */
+            /* log_info("Case 3.2: pp is full."); */
             RBTree_group_decrease_weight(T, pp);
             /* Things may have changed. Go again. */
             RBTree_group_decrease_weight(T, n);
@@ -398,14 +398,14 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
     /* Case 1: n is black */
     if (n->color == BLACK) {
         if (comp < 0) {
-            /* debug("Case 1 left"); */
+            /* log_info("Case 1 left"); */
             n->left = RBTreeNode_new();
             RBTreeNode_set_key(T, n->left, k);
             n->left->parent = n;
             n->left->color = RED;
             ++T->size;
         } else { /* comp > 0 */
-            /* debug("Case 1 right"); */
+            /* log_info("Case 1 right"); */
             n->right = RBTreeNode_new();
             RBTreeNode_set_key(T, n->right, k);
             n->right->parent = n;
@@ -420,7 +420,7 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
 
         /* Case 2.1: p has 2 red children */
         if (RBTree_group_weight(p) == 3) {
-            /* debug("Case 2.1 p is full"); */
+            /* log_info("Case 2.1 p is full"); */
             RBTree_group_decrease_weight(T, p);
             /* Now n may be elsewhere. Go again. */
             return RBTreeNode_insert(T, n, k);
@@ -429,7 +429,7 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
         /* Case 2.2: p has 1 red child (n) */
         else { /* weight(p) = 1 is handled in case 1 */
             if (comp < 0 && n == p->left) {
-                /* debug("Case 2.2 left-left"); */
+                /* log_info("Case 2.2 left-left"); */
                 RBTreeNode_rotate_right(T, p, NULL);
                 n->left = RBTreeNode_new();
                 n->left->parent = n;
@@ -438,7 +438,7 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
                 p->color = RED;
                 n->left->color = RED;
             } else if (comp > 0 && n == p->right) {
-                /* debug("Case 2.2 right-right"); */
+                /* log_info("Case 2.2 right-right"); */
                 RBTreeNode_rotate_left(T, p, NULL);
                 n->right = RBTreeNode_new();
                 n->right->parent = n;
@@ -447,14 +447,14 @@ static int RBTreeNode_insert(RBTree *T, RBTreeNode *n, const void *k)
                 p->color = RED;
                 n->right->color = RED;
             } else if (comp < 0 && n == p->right) {
-                /* debug("Case 2.2 right-left"); */
+                /* log_info("Case 2.2 right-left"); */
                 p->left = RBTreeNode_new();
                 RBTreeNode_set_key(T, p->left, RBTreeNode_key_address(T, p));
                 RBTreeNode_set_key(T, p, k);
                 p->left->parent = p;
                 p->left->color = RED;
             } else if (comp > 0 && n == p->left) {
-                /* debug("Case 2.2 left-right"); */
+                /* log_info("Case 2.2 left-right"); */
                 p->right = RBTreeNode_new();
                 RBTreeNode_set_key(T, p->right, RBTreeNode_key_address(T, p));
                 RBTreeNode_set_key(T, p, k);
@@ -991,7 +991,7 @@ int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
     if (n->color == RED) {
         /* Check for adjacent red nodes. */
         if (n->parent && n->parent->color == RED) {
-            debug("Invariant violated: Two adjacent red nodes.")
+            log_info("Invariant violated: Two adjacent red nodes.")
             return -1;
         }
     }
@@ -1005,7 +1005,7 @@ int RBTreeNode_invariant(RBTreeNode *n, void *black_count)
         if (*(int*)black_count == -1) {
             *(int*)black_count = count;
         } else if (count != *(int*)black_count) {
-            debug("Invariant violated: Unequal numbers of black nodes per path.");
+            log_info("Invariant violated: Unequal numbers of black nodes per path.");
             return -2;
         }
     }

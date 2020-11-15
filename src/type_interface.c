@@ -1,3 +1,4 @@
+#include "check.h"
 #include "str.h"
 #include "type_interface.h"
 

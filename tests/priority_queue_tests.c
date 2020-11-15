@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "debug.h"
+#include "log.h"
 #include "priority_queue.h"
 #include "test_utils.h"
 #include "test.h"

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "debug.h"
+#include "check.h"
 #include "heap.h"
 #include "priority_queue.h"
 

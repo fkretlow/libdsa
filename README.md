@@ -7,7 +7,7 @@ understand the code.
 
 The implementations are influenced by the examples in Zed A. Shaw's *Learn C
 the Hard Way*, but each of them was rewritten from scratch. The same goes for
-the testing and debugging macros in `debug.h` and `test.h`.
+the testing and debugging macros in `check.h` and `test.h`.
 
 Suggestions are welcome and appreciated. Keep in mind that this is a study
 project.

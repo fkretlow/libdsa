@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "debug.h"
+#include "check.h"
 #include "str.h"
 
 String *serialize_int(const void *ip)

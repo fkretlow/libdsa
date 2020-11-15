@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "check.h"
+#include "log.h"
 #include "memory_scheme.h"
 
 /***************************************************************************************

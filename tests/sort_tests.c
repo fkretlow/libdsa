@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "debug.h"
+#include "log.h"
 #include "sort.h"
 #include "test_utils.h"
 #include "test.h"

@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <debug.h>
 
 #define TEST_OK 0
 #define TEST_ERR -1

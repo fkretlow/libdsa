@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "debug.h"
 #include "heap.h"
 #include "sort_tools.h"
 

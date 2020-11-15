@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
+#include "check.h"
 #include "vector.h"
 
 int Vector_initialize(Vector *V, t_intf *element_type)
@@ -213,7 +213,7 @@ int Vector_remove(Vector *V, const size_t i)
      * disaster so we just log it. */
     if (V->size < (V->capacity >> 2) && V->capacity > VECTOR_MIN_CAPACITY) {
         int rc = Vector_shrink_to_fit(V);
-        if (rc != 0) debug("Failed to contract internal memory.");
+        if (rc != 0) log_info("Failed to contract internal memory.");
     }
 
     return 0;

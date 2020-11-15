@@ -3,16 +3,16 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
-#include "debug.h"
 #include "hash.h"
 
-typedef void (*copy_f)(void *dest, const void *src);
-typedef void (*destroy_f)(void *obj);
-typedef int (*compare_f)(const void *a, const void *b);
-typedef uint32_t (*hash_f)(const void *obj);
-typedef void (*print_f)(FILE *stream, const void *obj);
+typedef void        (*copy_f)       (void *dest, const void *src);
+typedef void        (*destroy_f)    (void *obj);
+typedef int         (*compare_f)    (const void *a, const void *b);
+typedef uint32_t    (*hash_f)       (const void *obj);
+typedef void        (*print_f)      (FILE *stream, const void *obj);
 
 typedef struct t_intf {
     size_t size;
@@ -23,7 +23,7 @@ typedef struct t_intf {
     print_f print;
 } t_intf;
 
-void        *t_allocate (const t_intf *T, size_t n);
+void *      t_allocate  (const t_intf *T, size_t n);
 void        t_copy      (const t_intf *T, void *dest, const void *src);
 void        t_destroy   (const t_intf *T, void *obj);
 int         t_compare   (const t_intf *T, const void *a, const void *b);
@@ -32,7 +32,7 @@ void        t_print     (const t_intf *T, FILE *stream, const void *obj);
 
 #define t_size(T) (T)->size
 
-/* Predefined type interfaces: */
+/* Predefined type interfaces */
 t_intf String_type;
 t_intf int_type;
 t_intf pointer_type;

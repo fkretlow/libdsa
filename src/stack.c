@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "debug.h"
+#include "check.h"
 #include "stack.h"
 
 static inline int Stack_invariant(const Stack *S)

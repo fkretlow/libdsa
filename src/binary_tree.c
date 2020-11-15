@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "check.h"
 #include "binary_tree.h"
+#include "log.h"
 
 /***************************************************************************************
  *

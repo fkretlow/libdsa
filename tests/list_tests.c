@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "check.h"
 #include "list.h"
 #include "str.h"
 #include "test.h"

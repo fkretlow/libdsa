@@ -154,7 +154,7 @@ int main(void)
     unsigned seed = (unsigned)time(NULL);
     /* unsigned seed = 1604388022; */
     srand(seed);
-    /* debug("random seed was %u", seed); */
+    /* log_info("random seed was %u", seed); */
 
     run_test(test_set_init);
     run_test(test_set_usage);
