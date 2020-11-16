@@ -22,16 +22,16 @@ int test_priority_queue_usage(void)
     for (int i = 0; i < 32; ++i) {
         v1 = rand() % MAX_VAL;
         rc = PriorityQueue_enqueue(Q, &v1);
-        test(rc == 0, "PriorityQueue_enqueue failed (for-loop i=%d)", i);
+        test(rc == 0);
     }
 
     rc = PriorityQueue_dequeue(Q, &v1);
-    test(rc == 0, "PriorityQueue_dequeue failed.");
+    test(rc == 0);
 
     for (int i = 0; PriorityQueue_size(Q) > 0; ++i) {
         rc = PriorityQueue_dequeue(Q, &v2);
-        test(rc == 0, "PriorityQueue_dequeue failed (for-loop i=%d)", i);
-        test(v1 >= v2, "v1=%d, v2=%d, v1<v2", v1, v2);
+        test(rc == 0);
+        test(v1 >= v2);
         v1 = v2;
     }
 
@@ -41,7 +41,7 @@ int test_priority_queue_usage(void)
 int test_priority_queue_teardown(void)
 {
     PriorityQueue_clear(Q);
-    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    test(Q->size == 0);
     PriorityQueue_delete(Q);
     return TEST_OK;
 }

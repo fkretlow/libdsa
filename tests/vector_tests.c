@@ -11,12 +11,10 @@ static int rc;
 int test_vector_new(void)
 {
     V = Vector_new(&int_type);
-    test(V->data != NULL, "V->data = NULL");
-    test(V->size == 0, "V->size = %lu (%lu)", V->size, 0lu);
-    test(V->capacity == VECTOR_MIN_CAPACITY,
-            "V->capacity = %lu (%lu)", V->capacity, VECTOR_MIN_CAPACITY);
-    test(V->element_type->size == sizeof(int),
-            "V->element_type->size = %lu (%lu)", V->element_type->size, sizeof(int));
+    test(V->data != NULL);
+    test(V->size == 0);
+    test(V->capacity == VECTOR_MIN_CAPACITY);
+    test(V->element_type->size == sizeof(int));
     return TEST_OK;
 }
 
@@ -26,36 +24,32 @@ int test_vector_usage(void)
     int out = 0;
 
     rc = Vector_push_back(V, &in);
-    test(rc == 0, "Vector_push_back failed.");
-    test(V->size == 1, "V->size = %lu (%lu)", V->size, 1lu);
+    test(rc == 0);
+    test(V->size == 1);
 
     rc = Vector_get(V, 0, &out);
-    test(rc == 0, "Vector_get failed.");
-    test(out == in, "out = %d (%d)", out, in);
+    test(rc == 0);
+    test(out == in);
 
     out = 0;
     rc = Vector_pop_back(V, &out);
-    test(rc == 0, "Vector_pop_back failed.");
-    test(V->size == 0, "V->size = %lu (%lu)", V->size, 0lu);
-    test(out == in, "out = %d (%d)", out, in);
+    test(rc == 0);
+    test(V->size == 0);
+    test(out == in);
 
     for (int i = 0; i < 17; ++i) {
         rc = Vector_push_back(V, &i);
-        test(rc == 0, "Vector_push_back failed (loop i = %d)", i);
-        test(V->size == (size_t)i + 1,
-                "V->size = %lu (%lu)", V->size, (unsigned long)i + 1);
+        test(rc == 0);
+        test(V->size == (size_t)i + 1);
     }
-    test(V->capacity == 32,
-            "V->capacity = %lu (%lu) after 17 * push_back", V->capacity, 32lu);
+    test(V->capacity == 32);
 
     for (int i = 16; i >= 0; --i) {
         rc = Vector_pop_back(V, &out);
-        test(rc == 0, "Vector_pop_back failed (loop i = %d (decrementing))", i);
-        test(out == i, "out = %d (%d) (loop i = %d (decrementing))", out, i, i);
+        test(rc == 0);
+        test(out == i);
     }
-    test(V->capacity == VECTOR_MIN_CAPACITY,
-            "V->capacity = %lu (%lu) after removing all elements",
-            V->capacity, VECTOR_MIN_CAPACITY);
+    test(V->capacity == VECTOR_MIN_CAPACITY);
 
     test_fail(Vector_pop_back(V, &out) == -1, "Vector_pop_back should fail.");
 
@@ -65,10 +59,9 @@ int test_vector_usage(void)
 int test_vector_teardown(void)
 {
     Vector_clear(V);
-    test(V->data != NULL, "V->data = NULL");
-    test(V->capacity == VECTOR_MIN_CAPACITY,
-            "V->capacity = %lu (%lu)", V->capacity, VECTOR_MIN_CAPACITY);
-    test(V->size == 0, "V->size = %lu (%lu)", V->size, 0lu);
+    test(V->data != NULL);
+    test(V->capacity == VECTOR_MIN_CAPACITY);
+    test(V->size == 0);
     Vector_delete(V);
     return TEST_OK;
 }
@@ -76,7 +69,7 @@ int test_vector_teardown(void)
 int test_vector_of_strings(void)
 {
     V = Vector_new(&String_type);
-    test(V != NULL, "V = NULL");
+    test(V != NULL);
 
     String *s = String_new();
     String_assign_cstr(s, "Haydn");
@@ -90,7 +83,7 @@ int test_vector_of_strings(void)
 
     String out;
     Vector_pop_back(V, &out);
-    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", String_data(&out));
+    test(String_compare(s, &out) == 0);
     String_destroy(&out);
 
     Vector_delete(V);

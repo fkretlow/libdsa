@@ -10,11 +10,10 @@ static int rc;
 int test_queue_new(void)
 {
     Q = Queue_new(&int_type);
-    test(Q != NULL, "Q = NULL");
-    test(Q->first == NULL && Q->last == NULL, "Q->first != NULL or Q->last != NULL");
-    test(Q->element_type->size == sizeof(int),
-            "Q->element_size = %lu (%lu)", Q->element_type->size, sizeof(int));
-    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    test(Q != NULL);
+    test(Q->first == NULL && Q->last == NULL);
+    test(Q->element_type->size == sizeof(int));
+    test(Q->size == 0);
     return TEST_OK;
 }
 
@@ -24,16 +23,16 @@ int test_queue_usage(void)
 
     for (int i = 0; i < 8; ++i) {
         rc = Queue_enqueue(Q, &i);
-        test(rc == 0, "Queue_enqueue failed (loop iteration i=%d)", i);
+        test(rc == 0);
     }
-    test(Q->size == 8, "Q->size = %lu (%lu)", Q->size, 8lu);
+    test(Q->size == 8);
 
     for (int i = 0; i < 8; ++i) {
         rc = Queue_dequeue(Q, &val);
-        test(rc == 0, "Queue_dequeue failed (loop iteration i=%d)", i);
-        test(val == i, "val = %d (%d) (loop iteration i=%d)", val, i, i);
+        test(rc == 0);
+        test(val == i);
     }
-    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    test(Q->size == 0);
 
     return TEST_OK;
 }
@@ -42,7 +41,7 @@ int test_queue_teardown(void)
 {
 
     Queue_clear(Q);
-    test(Q->size == 0, "Q->size = %lu (%lu)", Q->size, 0lu);
+    test(Q->size == 0);
     Queue_delete(Q);
     return TEST_OK;
 }

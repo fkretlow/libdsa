@@ -110,7 +110,6 @@ int set_key(char *data, const mscheme *s, const void *k)
 
     if (s->key_external) {
         void **addr = (void**)data;
-        assert(*addr == NULL);
         *addr = t_allocate(s->key_type, 1);
         check_alloc(*addr);
         t_copy(s->key_type, *addr, k);

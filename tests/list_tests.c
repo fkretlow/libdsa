@@ -11,11 +11,10 @@ static int rc;
 int test_list_new(void)
 {
     L = List_new(&int_type);
-    test(L != NULL, "L = NULL");
-    test(L->first == NULL && L->last == NULL, "L->first != NULL or L->last != NULL");
-    test(L->element_type->size == sizeof(int),
-            "L->element_size = %lu (%lu)", L->element_type->size, sizeof(int));
-    test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
+    test(L != NULL);
+    test(L->first == NULL && L->last == NULL);
+    test(L->element_type->size == sizeof(int));
+    test(L->size == 0);
     return TEST_OK;
 }
 
@@ -25,66 +24,64 @@ int test_list_usage(void)
     int *ip;
 
     rc = List_push_back(L, &val);
-    test(rc == 0, "List_push_back failed.");
-    test(L->first && L->last && L->first == L->last,
-            "Funny node connections after first push.");
-    test(L->first->next == NULL && L->first->prev == NULL,
-            "Single node has non-NULL connections.");
-    test(L->size == 1, "L->size = %lu (%lu)", L->size, 1lu);
+    test(rc == 0);
+    test(L->first && L->last && L->first == L->last);
+    test(L->first->next == NULL && L->first->prev == NULL);
+    test(L->size == 1);
 
     val = 0;
     rc = List_pop_back(L, &val);
-    test(rc == 0, "List_pop_back failed.");
-    test(L->first == NULL, "L->first = %p (%p)", L->first, NULL);
-    test(L->last == NULL, "L->last = %p (%p)", L->last, NULL);
-    test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
-    test(val == 1, "val = %d (%d)", val, 1);
+    test(rc == 0);
+    test(L->first == NULL);
+    test(L->last == NULL);
+    test(L->size == 0);
+    test(val == 1);
 
     for (int i = 0; i < 8; ++i) {
         rc = List_push_back(L, &i);
-        test(rc == 0, "List_push_back failed (loop iteration i=%d)", i);
+        test(rc == 0);
     }
-    test(L->size == 8, "L->size = %lu (%lu)", L->size, 8lu);
+    test(L->size == 8);
 
     for (int i = 7; i >= 0; --i) {
         rc = List_pop_back(L, &val);
-        test(rc == 0, "List_pop_back failed (loop iteration i=%d)", i);
-        test(val == i, "val = %d (%d)", val, i);
+        test(rc == 0);
+        test(val == i);
     }
-    test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
+    test(L->size == 0);
 
     for (int i = 0; i < 8; ++i) {
         rc = List_push_front(L, &i);
-        test(rc == 0, "List_push_back failed (loop iteration i=%d)", i);
+        test(rc == 0);
     }
-    test(L->size == 8, "L->size = %lu (%lu)", L->size, 8lu);
+    test(L->size == 8);
 
     val = 7;
     List_foreach(L, ip) {
-        test(*ip == val, "*ip = %d (%d)", *ip, val);
+        test(*ip == val);
         --val;
     }
 
     val = -1;
     rc = List_insert(L, 3, &val);
-    test(rc == 0, "List_insert failed.");
-    test(L->size == 9, "L->size = %lu (%lu)", L->size, 9lu);
+    test(rc == 0);
+    test(L->size == 9);
 
     val = 0;
     rc = List_get(L, 3, &val);
-    test(rc == 0, "List_get failed.");
-    test(val == -1, "val = %d (%d)", val, -1);
+    test(rc == 0);
+    test(val == -1);
 
     rc = List_remove(L, 3);
-    test(rc == 0, "List_remove failed.");
-    test(L->size == 8, "L->size = %lu (%lu)", L->size, 8lu);
+    test(rc == 0);
+    test(L->size == 8);
 
     for (int i = 7; i >= 0; --i) {
         rc = List_pop_front(L, &val);
-        test(rc == 0, "List_pop_back failed (loop iteration i=%d)", i);
-        test(val == i, "val = %d (%d)", val, i);
+        test(rc == 0);
+        test(val == i);
     }
-    test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
+    test(L->size == 0);
 
     test_fail(List_pop_back(L, NULL) == -1, "List_pop_back on empty list didn't fail.");
 
@@ -94,7 +91,7 @@ int test_list_usage(void)
 int test_list_teardown(void)
 {
     List_clear(L);
-    test(L->size == 0, "L->size = %lu (%lu)", L->size, 0lu);
+    test(L->size == 0);
     List_delete(L);
     return TEST_OK;
 }
@@ -102,7 +99,7 @@ int test_list_teardown(void)
 int test_list_of_strings(void)
 {
     L = List_new(&String_type);
-    test(L != NULL, "L = NULL");
+    test(L != NULL);
 
     String *s = String_new();
     String_assign_cstr(s, "Haydn");
@@ -116,7 +113,7 @@ int test_list_of_strings(void)
 
     String out;
     List_pop_back(L, &out);
-    test(String_compare(s, &out) == 0, "s != out (out = \"%s\")", String_data(&out));
+    test(String_compare(s, &out) == 0);
     String_destroy(&out);
 
     List_delete(L);

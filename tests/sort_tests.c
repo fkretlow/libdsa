@@ -20,14 +20,11 @@ static int int_compare(const void *a, const void *b)
 int test_is_sorted(void)
 {
     make_random(A, N_ELEMENTS, MAX_VALUE);
-    test(!is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "is_sorted returned true for unsorted array.");
+    test(!is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     make_equal(A, N_ELEMENTS, 0);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "is_sorted returned false for array with equal values.");
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     make_sorted(A, N_ELEMENTS);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "is_sorted returned false for sorted array.");
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     return TEST_OK;
 }
 
@@ -36,11 +33,10 @@ int test_quicksort(void)
     for (int i = 0; i < N_RUNS; ++i) {
         make_random(A, N_ELEMENTS, MAX_VALUE);
         quicksort(A, N_ELEMENTS, sizeof(*A), int_compare);
-        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare), "Quicksort: Not sorted.");
+        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     }
     quicksort(A, N_ELEMENTS, sizeof(*A), int_compare);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "Quicksort: Not sorted after sorting already sorted array.");
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     return TEST_OK;
 }
 
@@ -49,11 +45,10 @@ int test_mergesort(void)
     for (int i = 0; i < N_RUNS; ++i) {
         make_random(A, N_ELEMENTS, MAX_VALUE);
         mergesort(A, N_ELEMENTS, sizeof(*A), int_compare);
-        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare), "Mergesort: Not sorted.");
+        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     }
     mergesort(A, N_ELEMENTS, sizeof(*A), int_compare);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "Mergesort: Not sorted after sorting already sorted array.");
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     return TEST_OK;
 }
 
@@ -62,11 +57,10 @@ int test_heapsort(void)
     for (int i = 0; i < N_RUNS; ++i) {
         make_random(A, N_ELEMENTS, MAX_VALUE);
         heapsort(A, N_ELEMENTS, sizeof(*A), int_compare);
-        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare), "Heapsort: Not sorted.");
+        test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     }
     heapsort(A, N_ELEMENTS, sizeof(*A), int_compare);
-    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare),
-            "Heapsort: Not sorted after sorting already sorted array.");
+    test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     return TEST_OK;
 }
 
