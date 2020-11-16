@@ -3,5 +3,5 @@
     # $t
 # done
 
-./tests/binary_tree_tests
-echo ""
+./tests/memory_scheme_tests
+# echo ""
