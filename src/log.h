@@ -4,10 +4,16 @@
 #include <stdio.h>
 
 #define MAX_LOG_FILES 8
-FILE *log_files[MAX_LOG_FILES];
+
+struct log_file {
+    FILE *stream;
+    int use_styles;
+    int show_debug_messages;
+};
+
+struct log_file log_files[MAX_LOG_FILES];
 
 int _suppress_errors;
-int __ANSI_styles;
 
 #define ANSI_BOLD       "\x1b[1m"
 #define ANSI_FAINT      "\x1b[2m"
@@ -29,17 +35,18 @@ int __ANSI_styles;
 #define STYLE_PASS      ANSI_GREEN ANSI_BOLD
 
 enum _log_labels { DEBUG, INFO, CALL, WARN, ERROR, FAIL, PASS };
-void _log(const char *file, const int line, const char *function,
+void _log(const char *src_file, const int line, const char *function,
           int label, const char *fmt, ...);
 
 #ifndef NDEBUG
 #define log_debug(fmt, ...) _log(__FILE__, __LINE__, __func__, DEBUG, fmt, ##__VA_ARGS__)
+#define log_call(fmt, ...)  _log(__FILE__, __LINE__, __func__, CALL,  fmt, ##__VA_ARGS__)
 #else
 #define log_debug(fmt, ...)
+#define log_call(fmt, ...)
 #endif
 
 #define log_info(fmt, ...)  _log(__FILE__, __LINE__, __func__, INFO,  fmt, ##__VA_ARGS__)
-#define log_call(fmt, ...)  _log(__FILE__, __LINE__, __func__, CALL,  fmt, ##__VA_ARGS__)
 #define log_warn(fmt, ...)  _log(__FILE__, __LINE__, __func__, WARN,  fmt, ##__VA_ARGS__)
 #define log_error(fmt, ...) _log(__FILE__, __LINE__, __func__, ERROR, fmt, ##__VA_ARGS__)
 #define log_fail(fmt, ...)  _log(__FILE__, __LINE__, __func__, FAIL,  fmt, ##__VA_ARGS__)

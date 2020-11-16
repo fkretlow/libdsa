@@ -22,21 +22,23 @@ static int _rc = TEST_ERROR;
 static int _has_failed;
 
 extern int _suppress_errors;
-extern int __ANSI_styles;
-extern FILE *log_files[8];
+extern struct log_file log_files[MAX_LOG_FILES];
 
 #define test_suite_start() \
         fprintf(stderr, "%s\n", __FILE__); \
         for (size_t i = 0; i < strlen(__FILE__); ++i) fputc('-', stderr); \
         fputc('\n', stderr); \
         _suppress_errors = 0; \
-        __ANSI_styles = 1; \
-        log_files[0] = stderr; \
-        log_files[1] = fopen("./log.txt", "w"); \
+        log_files[0].stream = stderr; \
+        log_files[0].use_styles = 1; \
+        log_files[0].show_debug_messages = 0; \
+        log_files[1].stream = fopen("./log.txt", "w"); \
+        log_files[1].use_styles = 0; \
+        log_files[1].show_debug_messages = 1;
 
 #define test_suite_end() printf("\n"); \
-    fflush(log_files[1]); \
-    fclose(log_files[1]); \
+    fflush(log_files[1].stream); \
+    fclose(log_files[1].stream); \
     return 0
 
 #define run_test(T) { \
@@ -49,7 +51,7 @@ extern FILE *log_files[8];
 }
 
 #define test(T) if (!(T)) { \
-    log_error("assertion `%s` failed", #T); \
+    log_error("assertion `%s' failed", #T); \
     return -1; \
 }
 

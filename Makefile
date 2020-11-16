@@ -19,7 +19,7 @@ all: clean $(LIB) test
 clean:
 	rm -rf ./build ./bin ./**/*.o
 	rm -rf `find ./tests/ -type f ! -name "*.*"`
-	rm -rf `find . -type f -name "*.aux" -o -name "*.log" -o -name "*.gc*" -o -name "*.info"`
+	rm -rf `find . -type f -name "*.aux" -o -name "*.log" -o -name "*.gc*" -o -name "*.info" -o -name "log.txt"`
 	rm -rf ./cov
 	ctags -R .
 

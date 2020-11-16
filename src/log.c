@@ -5,7 +5,7 @@
 
 #include "log.h"
 
-FILE *log_files[MAX_LOG_FILES] = { NULL };
+struct log_file log_files[MAX_LOG_FILES] = { 0 };
 
 #define set_style(stream, style, use_styles) \
     if (use_styles) fprintf(stream, "%s%s", ANSI_RESET, style)
@@ -13,23 +13,20 @@ FILE *log_files[MAX_LOG_FILES] = { NULL };
 #define clear_style(stream, use_styles) \
     if (use_styles) fprintf(stream, "%s", ANSI_RESET)
 
-char _log_buf[256];
-void _log(const char *file, const int line, const char *function,
+void _log(const char *src_file, const int line, const char *function,
           int label, const char *fmt, ...)
 {
-    int use_styles;
-    FILE *stream;
+    struct log_file file;
     for (int i = 0; i < MAX_LOG_FILES; ++i) {
-        stream = log_files[i];
-        if (stream == NULL) break;
+        file = log_files[i];
+        if (file.stream == NULL) break;
+        if (file.show_debug_messages == 0 && (label == DEBUG || label == CALL)) continue;
 
-        use_styles = (stream == stdout || stream == stderr) ? __ANSI_styles : 0;
+        set_style(file.stream, STYLE_LOC, file.use_styles);
+        fprintf(file.stream, "%s:%d: ", src_file, line);
 
-        set_style(stream, STYLE_LOC, use_styles);
-        fprintf(stream, "%s:%d: ", file, line);
-
-        set_style(stream, STYLE_FN, use_styles);
-        fprintf(stream, "%s: ", function);
+        set_style(file.stream, STYLE_FN, file.use_styles);
+        fprintf(file.stream, "%s: ", function);
 
         const char *label_style;
         const char *label_text;
@@ -66,14 +63,14 @@ void _log(const char *file, const int line, const char *function,
                 label_style = label_text = "";
         }
 
-        set_style(stream, label_style, use_styles);
-        fprintf(stream, "%s", label_text);
-        clear_style(stream, use_styles);
+        set_style(file.stream, label_style, file.use_styles);
+        fprintf(file.stream, "%s", label_text);
+        clear_style(file.stream, file.use_styles);
 
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(stream, fmt, ap);
-        fputc('\n', stream);
+        vfprintf(file.stream, fmt, ap);
+        fputc('\n', file.stream);
         va_end(ap);
     }
 }
