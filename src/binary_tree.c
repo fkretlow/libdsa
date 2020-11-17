@@ -50,8 +50,8 @@ error:
 #define btn_has_key(n)   ((n)->flags.plain.has_key)
 #define btn_has_value(n) ((n)->flags.plain.has_value)
 
-#define btn_get_key(T, n)   (void*)(((char *)(n)) + sizeof(btn))
-#define btn_get_value(T, n) (void*)(((char *)(n)) + sizeof(btn) + t_size((T)->key_type))
+#define btn_get_key(T, n)   (((char *)(n)) + sizeof(btn))
+#define btn_get_value(T, n) (((char *)(n)) + sizeof(btn) + t_size((T)->key_type))
 
 void btn_delete(const bt *T, btn *n)
 {
