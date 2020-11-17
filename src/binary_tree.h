@@ -28,7 +28,7 @@ typedef struct btn {
     struct btn *left;
     struct btn *right;
     union {
-        struct btn_flags  plain;
+        struct btn_flags   plain;
         struct rbtn_flags  red_black;
         struct avltn_flags avl;
     } flags;
@@ -73,19 +73,17 @@ int     bt_traverse_nodes_r    (bt *T, int (*f)(btn *n, void *p), void *p);
 
 /* Node subroutines */
 
-btn *   btn_new                (void);
-void    btn_delete             (bt *T, btn *n);
+btn *   btn_new                (const bt *T);
+void    btn_delete             (const bt *T, btn *n);
 
-int     btn_set_key            (const bt *T, btn *n, const void *k);
-void *  btn_get_key            (const bt *T, const btn *n);
+void    btn_set_key            (const bt *T, btn *n, const void *k);
 void    btn_destroy_key        (const bt *T, btn *n);
 
-int     btn_set_value          (const bt *T, btn *n, const void *v);
-void *  btn_get_value          (const bt *T, const btn *n);
+void    btn_set_value          (const bt *T, btn *n, const void *v);
 void    btn_destroy_value      (const bt *T, btn *n);
 
 void    btn_rotate_left        (bt *T, btn *n);
 void    btn_rotate_right       (bt *T, btn *n);
 void    btn_replace_child      (bt *T, btn *p, btn *c, btn *s);
 
-#endif // _binary_tree_h
+#endif /* _binary_tree_h */
