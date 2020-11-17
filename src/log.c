@@ -14,23 +14,25 @@ struct log_file log_files[MAX_LOG_FILES] = { 0 };
     if (use_styles) fprintf(stream, "%s", ANSI_RESET)
 
 void _log(const char *src_file, const int line, const char *function,
-          int label, const char *fmt, ...)
+          int log_type, const char *fmt, ...)
 {
     struct log_file file;
     for (int i = 0; i < MAX_LOG_FILES; ++i) {
         file = log_files[i];
         if (file.stream == NULL) break;
-        if (file.show_debug_messages == 0 && (label == DEBUG || label == CALL)) continue;
+        if (file.suppress_errors && log_type == ERROR) continue;
+        if (file.suppress_debug_messages && (log_type == DEBUG || log_type == CALL))
+            continue;
 
-        set_style(file.stream, STYLE_LOC, file.use_styles);
+        set_style(file.stream, STYLE_LOC, file.use_ansi_styles);
         fprintf(file.stream, "%s:%d: ", src_file, line);
 
-        set_style(file.stream, STYLE_FN, file.use_styles);
+        set_style(file.stream, STYLE_FN, file.use_ansi_styles);
         fprintf(file.stream, "%s: ", function);
 
         const char *label_style;
         const char *label_text;
-        switch (label) {
+        switch (log_type) {
             case INFO:
                 label_style = STYLE_INFO;
                 label_text = "info: ";
@@ -63,9 +65,9 @@ void _log(const char *src_file, const int line, const char *function,
                 label_style = label_text = "";
         }
 
-        set_style(file.stream, label_style, file.use_styles);
+        set_style(file.stream, label_style, file.use_ansi_styles);
         fprintf(file.stream, "%s", label_text);
-        clear_style(file.stream, file.use_styles);
+        clear_style(file.stream, file.use_ansi_styles);
 
         va_list ap;
         va_start(ap, fmt);

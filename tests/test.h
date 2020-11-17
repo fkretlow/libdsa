@@ -21,20 +21,20 @@
 static int _rc = TEST_ERROR;
 static int _has_failed;
 
-extern int _suppress_errors;
 extern struct log_file log_files[MAX_LOG_FILES];
 
 #define test_suite_start() \
         fprintf(stderr, "%s\n", __FILE__); \
         for (size_t i = 0; i < strlen(__FILE__); ++i) fputc('-', stderr); \
         fputc('\n', stderr); \
-        _suppress_errors = 0; \
-        log_files[0].stream = stderr; \
-        log_files[0].use_styles = 1; \
-        log_files[0].show_debug_messages = 0; \
-        log_files[1].stream = fopen("./log.txt", "w"); \
-        log_files[1].use_styles = 0; \
-        log_files[1].show_debug_messages = 1;
+        log_files[0].stream=stderr; \
+        log_files[0].use_ansi_styles=1; \
+        log_files[0].suppress_debug_messages=1; \
+        log_files[0].suppress_errors=0; \
+        log_files[1].stream=fopen("log.txt", "a"); \
+        log_files[1].use_ansi_styles=0; \
+        log_files[1].suppress_debug_messages=0; \
+        log_files[1].suppress_errors=0; \
 
 #define test_suite_end() printf("\n"); \
     fflush(log_files[1].stream); \
@@ -55,11 +55,11 @@ extern struct log_file log_files[MAX_LOG_FILES];
     return -1; \
 }
 
-#define test_fail(T, fmt, ...) _suppress_errors = 1; \
+#define test_fail(T, fmt, ...) log_files[0].suppress_errors = 1; \
     if (!(T)) { \
         log_fail(fmt, ##__VA_ARGS__); \
         return TEST_ERROR; \
     } \
-    _suppress_errors = 0;
+    log_files[0].suppress_errors = 0;
 
 #endif // _unittest_h

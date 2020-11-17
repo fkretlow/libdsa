@@ -3,17 +3,15 @@
 
 #include <stdio.h>
 
-#define MAX_LOG_FILES 8
+#define MAX_LOG_FILES 4
 
 struct log_file {
     FILE *stream;
-    int use_styles;
-    int show_debug_messages;
+    unsigned int use_ansi_styles            : 1;
+    unsigned int suppress_debug_messages    : 1;
+    unsigned int suppress_errors            : 1;
 };
-
 struct log_file log_files[MAX_LOG_FILES];
-
-int _suppress_errors;
 
 #define ANSI_BOLD       "\x1b[1m"
 #define ANSI_FAINT      "\x1b[2m"
@@ -34,9 +32,9 @@ int _suppress_errors;
 #define STYLE_FAIL      ANSI_RED ANSI_BOLD
 #define STYLE_PASS      ANSI_GREEN ANSI_BOLD
 
-enum _log_labels { DEBUG, INFO, CALL, WARN, ERROR, FAIL, PASS };
+enum _log_types { DEBUG, INFO, CALL, WARN, ERROR, FAIL, PASS };
 void _log(const char *src_file, const int line, const char *function,
-          int label, const char *fmt, ...);
+          int log_type, const char *fmt, ...);
 
 #ifndef NDEBUG
 #define log_debug(fmt, ...) _log(__FILE__, __LINE__, __func__, DEBUG, fmt, ##__VA_ARGS__)

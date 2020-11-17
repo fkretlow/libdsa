@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "memory_scheme.h"
 #include "hash.h"
 
 #define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))
@@ -15,7 +14,15 @@
 typedef struct String {
     size_t size;
     bool storage_allocated;
-    union VariableSizeData data;
+    union {
+        struct {
+            char data[STRING_ALLOC_THRESHOLD];
+        } internal;
+        struct {
+            size_t capacity;
+            char *data;
+        } external;
+    } data;
 } String;
 
 #define String_size(S) ((S)->slen)

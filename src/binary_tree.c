@@ -40,9 +40,8 @@ int bt_initialize(bt *T, uint8_t flavor, t_intf *kt, t_intf *vt)
     T->root = NULL;
     T->count = 0;
     T->flavor = flavor;
-
-    int rc = generate_memory_scheme(&T->scheme, kt, vt);
-    check_rc(rc, "generate_memory_scheme");
+    T->key_type = kt;
+    T->value_type = vt;
 
     return 0;
 error:

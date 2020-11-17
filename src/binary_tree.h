@@ -3,20 +3,7 @@
 
 #include <stdint.h>
 
-#include "memory_scheme.h"
 #include "type_interface.h"
-
-struct btn_controls;
-struct btn_controls {
-    struct btn_controls *parent;
-    struct btn_controls *left;
-    struct btn_controls *right;
-    union {
-        struct btn_flags  plain;
-        struct rbtn_flags  red_black;
-        struct avltn_flags avl;
-    } flags;
-};
 
 struct btn_flags {
     unsigned char has_key   : 1;
@@ -45,7 +32,6 @@ typedef struct btn {
         struct rbtn_flags  red_black;
         struct avltn_flags avl;
     } flags;
-    char data[2 * sizeof(char*)];
 } btn;
 
 #define NONE 0
@@ -55,8 +41,9 @@ typedef struct btn {
 typedef struct {
     btn *root;
     uint32_t count;
-    struct mscheme scheme;
     uint8_t flavor;
+    t_intf *key_type;
+    t_intf *value_type;
 } bt;
 
 /* Interface */
