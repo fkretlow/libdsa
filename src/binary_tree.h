@@ -6,6 +6,18 @@
 #include "memory_scheme.h"
 #include "type_interface.h"
 
+struct btn_controls;
+struct btn_controls {
+    struct btn_controls *parent;
+    struct btn_controls *left;
+    struct btn_controls *right;
+    union {
+        struct btn_flags  plain;
+        struct rbtn_flags  red_black;
+        struct avltn_flags avl;
+    } flags;
+};
+
 struct btn_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
