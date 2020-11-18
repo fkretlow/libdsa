@@ -30,6 +30,9 @@ int test_node_handlers(void)
     test(btn_has_value(n) == 1);
     test(*(int*)btn_get_value(T, n) == v);
 
+    btn_destroy_value(T, n);
+    test(btn_has_value(n) == 0);
+
     btn_delete(T, n);
     bt_delete(T);
     str_delete(k1);
@@ -71,7 +74,7 @@ int test_node_copy(void)
     n->right = r; r->parent = n;
     r->left = rl; rl->parent = r;
 
-    /* test */
+    /* copy and verify */
     btn *c = btn_copy_rec(T, n);
     btn *cl = c->left;
     btn *cr = c->right;
@@ -180,6 +183,18 @@ int test_node_rotations(void)
     btn_delete(T, rl);
     btn_delete(T, rr);
 
+    /* check p-is-root case in btn_replace_child */
+    btn *c = btn_new(T);
+    btn *s = btn_new(T);
+    T->root = c;
+    btn_replace_child(T, c->parent, c, s);
+    test(T->root == s);
+    test(s->parent == NULL);
+
+    btn_delete(T, c);
+    btn_delete(T, s);
+
+    T->root = NULL;
     bt_delete(T);
     return 0;
 }
