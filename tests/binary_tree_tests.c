@@ -40,76 +40,6 @@ int test_node_handlers(void)
     return 0;
 }
 
-int test_node_copy(void)
-{
-    bt *T = bt_new(NONE, &str_type, &int_type);
-
-    /* set up a source tree */
-    str *kn  = str_from_cstr("root");
-    str *kl  = str_from_cstr("left");
-    str *kr  = str_from_cstr("right");
-    str *krl = str_from_cstr("right-left");
-    int vn  = 0;
-    int vl  = 1;
-    int vr  = 2;
-    int vrl = 3;
-
-    btn *n = btn_new(T);
-    btn_set_key(T, n, kn);
-    btn_set_value(T, n, &vn);
-
-    btn *l = btn_new(T);
-    btn_set_key(T, l, kl);
-    btn_set_value(T, l, &vl);
-
-    btn *r = btn_new(T);
-    btn_set_key(T, r, kr);
-    btn_set_value(T, r, &vr);
-
-    btn *rl = btn_new(T);
-    btn_set_key(T, rl, krl);
-    btn_set_value(T, rl, &vrl);
-
-    n->left = l; l->parent = n;
-    n->right = r; r->parent = n;
-    r->left = rl; rl->parent = r;
-
-    /* copy and verify */
-    btn *c = btn_copy_rec(T, n);
-    btn *cl = c->left;
-    btn *cr = c->right;
-    btn *crl = c->right->left;
-
-    test(c);
-    test(str_compare(btn_get_key  (T, c), kn)  == 0);
-    test(int_compare(btn_get_value(T, c), &vn) == 0);
-
-    test(cl);
-    test(str_compare(btn_get_key  (T, cl), kl)  == 0);
-    test(int_compare(btn_get_value(T, cl), &vl) == 0);
-    test(cl->left == NULL && cl->right == NULL);
-
-    test(cr);
-    test(str_compare(btn_get_key  (T, cr), kr)  == 0);
-    test(int_compare(btn_get_value(T, cr), &vr) == 0);
-    test(cr->left != NULL && cr->right == NULL);
-
-    test(crl);
-    test(str_compare(btn_get_key  (T, crl), krl)  == 0);
-    test(int_compare(btn_get_value(T, crl), &vrl) == 0);
-    test(crl->left == NULL && crl->right == NULL);
-
-    /* teardown */
-    btn_delete_rec(T, n);
-    btn_delete_rec(T, c);
-    bt_delete(T);
-    str_delete(kn);
-    str_delete(kl);
-    str_delete(kr);
-    str_delete(krl);
-    return 0;
-}
-
 int test_node_rotations(void)
 {
     bt *T = bt_new(NONE, &int_type, NULL);
@@ -199,13 +129,99 @@ int test_node_rotations(void)
     return 0;
 }
 
+int test_bt_copy(void)
+{
+    bt *T = bt_new(NONE, &str_type, &int_type);
+
+    /* set up a source tree */
+    str *kn  = str_from_cstr("root");
+    str *kl  = str_from_cstr("left");
+    str *kr  = str_from_cstr("right");
+    str *krl = str_from_cstr("right-left");
+    int vn  = 0;
+    int vl  = 1;
+    int vr  = 2;
+    int vrl = 3;
+
+    btn *n = btn_new(T);
+    btn_set_key(T, n, kn);
+    btn_set_value(T, n, &vn);
+
+    btn *l = btn_new(T);
+    btn_set_key(T, l, kl);
+    btn_set_value(T, l, &vl);
+
+    btn *r = btn_new(T);
+    btn_set_key(T, r, kr);
+    btn_set_value(T, r, &vr);
+
+    btn *rl = btn_new(T);
+    btn_set_key(T, rl, krl);
+    btn_set_value(T, rl, &vrl);
+
+    T->root = n;
+    T->count = 4;
+    n->left = l; l->parent = n;
+    n->right = r; r->parent = n;
+    r->left = rl; rl->parent = r;
+
+    /* copy and verify */
+    bt *C = bt_copy(T);
+    test(C->count == T->count);
+    test(C->key_type == T->key_type);
+    test(C->value_type == T->value_type);
+
+    btn *c = C->root;
+    btn *cl = c->left;
+    btn *cr = c->right;
+    btn *crl = c->right->left;
+
+    test(c);
+    test(str_compare(btn_get_key  (T, c), kn)  == 0);
+    test(int_compare(btn_get_value(T, c), &vn) == 0);
+
+    test(cl);
+    test(str_compare(btn_get_key  (T, cl), kl)  == 0);
+    test(int_compare(btn_get_value(T, cl), &vl) == 0);
+    test(cl->left == NULL && cl->right == NULL);
+
+    test(cr);
+    test(str_compare(btn_get_key  (T, cr), kr)  == 0);
+    test(int_compare(btn_get_value(T, cr), &vr) == 0);
+    test(cr->left != NULL && cr->right == NULL);
+
+    test(crl);
+    test(str_compare(btn_get_key  (T, crl), krl)  == 0);
+    test(int_compare(btn_get_value(T, crl), &vrl) == 0);
+    test(crl->left == NULL && crl->right == NULL);
+
+    /* also do it once on the stack */
+    bt S;
+    int rc = bt_copy_to(&S, T);
+    test(rc == 0);
+    test(S.count == T->count);
+    test(S.key_type == T->key_type);
+    test(S.value_type == T->value_type);
+
+    /* teardown */
+    bt_delete(T);
+    bt_delete(C);
+    bt_destroy(&S);
+
+    str_delete(kn);
+    str_delete(kl);
+    str_delete(kr);
+    str_delete(krl);
+    return 0;
+}
+
 int main(void)
 {
     test_suite_start();
 
     run_test(test_node_handlers);
-    run_test(test_node_copy);
     run_test(test_node_rotations);
+    run_test(test_bt_copy);
 
     test_suite_end();
 }

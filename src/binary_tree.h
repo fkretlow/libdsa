@@ -53,7 +53,8 @@ bt *    bt_new                 (       uint8_t flavor, t_intf *kt, t_intf *vt);
 void    bt_destroy             (bt *T);
 void    bt_delete              (bt *T);
 
-bt *    bt_copy                (bt *T);
+bt *    bt_copy                (          const bt *src);
+int     bt_copy_to             (bt *dest, const bt *src);
 void    bt_clear               (bt *T);
 
 int     bt_insert              (bt *T, const void *k);
@@ -77,7 +78,7 @@ btn *   btn_new                (const bt *T);
 void    btn_delete             (const bt *T, btn *n);
 void    btn_delete_rec         (const bt *T, btn *n);
 
-btn *   btn_copy_rec           (const bt *T, btn *n);
+btn *   btn_copy_rec           (const bt *T, const btn *n);
 
 #define btn_has_key(n)   ((n)->flags.plain.has_key)
 #define btn_has_value(n) ((n)->flags.plain.has_value)

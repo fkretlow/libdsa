@@ -106,11 +106,11 @@ void btn_destroy_value(const bt *T, btn *n)
 }
 
 /***************************************************************************************
- * btn *btn_copy_rec(const bt *T, btn *n);
+ * btn *btn_copy_rec(const bt *T, const btn *n);
  * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree
  * has the exact same layout. */
 
-btn *btn_copy_rec(const bt *T, btn *n)
+btn *btn_copy_rec(const bt *T, const btn *n)
 {
     log_call("T=%p, n=%p", T, n);
     assert(T && T->key_type && n && (!btn_has_value(n) || T->value_type));
@@ -282,22 +282,42 @@ void bt_delete(bt *T)
 }
 
 /***************************************************************************************
- * bt *bt_copy(bt *T);
- * Copy a binary tree, duplicating all content and preserving the exact same layout. */
+ * bt *bt_copy   (          const bt *src);
+ * int bt_copy_to(bt *dest, const bt *src);
+ * Copy a binary tree, duplicating all content and preserving the exact same layout.
+ * bt_copy makes the copy on the heap, bt_copy_to creates it where dest points to. */
 
-bt *bt_copy(bt *T)
+bt *bt_copy(const bt *src)
 {
-    log_call("T=%p", T);
-    check_ptr(T);
+    log_call("src=%p", src);
+    bt *dest = NULL;
+    check_ptr(src);
 
-    bt *C = bt_new(T->flavor, T->key_type, T->value_type);
-    check(C != NULL, "failed to create new tree");
+    dest = bt_new(src->flavor, src->key_type, src->value_type);
+    check(dest != NULL, "failed to create new tree");
 
-    if (T->count > 0) C->root = btn_copy_rec(C, T->root);
-    C->count = T->count;
+    if (src->count > 0) dest->root = btn_copy_rec(dest, src->root);
+    dest->count = src->count;
 
-    return C;
+    return dest;
 error:
-    if (C) bt_delete(C);
+    if (dest) bt_delete(dest);
     return NULL;
+}
+
+int bt_copy_to(bt *dest, const bt *src)
+{
+    log_call("dest=%p, src=%p", dest, src);
+    check_ptr(dest);
+    check_ptr(src);
+
+    int rc = bt_initialize(dest, src->flavor, src->key_type, src->value_type);
+    check_rc(rc, "bt_initialize");
+
+    if (src->count > 0) dest->root = btn_copy_rec(dest, src->root);
+    dest->count = src->count;
+
+    return 0;
+error:
+    return -1;
 }
