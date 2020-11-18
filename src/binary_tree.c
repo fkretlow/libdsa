@@ -62,6 +62,47 @@ void btn_delete_rec(const bt *T, btn *n)
 }
 
 /***************************************************************************************
+ * int btn_insert_rec(const bt *T, btn *n, const void *k, btn **n_out);
+ * Insert a node with the key k into the subtree rooted at n. A pointer to the new node
+ * is saved in n_out. */
+
+int btn_insert_rec(
+        const bt *T,
+        btn *n,         /* the root of the subtree */
+        const void *k,  /* the key to insert */
+        btn **n_out)    /* pass back a pointer to the new node, can be NULL */
+{
+    log_call("T=%p, n=%p, k=%p, n_out=%p", T, n, k, n_out);
+    assert(T && T->key_type && n && k);
+
+    int comp = t_compare(T->key_type, k, btn_get_key(T, n));
+    if (comp == 0) {
+        *n_out = n;
+        return 0; /* no new nodes */
+    } else if (comp < 0 && n->left) {
+        return btn_insert_rec(T, n->left, k, n_out);
+    } else if (comp > 0 && n->right) {
+        return btn_insert_rec(T, n->right, k, n_out);
+    }
+
+    else {
+        if (comp < 0) {
+            n->left = btn_new(T);
+            n->left->parent = n;
+            btn_set_key(T, n->left, k);
+            *n_out = n->left;
+        } else { /* comp > 0 */
+            n->right = btn_new(T);
+            n->right->parent = n;
+            btn_set_key(T, n->right, k);
+            *n_out = n->right;
+        }
+
+        return 1; /* one new node */
+    }
+}
+
+/***************************************************************************************
  * void btn_set_key  (const bt *T, btn *n, const void *k);
  * void btn_set_value(const bt *T, btn *n, const void *v);
  * Set the key/value stored in n to k/v by copying it into the node. We assume that no
@@ -259,6 +300,19 @@ error:
 }
 
 /***************************************************************************************
+ * void bt_clear(bt *T);
+ * Delete all nodes, freeing associated memory, and reset T. */
+
+void bt_clear(bt *T)
+{
+    log_call("T=%p", T);
+    if (T) {
+        if (T->root) btn_delete_rec(T, T->root);
+        T->count = 0;
+    }
+}
+
+/***************************************************************************************
  * void bt_destroy(bt *T);
  * void bt_delete (bt *T);
  * Destroy T, freeing any associated memory. bt_delete also calls free on T. */
@@ -296,7 +350,7 @@ bt *bt_copy(const bt *src)
     dest = bt_new(src->flavor, src->key_type, src->value_type);
     check(dest != NULL, "failed to create new tree");
 
-    if (src->count > 0) dest->root = btn_copy_rec(dest, src->root);
+    if (src->root) dest->root = btn_copy_rec(dest, src->root);
     dest->count = src->count;
 
     return dest;
@@ -314,10 +368,61 @@ int bt_copy_to(bt *dest, const bt *src)
     int rc = bt_initialize(dest, src->flavor, src->key_type, src->value_type);
     check_rc(rc, "bt_initialize");
 
-    if (src->count > 0) dest->root = btn_copy_rec(dest, src->root);
+    if (src->root) dest->root = btn_copy_rec(dest, src->root);
     dest->count = src->count;
 
     return 0;
+error:
+    return -1;
+}
+
+/***************************************************************************************
+ * int bt_has(const bt *T, const void *k); Check if k is in T. */
+
+int bt_has(const bt *T, const void *k)
+{
+    check_ptr(T);
+    check_ptr(k);
+
+    btn *n = T->root;
+    int comp;
+    for ( ;; ) {
+        if (!n) return 0;
+        comp = t_compare(T->key_type, k, btn_get_key(T, n));
+        if (comp == 0) return 1;
+        else if (comp < 0) n = n->left;
+        else if (comp > 0) n = n->right;
+    }
+
+error:
+    return -1;
+}
+
+
+/***************************************************************************************
+ * int bt_insert(bt *T, const void *k);
+ * Insert k into the tree. Return 0 or 1 depending on whether a node was added or k was
+ * already there, or -1 on error. */
+
+int bt_insert(bt *T, const void *k)
+{
+    log_call("T=%p, k=%p", T, k);
+    check_ptr(T);
+    check_ptr(k);
+    assert(T->key_type);
+
+    int rc;
+
+    if (T->root) {
+        rc = btn_insert_rec(T, T->root, k, NULL);
+    } else {
+        T->root = btn_new(T);
+        T->root->parent = NULL;
+        btn_set_key(T, T->root, k);
+        rc = 1;
+    }
+    if (rc == 1) ++T->count;
+    return rc;
 error:
     return -1;
 }
