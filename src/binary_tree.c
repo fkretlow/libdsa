@@ -32,9 +32,10 @@ error:
 /***************************************************************************************
  * void btn_delete    (const bt *T, btn *n);
  * void btn_delete_rec(const bt *T, btn *n);
- * Delete n, destroying stored data and freeing associated memory. No node links are
- * altered. Don't call btn_delete on a node with children lest they become unreachable
- * in the void... use btn_delete_rec[ursively] to wipe out the whole subtree. */
+ * Delete n, destroying stored data and freeing associated memory. No links are altered
+ * in adjacent nodes. Don't call btn_delete on a node with children lest they become
+ * unreachable in the void... use btn_delete_rec[ursively] to wipe out the whole
+ * subtree. */
 
 void btn_delete(const bt *T, btn *n)
 {
@@ -102,6 +103,42 @@ void btn_destroy_value(const bt *T, btn *n)
     assert(T && n && T->value_type && btn_has_value(n));
     t_destroy(T->value_type, btn_get_value(T, n));
     n->flags.plain.has_value = 0;
+}
+
+/***************************************************************************************
+ * btn *btn_copy_rec(const bt *T, btn *n);
+ * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree
+ * has the exact same layout. */
+
+btn *btn_copy_rec(const bt *T, btn *n)
+{
+    log_call("T=%p, n=%p", T, n);
+    assert(T && T->key_type && n && (!btn_has_value(n) || T->value_type));
+
+    btn *c = btn_new(T);
+    check(c != NULL, "failed to create new node");
+
+    /* copy the data */
+    if (btn_has_key(n))     btn_set_key(T, c, btn_get_key(T, n));
+    if (btn_has_value(n))   btn_set_value(T, c, btn_get_value(T, n));
+
+    /* recursively copy the subtrees */
+    if (n->left) {
+        c->left = btn_copy_rec(T, n->left);
+        c->left->parent = c;
+    }
+    if (n->right) {
+        c->right = btn_copy_rec(T, n->right);
+        c->right->parent = c;
+    }
+
+    /* copy the byte with the flags */
+    memcpy(&c->flags, &n->flags, sizeof(struct btn_flags));
+
+    return c;
+error:
+    if (c) btn_delete_rec(T, c);
+    return NULL;
 }
 
 /***************************************************************************************
