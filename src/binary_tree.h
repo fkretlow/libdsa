@@ -75,6 +75,7 @@ int     bt_traverse_nodes_r    (bt *T, int (*f)(btn *n, void *p), void *p);
 
 btn *   btn_new                (const bt *T);
 void    btn_delete             (const bt *T, btn *n);
+void    btn_delete_rec         (const bt *T, btn *n);
 
 void    btn_set_key            (const bt *T, btn *n, const void *k);
 void    btn_destroy_key        (const bt *T, btn *n);
