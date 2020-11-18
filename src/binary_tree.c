@@ -132,7 +132,7 @@ btn *btn_copy_rec(const bt *T, btn *n)
         c->right->parent = c;
     }
 
-    /* copy the byte with the flags */
+    /* copy the flags byte */
     memcpy(&c->flags, &n->flags, sizeof(struct btn_flags));
 
     return c;
@@ -145,8 +145,7 @@ error:
  * void btn_rotate_left    (bt *T, btn *n, btn **n_out);
  * void btn_rotate_right   (bt *T, btn *n, btn **n_out);
  * void btn_replace_child  (bt *T, btn *p, btn *c, btn *s);
- * Normal tree rotations. btn_replace_child replaces the child pointer in the parent of
- * a rotated node. */
+ * The usual tree rotations. */
 
 void btn_rotate_left(
         bt *T,          /* the tree, needed for btn_replace_child */
@@ -243,10 +242,7 @@ error:
     return -1;
 }
 
-bt *bt_new(
-        uint8_t flavor, /* balancing strategy, one of NONE, RED_BLACK, and AVL */
-        t_intf *kt,     /* type interface for keys */
-        t_intf *vt)     /* type interface for values, can be NULL */
+bt *bt_new(uint8_t flavor, t_intf *kt, t_intf *vt)
 {
     log_call("flavor=%u, kt=%p, vt=%p", flavor, kt, vt);
 
@@ -271,7 +267,7 @@ void bt_destroy(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
-        if (T->root) btn_delete(T, T->root);
+        if (T->root) btn_delete_rec(T, T->root);
         memset(T, 0, sizeof(*T));
     }
 }
@@ -280,7 +276,7 @@ void bt_delete(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
-        if (T->root) btn_delete(T, T->root);
+        if (T->root) btn_delete_rec(T, T->root);
         free(T);
     }
 }

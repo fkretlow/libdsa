@@ -3,53 +3,122 @@
 #include "test.h"
 #include "type_interface.h"
 
-static bt T;
-
 int test_node_handlers(void)
 {
-    bt_initialize(&T, NONE, &str_type, &int_type);
+    bt *T = bt_new(NONE, &str_type, &int_type);
+    test(T);
 
-    btn *n = btn_new(&T);
+    btn *n = btn_new(T);
     test(n);
 
     str *k1 = str_from_cstr("key");
     str *k2 = str_from_cstr("this is a very long key");
 
-    btn_set_key(&T, n, k1);
+    btn_set_key(T, n, k1);
     test(btn_has_key(n) == 1);
-    test(str_compare(btn_get_key(&T, n), k1) == 0);
+    test(str_compare(btn_get_key(T, n), k1) == 0);
 
-    btn_destroy_key(&T, n);
+    btn_destroy_key(T, n);
     test(btn_has_key(n) == 0);
 
-    btn_set_key(&T, n, k2);
+    btn_set_key(T, n, k2);
     test(btn_has_key(n) == 1);
-    test(str_compare(btn_get_key(&T, n), k2) == 0);
+    test(str_compare(btn_get_key(T, n), k2) == 0);
 
     int v = 10;
-    btn_set_value(&T, n, &v);
+    btn_set_value(T, n, &v);
     test(btn_has_value(n) == 1);
-    test(*(int*)btn_get_value(&T, n) == v);
+    test(*(int*)btn_get_value(T, n) == v);
 
-    btn_delete(&T, n);
-    bt_destroy(&T);
+    btn_delete(T, n);
+    bt_delete(T);
     str_delete(k1);
     str_delete(k2);
     return 0;
 }
 
+int test_node_copy(void)
+{
+    bt *T = bt_new(NONE, &str_type, &int_type);
+
+    /* set up a source tree */
+    str *kn  = str_from_cstr("root");
+    str *kl  = str_from_cstr("left");
+    str *kr  = str_from_cstr("right");
+    str *krl = str_from_cstr("right-left");
+    int vn  = 0;
+    int vl  = 1;
+    int vr  = 2;
+    int vrl = 3;
+
+    btn *n = btn_new(T);
+    btn_set_key(T, n, kn);
+    btn_set_value(T, n, &vn);
+
+    btn *l = btn_new(T);
+    btn_set_key(T, l, kl);
+    btn_set_value(T, l, &vl);
+
+    btn *r = btn_new(T);
+    btn_set_key(T, r, kr);
+    btn_set_value(T, r, &vr);
+
+    btn *rl = btn_new(T);
+    btn_set_key(T, rl, krl);
+    btn_set_value(T, rl, &vrl);
+
+    n->left = l; l->parent = n;
+    n->right = r; r->parent = n;
+    r->left = rl; rl->parent = r;
+
+    /* test */
+    btn *c = btn_copy_rec(T, n);
+    btn *cl = c->left;
+    btn *cr = c->right;
+    btn *crl = c->right->left;
+
+    test(c);
+    test(str_compare(btn_get_key  (T, c), kn)  == 0);
+    test(int_compare(btn_get_value(T, c), &vn) == 0);
+
+    test(cl);
+    test(str_compare(btn_get_key  (T, cl), kl)  == 0);
+    test(int_compare(btn_get_value(T, cl), &vl) == 0);
+    test(cl->left == NULL && cl->right == NULL);
+
+    test(cr);
+    test(str_compare(btn_get_key  (T, cr), kr)  == 0);
+    test(int_compare(btn_get_value(T, cr), &vr) == 0);
+    test(cr->left != NULL && cr->right == NULL);
+
+    test(crl);
+    test(str_compare(btn_get_key  (T, crl), krl)  == 0);
+    test(int_compare(btn_get_value(T, crl), &vrl) == 0);
+    test(crl->left == NULL && crl->right == NULL);
+
+    /* teardown */
+    btn_delete_rec(T, n);
+    btn_delete_rec(T, c);
+    bt_delete(T);
+    str_delete(kn);
+    str_delete(kl);
+    str_delete(kr);
+    str_delete(krl);
+    return 0;
+}
+
 int test_node_rotations(void)
 {
-    bt_initialize(&T, NONE, &int_type, NULL);
+    bt *T = bt_new(NONE, &int_type, NULL);
 
-    btn *p = btn_new(&T);
-    btn *n = btn_new(&T);
-    btn *l = btn_new(&T);
-    btn *ll = btn_new(&T);
-    btn *lr = btn_new(&T);
-    btn *r = btn_new(&T);
-    btn *rl = btn_new(&T);
-    btn *rr = btn_new(&T);
+    btn *p = btn_new(T);
+    btn *n = btn_new(T);
+    btn *l = btn_new(T);
+    btn *ll = btn_new(T);
+    btn *lr = btn_new(T);
+    btn *r = btn_new(T);
+    btn *rl = btn_new(T);
+    btn *rr = btn_new(T);
 
     btn *res;
 
@@ -72,7 +141,7 @@ int test_node_rotations(void)
     r->right = rr, rr->parent = r;
 
     /* rotate right and check */
-    btn_rotate_right(&T, n, &res);
+    btn_rotate_right(T, n, &res);
     test(res == l);
     test(p->left == l);
     test(l->parent == p);
@@ -92,7 +161,7 @@ int test_node_rotations(void)
     r->right = rr, rr->parent = r;
 
     /* rotate left and check */
-    btn_rotate_left(&T, n, &res);
+    btn_rotate_left(T, n, &res);
     test(res == r);
     test(p->right == r);
     test(r->parent == p);
@@ -102,16 +171,16 @@ int test_node_rotations(void)
     test(n->right == rl);
     test(rl->parent == n);
 
-    btn_delete(&T, p);
-    btn_delete(&T, n);
-    btn_delete(&T, l);
-    btn_delete(&T, ll);
-    btn_delete(&T, lr);
-    btn_delete(&T, r);
-    btn_delete(&T, rl);
-    btn_delete(&T, rr);
+    btn_delete(T, p);
+    btn_delete(T, n);
+    btn_delete(T, l);
+    btn_delete(T, ll);
+    btn_delete(T, lr);
+    btn_delete(T, r);
+    btn_delete(T, rl);
+    btn_delete(T, rr);
 
-    bt_destroy(&T);
+    bt_delete(T);
     return 0;
 }
 
@@ -120,6 +189,7 @@ int main(void)
     test_suite_start();
 
     run_test(test_node_handlers);
+    run_test(test_node_copy);
     run_test(test_node_rotations);
 
     test_suite_end();

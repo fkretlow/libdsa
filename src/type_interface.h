@@ -34,7 +34,12 @@ void        t_print     (const t_intf *T, FILE *stream, const void *obj);
 
 /* Predefined type interfaces */
 t_intf str_type;
+
 t_intf int_type;
+int         int_compare (const void *a, const void *b);
+uint32_t    int_hash    (const void *i);
+void        int_print   (FILE *stream, const void *i);
+
 t_intf pointer_type;
 
 #endif // _type_interface_h
