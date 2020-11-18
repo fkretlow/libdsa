@@ -33,7 +33,7 @@ void        t_print     (const t_intf *T, FILE *stream, const void *obj);
 #define t_size(T) (T)->size
 
 /* Predefined type interfaces */
-t_intf String_type;
+t_intf str_type;
 t_intf int_type;
 t_intf pointer_type;
 

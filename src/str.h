@@ -1,58 +1,58 @@
 #ifndef _str_h
 #define _str_h
 
-#include <stdbool.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "hash.h"
 
-#define STRING_ALLOC_THRESHOLD (sizeof(size_t) + sizeof(char*))
-#define STRING_MAX_SIZE 1024lu
+#define STR_INTERNAL_CAPACITY (sizeof(uint32_t) + sizeof(char*))
+#define STR_MAX_CAPACITY UINT32_MAX
 
-typedef struct String {
-    size_t size;
-    bool storage_allocated;
+typedef struct str {
+    uint32_t length;
+    uint8_t data_external;
     union {
         struct {
-            char data[STRING_ALLOC_THRESHOLD];
+            char data[STR_INTERNAL_CAPACITY];
         } internal;
         struct {
-            size_t capacity;
+            uint32_t capacity;
             char *data;
         } external;
     } data;
-} String;
+} str;
 
-#define String_size(S) ((S)->slen)
-#define String_empty(S) ((S)->slen == 0)
-#define String_data(s) ( (s)->storage_allocated \
+#define str_length(S) ((S)->length)
+#define str_empty(S) ((S)->slen == 0)
+#define str_data(s) ( (s)->data_external \
                             ? (s)->data.external.data \
                             : (s)->data.internal.data )
-#define String_capacity(s) ( (s)->storage_allocated \
+#define str_capacity(s) ( (s)->data_external \
                                 ? (s)->data.external.capacity \
-                                : STRING_ALLOC_THRESHOLD )
+                                : STR_INTERNAL_CAPACITY )
 
-int String_initialize(String *s);
-void String_destroy(void *s);
-String *String_new(void);
-void String_delete(String *s);
-int String_reserve(String *s, const size_t capacity);
-int String_shrink_to_fit(String *s);
-void String_clear(String *s);
-String *String_copy(const String *src);
-void String_copy_to(void *dest, const void *src);
-int String_assign(String *dest, const String *src);
-int String_assign_cstr(String *dest, const char *cstr);
-String *String_from_cstr(const char *cstr);
-int String_compare(const void *a, const void *b);
-int String_append(String *s1, const String *s2);
-int String_append_cstr(String *s, const char *cstr);
-int String_push_back(String *s, const char c);
-int String_pop_back(String *s, char *out);
-String *String_concat(const String *s1, const String *s2);
-uint32_t String_hash(const void *s);
-void String_printf(FILE *stream, const void *s);
+int         str_initialize      (str *s);
+void        str_destroy         (void *s);
+str *       str_new             (void);
+void        str_delete          (str *s);
+int         str_reserve         (str *s, const size_t capacity);
+int         str_shrink_to_fit   (str *s);
+void        str_clear           (str *s);
+str *       str_copy            (const str *src);
+void        str_copy_to         (void *dest, const void *src);
+int         str_assign          (str *dest, const str *src);
+int         str_assign_cstr     (str *dest, const char *cstr);
+str *       str_from_cstr       (const char *cstr);
+int         str_compare         (const void *a, const void *b);
+int         str_append          (str *s1, const str *s2);
+int         str_append_cstr     (str *s, const char *cstr);
+int         str_push_back       (str *s, const char c);
+int         str_pop_back        (str *s, char *out);
+str *       str_concat          (const str *s1, const str *s2);
+uint32_t    str_hash            (const void *s);
+void        str_print           (FILE *stream, const void *s);
 
 #endif // _str_h

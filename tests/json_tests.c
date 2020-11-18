@@ -15,38 +15,38 @@ int test_serialize_list_of_ints(void)
         List_push_back(L, &i);
     }
 
-    String *expected = String_from_cstr("[0, 1, 2, 3, 4, 5, 6, 7]");
-    String *json = List_to_json(L, serialize_int);
+    str *expected = str_from_cstr("[0, 1, 2, 3, 4, 5, 6, 7]");
+    str *json = List_to_json(L, serialize_int);
     test(json != NULL);
-    test(String_compare(expected, json) == 0);
+    test(str_compare(expected, json) == 0);
 
     List_delete(L);
-    String_delete(expected);
-    String_delete(json);
+    str_delete(expected);
+    str_delete(json);
     return 0;
 }
 
 int test_serialize_list_of_strings(void)
 {
-    List *L = List_new(&String_type);
+    List *L = List_new(&str_type);
 
-    String *s = String_new();
+    str *s = str_new();
     char *composers[3] = { "Haydn", "Mozart", "Beethoven" };
     for (int i = 0; i < 3; ++i) {
-        String_assign_cstr(s, composers[i]);
+        str_assign_cstr(s, composers[i]);
         List_push_back(L, s);
     }
 
-    String *expected = String_from_cstr("[\"Haydn\", \"Mozart\", \"Beethoven\"]");
+    str *expected = str_from_cstr("[\"Haydn\", \"Mozart\", \"Beethoven\"]");
 
-    String *json = List_to_json(L, serialize_string);
+    str *json = List_to_json(L, serialize_string);
     test(json != NULL);
-    test(String_compare(json, expected) == 0);
+    test(str_compare(json, expected) == 0);
 
     List_delete(L);
-    String_delete(s);
-    String_delete(json);
-    String_delete(expected);
+    str_delete(s);
+    str_delete(json);
+    str_delete(expected);
     return 0;
 }
 

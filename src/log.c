@@ -39,7 +39,7 @@ void _log(const char *src_file, const int line, const char *function,
                 break;
             case DEBUG:
                 label_style = STYLE_DEBUG;
-                label_text = "";
+                label_text = "debug: ";
                 break;
             case CALL:
                 label_style = STYLE_CALL;

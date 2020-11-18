@@ -98,26 +98,26 @@ int test_list_teardown(void)
 
 int test_list_of_strings(void)
 {
-    L = List_new(&String_type);
+    L = List_new(&str_type);
     test(L != NULL);
 
-    String *s = String_new();
-    String_assign_cstr(s, "Haydn");
+    str *s = str_new();
+    str_assign_cstr(s, "Haydn");
     List_push_back(L, s);
 
-    String_assign_cstr(s, "Mozart");
+    str_assign_cstr(s, "Mozart");
     List_push_back(L, s);
 
-    String_assign_cstr(s, "Beethoven");
+    str_assign_cstr(s, "Beethoven");
     List_push_back(L, s);
 
-    String out;
+    str out;
     List_pop_back(L, &out);
-    test(String_compare(s, &out) == 0);
-    String_destroy(&out);
+    test(str_compare(s, &out) == 0);
+    str_destroy(&out);
 
     List_delete(L);
-    String_delete(s);
+    str_delete(s);
     return 0;
 }
 

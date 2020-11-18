@@ -7,58 +7,58 @@
 #include "type_interface.h"
 
 
-int String_initialize(String *s)
+int str_initialize(str *s)
 {
     if (s) memset(s, 0, sizeof(*s));
     return 0;
 }
 
-void String_destroy(void *sp)
+void str_destroy(void *sp)
 {
-    String *s = sp;
+    str *s = sp;
     if (s) {
-        if (s->storage_allocated) {
+        if (s->data_external) {
             free(s->data.external.data);
-            s->storage_allocated = 0;
+            s->data_external = 0;
         }
     }
 }
 
-String *String_new(void) { return calloc(1, sizeof(String)); }
+str *str_new(void) { return calloc(1, sizeof(str)); }
 
-void String_delete(String *s)
+void str_delete(str *s)
 {
     if (s) {
-        String_destroy(s);
+        str_destroy(s);
         free(s);
     }
 }
 
 /* Allocate memory for at least `capacity` characters.
  * Does not shrink the internal storage. */
-int String_reserve(String *s, const size_t capacity)
+int str_reserve(str *s, const size_t capacity)
 {
     check_ptr(s);
 
-    if (capacity < STRING_ALLOC_THRESHOLD - 1
-            || (s->storage_allocated && capacity < s->data.external.capacity))
+    if (capacity < STR_INTERNAL_CAPACITY - 1
+            || (s->data_external && capacity < s->data.external.capacity))
         return 0;
 
-    size_t c = STRING_ALLOC_THRESHOLD;
+    size_t c = 2;
     while (c < capacity) c <<= 1;
 
     char *data;
-    if (s->storage_allocated) {
+    if (s->data_external) {
         data = realloc(s->data.external.data, c * sizeof(char));
         check_alloc(data);
     } else {
         data = malloc(c * sizeof(char));
         check_alloc(data);
-        memmove(data, s->data.internal.data, s->size + 1);
+        memmove(data, s->data.internal.data, s->length + 1);
     }
     s->data.external.data = data;
     s->data.external.capacity = c;
-    s->storage_allocated = true;
+    s->data_external = 1;
 
     return 0;
 error:
@@ -68,29 +68,29 @@ error:
 
 /* Shrink the internal storage if and as possible. Does not necessarily shrink
  * it to the exact size needed. */
-int String_shrink_to_fit(String *s)
+int str_shrink_to_fit(str *s)
 {
     check_ptr(s);
 
-    if (String_capacity(s) <= s->size + 1) return 0;
+    if (str_capacity(s) <= s->length + 1) return 0;
 
-    if (s->size < STRING_ALLOC_THRESHOLD) {
-        if (s->storage_allocated) {
-            char *temp = malloc((s->size + 1) * sizeof(char));
+    if (s->length < STR_INTERNAL_CAPACITY) {
+        if (s->data_external) {
+            char *temp = malloc((s->length + 1) * sizeof(char));
             check_alloc(temp);
-            memmove(temp, s->data.external.data, s->size + 1);
+            memmove(temp, s->data.external.data, s->length + 1);
             free(s->data.external.data);
             s->data.external.capacity = 0;
-            memmove(s->data.internal.data, temp, s->size + 1);
-            s->storage_allocated = false;
+            memmove(s->data.internal.data, temp, s->length + 1);
+            s->data_external = 0;
             free(temp);
         } else {
             /* Nothing to do. */
         }
-    } else { /* s->size >= STRING_ALLOC_THRESHOLD */
-        assert(s->storage_allocated);
-        size_t c = STRING_ALLOC_THRESHOLD;
-        while (c < s->size + 1) c <<= 1;
+    } else { /* s->length >= STR_INTERNAL_CAPACITY */
+        assert(s->data_external);
+        size_t c = 2;
+        while (c < s->length + 1) c <<= 1;
 
         char *data = realloc(s->data.external.data, c * sizeof(char));
         check_alloc(data);
@@ -103,119 +103,119 @@ error:
     return -1;
 }
 
-void String_clear(String *s)
+void str_clear(str *s)
 {
     if (s) {
-        if (s->storage_allocated) {
+        if (s->data_external) {
             free(s->data.external.data);
-            s->storage_allocated = false;
+            s->data_external = 0;
         }
-        s->size = 0;
+        s->length = 0;
         s->data.internal.data[0] = 0;
     }
 }
 
-String *String_copy(const String *src)
+str *str_copy(const str *src)
 {
-    String *s = NULL;
+    str *s = NULL;
     check_ptr(src);
 
-    s = String_new();
-    check(s != NULL, "Failed to allocate new String.");
+    s = str_new();
+    check(s != NULL, "Failed to allocate new str.");
 
-    int rc = String_assign(s, src);
-    check(rc == 0, "Failed to assign to String copy.");
+    int rc = str_assign(s, src);
+    check(rc == 0, "Failed to assign to str copy.");
 
     return s;
 error:
-    if (s) String_delete(s);
+    if (s) str_delete(s);
     return NULL;
 }
 
-void String_copy_to(void *dest, const void *src)
+void str_copy_to(void *dest, const void *src)
 {
-    String_initialize(dest);
-    String_assign(dest, src);
+    str_initialize(dest);
+    str_assign(dest, src);
 }
 
-int String_assign(String *dest, const String *src)
+int str_assign(str *dest, const str *src)
 {
     check_ptr(dest);
     check_ptr(src);
 
-    int rc = String_reserve(dest, src->size + 1);
+    int rc = str_reserve(dest, src->length + 1);
     check(rc == 0, "Failed to allocate internal storage.");
 
-    const char *src_data = String_data(src);
-    char *dest_data = String_data(dest);
-    memmove(dest_data, src_data, src->size + 1);
-    dest->size = src->size;
+    const char *src_data = str_data(src);
+    char *dest_data = str_data(dest);
+    memmove(dest_data, src_data, src->length + 1);
+    dest->length = src->length;
 
     return 0;
 error:
     return -1;
 }
 
-int String_assign_cstr(String *dest, const char *cstr)
+int str_assign_cstr(str *dest, const char *cstr)
 {
     check_ptr(dest);
     check_ptr(cstr);
 
-    size_t cstrlen = strnlen(cstr, STRING_MAX_SIZE);
-    int rc = String_reserve(dest, cstrlen + 1);
+    size_t cstrlen = strnlen(cstr, STR_MAX_CAPACITY);
+    int rc = str_reserve(dest, cstrlen + 1);
     check(rc == 0, "Failed to allocate internal storage.");
 
-    char *dest_data = String_data(dest);
+    char *dest_data = str_data(dest);
     memmove(dest_data, cstr, cstrlen);
     dest_data[cstrlen] = 0;
-    dest->size = cstrlen;
+    dest->length = cstrlen;
 
     return 0;
 error:
     return -1;
 }
 
-String *String_from_cstr(const char *cstr)
+str *str_from_cstr(const char *cstr)
 {
-    String *s = NULL;
+    str *s = NULL;
     check_ptr(cstr);
 
-    s = String_new();
-    check(s != NULL, "Failed to make new String.");
+    s = str_new();
+    check(s != NULL, "Failed to make new str.");
 
-    int rc = String_assign_cstr(s, cstr);
+    int rc = str_assign_cstr(s, cstr);
     check(rc == 0, "Failed to assign to new string.");
 
     return s;
 error:
-    if (s) String_delete(s);
+    if (s) str_delete(s);
     return NULL;
 }
 
-int String_compare(const void *a, const void *b)
+int str_compare(const void *a, const void *b)
 {
-    const String *s1 = a;
-    const String *s2 = b;
-    return strncmp(String_data(s1),
-                   String_data(s2),
-                   _max(s1->size, s2->size));
+    const str *s1 = a;
+    const str *s2 = b;
+    return strncmp(str_data(s1),
+                   str_data(s2),
+                   s1->length > s2->length ? s1->length : s2->length);
 }
 
-int String_append(String *s1, const String *s2)
+int str_append(str *s1, const str *s2)
 {
     check_ptr(s1);
     check_ptr(s2);
 
-    size_t size = s1->size + s2->size;
-    size_t capacity = String_capacity(s1);
+    size_t size = s1->length + s2->length;
+    size_t capacity = str_capacity(s1);
     while (capacity < size + 1) capacity <<= 1;
-    int rc = String_reserve(s1, capacity);
+    int rc = str_reserve(s1, capacity);
     check(rc == 0, "Failed to ensure there's enough internal storage.");
 
-    char *s1_data = String_data(s1);
-    const char *s2_data = String_data(s2);
-    memmove(s1_data + s1->size, s2_data, s2->size);
-    s1->size = size;
+    char *s1_data = str_data(s1);
+    const char *s2_data = str_data(s2);
+    memmove(s1_data + s1->length, s2_data, s2->length);
+    s1->length = size;
     s1_data[size] = 0;
 
     return 0;
@@ -223,21 +223,21 @@ error:
     return -1;
 }
 
-int String_append_cstr(String *s, const char *cstr)
+int str_append_cstr(str *s, const char *cstr)
 {
     check_ptr(s);
     check_ptr(cstr);
 
-    size_t cstrlen = strnlen(cstr, STRING_MAX_SIZE);
-    size_t size = s->size + cstrlen;
-    size_t capacity = String_capacity(s);
+    size_t cstrlen = strnlen(cstr, STR_MAX_CAPACITY);
+    size_t size = s->length + cstrlen;
+    size_t capacity = str_capacity(s);
     while (capacity < size + 1) capacity <<= 1;
-    int rc = String_reserve(s, capacity);
+    int rc = str_reserve(s, capacity);
     check(rc == 0, "Failed to allocate internal storage.");
 
-    char *s_data = String_data(s);
-    memmove(s_data + s->size, cstr, cstrlen);
-    s->size = size;
+    char *s_data = str_data(s);
+    memmove(s_data + s->length, cstr, cstrlen);
+    s->length = size;
     s_data[size] = 0;
 
     return 0;
@@ -245,66 +245,66 @@ error:
     return -1;
 }
 
-int String_push_back(String *s, const char c)
+int str_push_back(str *s, const char c)
 {
     check_ptr(s);
 
-    if (String_capacity(s) <= s->size + 1) {
-        int rc = String_reserve(s, s->size + 2);
+    if (str_capacity(s) <= s->length + 1) {
+        int rc = str_reserve(s, s->length + 2);
         check(rc == 0, "Failed to allocate internal storage.");
     }
 
-    char *data = String_data(s);
-    data[s->size] = c;
-    ++s->size;
-    data[s->size] = 0;
+    char *data = str_data(s);
+    data[s->length] = c;
+    ++s->length;
+    data[s->length] = 0;
 
     return 0;
 error:
     return -1;
 }
 
-int String_pop_back(String *s, char *out)
+int str_pop_back(str *s, char *out)
 {
     check_ptr(s);
-    check(s->size > 0, "Attempt to pop_back from empty string.");
+    check(s->length > 0, "Attempt to pop_back from empty string.");
 
-    char *data = String_data(s);
-    --s->size;
-    if (out) *out = data[s->size];
-    data[s->size] = 0;
+    char *data = str_data(s);
+    --s->length;
+    if (out) *out = data[s->length];
+    data[s->length] = 0;
 
     return 0;
 error:
     return -1;
 }
 
-String *String_concat(const String *s1, const String *s2)
+str *str_concat(const str *s1, const str *s2)
 {
-    String *s = NULL;
+    str *s = NULL;
 
     check_ptr(s1);
     check_ptr(s2);
 
-    s = String_copy(s1);
-    check(s != NULL, "Failed to copy the first String.");
-    int rc = String_append(s, s2);
-    check(rc == 0, "Failed to append the second String.");
+    s = str_copy(s1);
+    check(s != NULL, "Failed to copy the first str.");
+    int rc = str_append(s, s2);
+    check(rc == 0, "Failed to append the second str.");
 
     return s;
 error:
-    if (s) String_delete(s);
+    if (s) str_delete(s);
     return NULL;
 }
 
-uint32_t String_hash(const void *s)
+uint32_t str_hash(const void *s)
 {
-    char *data = String_data((String*)s);
-    return jenkins_hash(data, ((String *)s)->size);
+    char *data = str_data((str*)s);
+    return jenkins_hash(data, ((str *)s)->length);
 }
 
-void String_printf(FILE *stream, const void *s)
+void str_print(FILE *stream, const void *s)
 {
-    char *data = String_data((String *)s);
+    char *data = str_data((str *)s);
     fprintf(stream, "%s", data);
 }

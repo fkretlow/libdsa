@@ -8,33 +8,33 @@
 #include "check.h"
 #include "str.h"
 
-String *serialize_int(const void *ip)
+str *serialize_int(const void *ip)
 {
     int i = *(int *)ip;
-    String *s = String_new();
-    check(s != NULL, "Failed to create String for serialized int.");
-    size_t size = 1 * sizeof(char);
-    if (i) size = (size_t)(floor(log10(i)) + 1) * sizeof(char);
-    check(!String_reserve(s, size + 1), "Failed to reserve memory in String.");
-    char *s_data = String_data(s);
+    str *s = str_new();
+    check(s != NULL, "Failed to create str for serialized int.");
+    size_t length = 1 * sizeof(char);
+    if (i) length = (size_t)(floor(log10(i)) + 1) * sizeof(char);
+    check(!str_reserve(s, length + 1), "Failed to reserve memory in str.");
+    char *s_data = str_data(s);
     sprintf(s_data, "%d", i);
-    s_data[size] = 0;
-    s->size = size;
+    s_data[length] = 0;
+    s->length = length;
     return s;
 error:
-    if (s) String_delete(s);
+    if (s) str_delete(s);
     return NULL;
 }
 
-String *serialize_string(const void *s)
+str *serialize_string(const void *s)
 {
-    String *out = String_from_cstr("\"");
-    check(out != NULL, "Failed to create String for serialized string.");
-    check(!String_append(out, (String *)s), "Failed to append string to result string.");
-    check(!String_push_back(out, '"'), "Failed to append trailing ' to result string.");
+    str *out = str_from_cstr("\"");
+    check(out != NULL, "Failed to create str for serialized string.");
+    check(!str_append(out, (str *)s), "Failed to append string to result string.");
+    check(!str_push_back(out, '"'), "Failed to append trailing ' to result string.");
     return out;
 error:
-    if (out) String_delete(out);
+    if (out) str_delete(out);
     return NULL;
 }
 

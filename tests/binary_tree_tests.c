@@ -7,24 +7,24 @@ static bt T;
 
 int test_node_handlers(void)
 {
-    bt_initialize(&T, NONE, &String_type, &int_type);
+    bt_initialize(&T, NONE, &str_type, &int_type);
 
     btn *n = btn_new(&T);
     test(n);
 
-    String *k1 = String_from_cstr("key");
-    String *k2 = String_from_cstr("this is a very long key");
+    str *k1 = str_from_cstr("key");
+    str *k2 = str_from_cstr("this is a very long key");
 
     btn_set_key(&T, n, k1);
     test(btn_has_key(n) == 1);
-    test(String_compare(btn_get_key(&T, n), k1) == 0);
+    test(str_compare(btn_get_key(&T, n), k1) == 0);
 
     btn_destroy_key(&T, n);
     test(btn_has_key(n) == 0);
 
     btn_set_key(&T, n, k2);
     test(btn_has_key(n) == 1);
-    test(String_compare(btn_get_key(&T, n), k2) == 0);
+    test(str_compare(btn_get_key(&T, n), k2) == 0);
 
     int v = 10;
     btn_set_value(&T, n, &v);
@@ -33,8 +33,8 @@ int test_node_handlers(void)
 
     btn_delete(&T, n);
     bt_destroy(&T);
-    String_delete(k1);
-    String_delete(k2);
+    str_delete(k1);
+    str_delete(k2);
     return 0;
 }
 

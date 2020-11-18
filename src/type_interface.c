@@ -46,13 +46,13 @@ void t_print(const t_intf *T, FILE *stream, const void *obj)
 
 /* Predefined type interfaces: */
 
-t_intf String_type = {
-    .size = sizeof(String),
-    .copy = String_copy_to,
-    .destroy = String_destroy,
-    .compare = String_compare,
-    .hash = String_hash,
-    .print = String_printf
+t_intf str_type = {
+    .size = sizeof(str),
+    .copy = str_copy_to,
+    .destroy = str_destroy,
+    .compare = str_compare,
+    .hash = str_hash,
+    .print = str_print
 };
 
 /* Built-in types */

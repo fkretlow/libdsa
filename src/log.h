@@ -25,7 +25,7 @@ struct log_file log_files[MAX_LOG_FILES];
 #define STYLE_LOC       ANSI_FAINT
 #define STYLE_FN        ANSI_BLUE ANSI_BOLD
 #define STYLE_INFO      ""
-#define STYLE_DEBUG     ""
+#define STYLE_DEBUG     ANSI_FAINT
 #define STYLE_CALL      ANSI_FAINT
 #define STYLE_WARN      ANSI_ORANGE
 #define STYLE_ERROR     ANSI_RED ANSI_BOLD

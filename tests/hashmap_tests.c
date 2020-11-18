@@ -72,21 +72,21 @@ int test_hashmap_teardown(void)
 
 int test_hashmap_with_strings(void)
 {
-    M = Hashmap_new(&String_type, &String_type);
+    M = Hashmap_new(&str_type, &str_type);
     test(M != NULL);
 
-    String *k = String_from_cstr("name");
-    String *v = String_from_cstr("Johann");
-    String v_out;
+    str *k = str_from_cstr("name");
+    str *v = str_from_cstr("Johann");
+    str v_out;
     rc = Hashmap_set(M, k, v);
     test(rc == 0);
     rc = Hashmap_get(M, k, &v_out);
     test(rc == 1);
-    test(String_compare(v, &v_out) == 0);
+    test(str_compare(v, &v_out) == 0);
 
-    String_delete(k);
-    String_delete(v);
-    String_destroy(&v_out);
+    str_delete(k);
+    str_delete(v);
+    str_destroy(&v_out);
     Hashmap_delete(M);
     return 0;
 }

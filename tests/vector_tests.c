@@ -68,26 +68,26 @@ int test_vector_teardown(void)
 
 int test_vector_of_strings(void)
 {
-    V = Vector_new(&String_type);
+    V = Vector_new(&str_type);
     test(V != NULL);
 
-    String *s = String_new();
-    String_assign_cstr(s, "Haydn");
+    str *s = str_new();
+    str_assign_cstr(s, "Haydn");
     Vector_push_back(V, s);
 
-    String_assign_cstr(s, "Mozart");
+    str_assign_cstr(s, "Mozart");
     Vector_push_back(V, s);
 
-    String_assign_cstr(s, "Beethoven");
+    str_assign_cstr(s, "Beethoven");
     Vector_push_back(V, s);
 
-    String out;
+    str out;
     Vector_pop_back(V, &out);
-    test(String_compare(s, &out) == 0);
-    String_destroy(&out);
+    test(str_compare(s, &out) == 0);
+    str_destroy(&out);
 
     Vector_delete(V);
-    String_delete(s);
+    str_delete(s);
     return 0;
 }
 
