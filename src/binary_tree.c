@@ -77,7 +77,7 @@ int btn_insert_rec(
 
     int comp = t_compare(T->key_type, k, btn_get_key(T, n));
     if (comp == 0) {
-        *n_out = n;
+        if (n_out) *n_out = n;
         return 0; /* no new nodes */
     } else if (comp < 0 && n->left) {
         return btn_insert_rec(T, n->left, k, n_out);
@@ -90,12 +90,12 @@ int btn_insert_rec(
             n->left = btn_new(T);
             n->left->parent = n;
             btn_set_key(T, n->left, k);
-            *n_out = n->left;
+            if (n_out) *n_out = n->left;
         } else { /* comp > 0 */
             n->right = btn_new(T);
             n->right->parent = n;
             btn_set_key(T, n->right, k);
-            *n_out = n->right;
+            if (n_out) *n_out = n->right;
         }
 
         return 1; /* one new node */
@@ -308,6 +308,7 @@ void bt_clear(bt *T)
     log_call("T=%p", T);
     if (T) {
         if (T->root) btn_delete_rec(T, T->root);
+        T->root = NULL;
         T->count = 0;
     }
 }

@@ -9,6 +9,7 @@ struct log_file {
     FILE *stream;
     unsigned int use_ansi_styles            : 1;
     unsigned int suppress_debug_messages    : 1;
+    unsigned int suppress_call_logs         : 1;
     unsigned int suppress_errors            : 1;
 };
 struct log_file log_files[MAX_LOG_FILES];

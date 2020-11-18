@@ -21,6 +21,7 @@ void _log(const char *src_file, const int line, const char *function,
         file = log_files[i];
         if (file.stream == NULL) break;
         if (file.suppress_errors && log_type == ERROR) continue;
+        if (file.suppress_call_logs && log_type == CALL) continue;
         if (file.suppress_debug_messages && (log_type == DEBUG || log_type == CALL))
             continue;
 

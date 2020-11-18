@@ -1,7 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "binary_tree.h"
 #include "str.h"
 #include "test.h"
 #include "type_interface.h"
+
+#define NMEMB 256
+#define MAXV 1024
 
 int test_node_handlers(void)
 {
@@ -215,13 +222,102 @@ int test_bt_copy(void)
     return 0;
 }
 
+int test_bt_has(void)
+{
+    bt *T = bt_new(NONE, &str_type, NULL);
+    test(T);
+
+    str *c = str_from_cstr("c");
+    str *a = str_from_cstr("a");
+    str *b = str_from_cstr("b");
+    str *d = str_from_cstr("d");
+
+    T->root = btn_new(T);
+    T->root->parent = NULL;
+    btn_set_key(T, T->root, c);
+
+    T->root->left = btn_new(T);
+    T->root->left->parent = T->root;
+    btn_set_key(T, T->root->left, a);
+
+    T->root->left->right = btn_new(T);
+    T->root->left->right->parent = T->root->left;
+    btn_set_key(T, T->root->left->right, b);
+
+    T->count = 3;
+
+    test(bt_has(T, c) == 1);
+    test(bt_has(T, a) == 1);
+    test(bt_has(T, b) == 1);
+    test(bt_has(T, d) == 0);
+
+    str_delete(a);
+    str_delete(b);
+    str_delete(c);
+    str_delete(d);
+    bt_delete(T);
+    return 0;
+}
+
+int test_bt_insert(void)
+{
+    bt *T = bt_new(NONE, &int_type, NULL);
+
+    int rc, i, v;
+    int values[NMEMB] = { 0 };
+    uint32_t count = 0;
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_insert(T, &i);
+        ++count;
+        test(rc == 1);
+        test(bt_count(T) == count);
+        test(bt_has(T, &i) == 1);
+    }
+
+    v = 0;
+    rc = bt_insert(T, &v);
+    test(rc == 0);
+
+    bt_clear(T);
+    count = 0;
+
+    for (i = 0; i < NMEMB; ++i) {
+        v = rand() % MAXV;
+        rc = bt_insert(T, &v);
+        test(rc >= 0);
+        if (rc == 1) {
+            ++count;
+            values[i] = v;
+        } else {
+            --i;
+        }
+        test(bt_count(T) == count);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_has(T, values + i);
+        test(rc == 1);
+    }
+
+    bt_delete(T);
+    return 0;
+}
+
 int main(void)
 {
     test_suite_start();
 
+    unsigned seed = (unsigned)time(NULL);
+    /* unsigned seed = 1604388022; */
+    srand(seed);
+    /* log_info("random seed was %u", seed); */
+
     run_test(test_node_handlers);
     run_test(test_node_rotations);
     run_test(test_bt_copy);
+    run_test(test_bt_has);
+    run_test(test_bt_insert);
 
     test_suite_end();
 }
