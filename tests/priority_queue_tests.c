@@ -14,7 +14,7 @@ static int rc, v1, v2;
 int test_priority_queue_new(void)
 {
     Q = PriorityQueue_new(&int_type);
-    return TEST_OK;
+    return 0;
 }
 
 int test_priority_queue_usage(void)
@@ -35,7 +35,7 @@ int test_priority_queue_usage(void)
         v1 = v2;
     }
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_priority_queue_teardown(void)
@@ -43,7 +43,7 @@ int test_priority_queue_teardown(void)
     PriorityQueue_clear(Q);
     test(Q->size == 0);
     PriorityQueue_delete(Q);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

@@ -79,6 +79,13 @@ void    btn_delete_rec         (const bt *T, btn *n);
 
 btn *   btn_copy_rec           (const bt *T, btn *n);
 
+#define btn_has_key(n)   ((n)->flags.plain.has_key)
+#define btn_has_value(n) ((n)->flags.plain.has_value)
+
+#define btn_get_key(T, n)   (((char *)(n)) + sizeof(btn))
+#define btn_get_value(T, n) \
+    ((T)->value_type ? ((char *)(n)) + sizeof(btn) + t_size((T)->key_type) : NULL)
+
 void    btn_set_key            (const bt *T, btn *n, const void *k);
 void    btn_destroy_key        (const bt *T, btn *n);
 void    btn_set_value          (const bt *T, btn *n, const void *v);

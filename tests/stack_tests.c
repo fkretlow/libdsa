@@ -14,7 +14,7 @@ int test_stack_new(void)
     test(S->top == NULL);
     test(S->element_type->size == sizeof(int));
     test(S->size == 0);
-    return TEST_OK;
+    return 0;
 }
 
 int test_stack_usage(void)
@@ -37,7 +37,7 @@ int test_stack_usage(void)
     test(Stack_top(S) == NULL);
     test_fail(Stack_pop(S, &val) == -1, "Stack_pop from empty stack should fail.");
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_stack_teardown(void)
@@ -45,7 +45,7 @@ int test_stack_teardown(void)
     Stack_clear(S);
     test(S->size == 0);
     Stack_delete(S);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

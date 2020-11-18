@@ -12,13 +12,10 @@
 #include <string.h>
 #include "log.h"
 
-#define TEST_OK 0
-#define TEST_ERROR -1
-
 #define KRED "\x1B[31m"
 #define KRESET "\x1B[0m"
 
-static int _rc = TEST_ERROR;
+static int _rc = -1;
 static int _has_failed;
 
 extern struct log_file log_files[MAX_LOG_FILES];
@@ -29,7 +26,7 @@ extern struct log_file log_files[MAX_LOG_FILES];
         fputc('\n', stderr); \
         log_files[0].stream=stderr; \
         log_files[0].use_ansi_styles=1; \
-        log_files[0].suppress_debug_messages=1; \
+        log_files[0].suppress_debug_messages=0; \
         log_files[0].suppress_errors=0; \
         log_files[1].stream=fopen("log.txt", "a"); \
         log_files[1].use_ansi_styles=0; \
@@ -58,7 +55,7 @@ extern struct log_file log_files[MAX_LOG_FILES];
 #define test_fail(T, fmt, ...) log_files[0].suppress_errors = 1; \
     if (!(T)) { \
         log_fail(fmt, ##__VA_ARGS__); \
-        return TEST_ERROR; \
+        return -1; \
     } \
     log_files[0].suppress_errors = 0;
 

@@ -14,7 +14,7 @@ int test_queue_new(void)
     test(Q->first == NULL && Q->last == NULL);
     test(Q->element_type->size == sizeof(int));
     test(Q->size == 0);
-    return TEST_OK;
+    return 0;
 }
 
 int test_queue_usage(void)
@@ -34,7 +34,7 @@ int test_queue_usage(void)
     }
     test(Q->size == 0);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_queue_teardown(void)
@@ -43,7 +43,7 @@ int test_queue_teardown(void)
     Queue_clear(Q);
     test(Q->size == 0);
     Queue_delete(Q);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

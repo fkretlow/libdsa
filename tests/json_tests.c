@@ -23,7 +23,7 @@ int test_serialize_list_of_ints(void)
     List_delete(L);
     String_delete(expected);
     String_delete(json);
-    return TEST_OK;
+    return 0;
 }
 
 int test_serialize_list_of_strings(void)
@@ -47,7 +47,7 @@ int test_serialize_list_of_strings(void)
     String_delete(s);
     String_delete(json);
     String_delete(expected);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

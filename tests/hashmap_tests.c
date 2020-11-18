@@ -17,7 +17,7 @@ int test_hashmap_new(void)
     test(M->value_type == &int_type);
     test(M->buckets != NULL);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_hashmap_usage(void)
@@ -61,13 +61,13 @@ int test_hashmap_usage(void)
     rc = Hashmap_has(M, &key);
     test(rc == 0);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_hashmap_teardown(void)
 {
     Hashmap_delete(M);
-    return TEST_OK;
+    return 0;
 }
 
 int test_hashmap_with_strings(void)
@@ -88,7 +88,7 @@ int test_hashmap_with_strings(void)
     String_delete(v);
     String_destroy(&v_out);
     Hashmap_delete(M);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

@@ -15,7 +15,7 @@ int test_vector_new(void)
     test(V->size == 0);
     test(V->capacity == VECTOR_MIN_CAPACITY);
     test(V->element_type->size == sizeof(int));
-    return TEST_OK;
+    return 0;
 }
 
 int test_vector_usage(void)
@@ -53,7 +53,7 @@ int test_vector_usage(void)
 
     test_fail(Vector_pop_back(V, &out) == -1, "Vector_pop_back should fail.");
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_vector_teardown(void)
@@ -63,7 +63,7 @@ int test_vector_teardown(void)
     test(V->capacity == VECTOR_MIN_CAPACITY);
     test(V->size == 0);
     Vector_delete(V);
-    return TEST_OK;
+    return 0;
 }
 
 int test_vector_of_strings(void)
@@ -88,7 +88,7 @@ int test_vector_of_strings(void)
 
     Vector_delete(V);
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

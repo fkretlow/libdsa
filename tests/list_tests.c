@@ -15,7 +15,7 @@ int test_list_new(void)
     test(L->first == NULL && L->last == NULL);
     test(L->element_type->size == sizeof(int));
     test(L->size == 0);
-    return TEST_OK;
+    return 0;
 }
 
 int test_list_usage(void)
@@ -85,7 +85,7 @@ int test_list_usage(void)
 
     test_fail(List_pop_back(L, NULL) == -1, "List_pop_back on empty list didn't fail.");
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_list_teardown(void)
@@ -93,7 +93,7 @@ int test_list_teardown(void)
     List_clear(L);
     test(L->size == 0);
     List_delete(L);
-    return TEST_OK;
+    return 0;
 }
 
 int test_list_of_strings(void)
@@ -118,7 +118,7 @@ int test_list_of_strings(void)
 
     List_delete(L);
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)

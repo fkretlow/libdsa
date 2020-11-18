@@ -25,7 +25,7 @@ int test_is_sorted(void)
     test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
     make_sorted(A, N_ELEMENTS);
     test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
-    return TEST_OK;
+    return 0;
 }
 
 int test_quicksort(void)
@@ -37,7 +37,7 @@ int test_quicksort(void)
     }
     quicksort(A, N_ELEMENTS, sizeof(*A), int_compare);
     test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
-    return TEST_OK;
+    return 0;
 }
 
 int test_mergesort(void)
@@ -49,7 +49,7 @@ int test_mergesort(void)
     }
     mergesort(A, N_ELEMENTS, sizeof(*A), int_compare);
     test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
-    return TEST_OK;
+    return 0;
 }
 
 int test_heapsort(void)
@@ -61,7 +61,7 @@ int test_heapsort(void)
     }
     heapsort(A, N_ELEMENTS, sizeof(*A), int_compare);
     test(is_sorted(A, N_ELEMENTS, sizeof(*A), int_compare));
-    return TEST_OK;
+    return 0;
 }
 
 int main()

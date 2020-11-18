@@ -14,7 +14,7 @@
 
 #define btn_size(T) \
     (sizeof(btn) + t_size((T)->key_type) \
-                 + (T)->value_type ? t_size((T)->value_type) : 0)
+                 + ((T)->value_type ? t_size((T)->value_type) : 0))
 
 btn *btn_new(const bt *T) {
     log_call("T=%p", T);
@@ -36,16 +36,9 @@ error:
  * altered. Don't call btn_delete on a node with children lest they become unreachable
  * in the void... use btn_delete_rec[ursively] to wipe out the whole subtree. */
 
-#define btn_has_key(n)   ((n)->flags.plain.has_key)
-#define btn_has_value(n) ((n)->flags.plain.has_value)
-
-#define btn_get_key(T, n)   (((char *)(n)) + sizeof(btn))
-#define btn_get_value(T, n) \
-    ((T)->value_type ? ((char *)(n)) + sizeof(btn) + t_size((T)->key_type) : NULL)
-
 void btn_delete(const bt *T, btn *n)
 {
-    log_call("T=%p, n=%p");
+    log_call("T=%p, n=%p", T, n);
     assert(T && T->key_type && n);
 
     if (btn_has_key(n)) {
@@ -55,11 +48,12 @@ void btn_delete(const bt *T, btn *n)
         assert(T->value_type);
         t_destroy(T->value_type, btn_get_value(T, n));
     }
+    free(n);
 }
 
 void btn_delete_rec(const bt *T, btn *n)
 {
-    log_call("T=%p, n=%p");
+    log_call("T=%p, n=%p", T, n);
     assert(T && n);
     if (n->left) btn_delete_rec(T, n->left);
     if (n->right) btn_delete_rec(T, n->right);
@@ -122,6 +116,7 @@ void btn_rotate_left(
         btn *n,         /* the root of the subtree to rotate */
         btn **n_out)    /* write the address of the new root here, can be NULL */
 {
+    log_call("T=%p, n=%p, n_out=%p", T, n, n_out);
     assert(T && n);
     assert(n->right);   /* otherwise, why would we rotate? */
 
@@ -137,13 +132,11 @@ void btn_rotate_left(
     if (n_out) *n_out = r;
 }
 
-void btn_rotate_right(
-        bt *T,          /* the tree, needed for btn_replace_child */
-        btn *n,         /* the root of the subtree to rotate */
-        btn **n_out)    /* write the address of the new root here, can be NULL */
+void btn_rotate_right(bt *T, btn *n, btn **n_out)
 {
+    log_call("T=%p, n=%p, n_out=%p", T, n, n_out);
     assert(T && n);
-    assert(n->right);   /* otherwise, why would we rotate? */
+    assert(n->right);
 
     btn *p = n->parent;
     btn *l = n->left;
@@ -163,6 +156,7 @@ void btn_replace_child(
         btn *c, /* the child to replace */
         btn *s) /* the new child (successor) */
 {
+    log_call("T=%p, p=%p, c=%p s=%p", T, p, c, s);
     assert(T && c && s);
 
     if (p == NULL) {

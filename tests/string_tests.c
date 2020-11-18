@@ -18,7 +18,7 @@ int test_string_from_cstr(void)
         test(s->storage_allocated == false);
     }
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_compare(void)
@@ -36,7 +36,7 @@ int test_string_compare(void)
     String_delete(s1);
     String_delete(s2);
     String_delete(s3);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_assign(void)
@@ -57,7 +57,7 @@ int test_string_assign(void)
     String_delete(s2);
     String_delete(s3);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_copy(void)
@@ -70,7 +70,7 @@ int test_string_copy(void)
     String_delete(s1);
     String_delete(s2);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_append(void)
@@ -91,7 +91,7 @@ int test_string_append(void)
 
     String_delete(s1);
     String_delete(s2);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_concat(void)
@@ -107,7 +107,7 @@ int test_string_concat(void)
     String_delete(s2);
     String_delete(s3);
 
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_push_pop_back(void)
@@ -125,7 +125,7 @@ int test_string_push_pop_back(void)
     test(out == 'a');
 
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_allocation(void)
@@ -164,7 +164,7 @@ int test_string_allocation(void)
     test(s->storage_allocated == false);
 
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_hash(void)
@@ -173,7 +173,7 @@ int test_string_hash(void)
     unsigned long hash = String_hash(s);
     test(hash != 0);
     String_delete(s);
-    return TEST_OK;
+    return 0;
 }
 
 int test_string_type_interface(void)
@@ -201,7 +201,7 @@ int test_string_type_interface(void)
 
     String_delete(s1);
     String_delete(s2);
-    return TEST_OK;
+    return 0;
 }
 
 int main(void)
