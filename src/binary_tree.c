@@ -280,3 +280,24 @@ void bt_delete(bt *T)
         free(T);
     }
 }
+
+/***************************************************************************************
+ * bt *bt_copy(bt *T);
+ * Copy a binary tree, duplicating all content and preserving the exact same layout. */
+
+bt *bt_copy(bt *T)
+{
+    log_call("T=%p", T);
+    check_ptr(T);
+
+    bt *C = bt_new(T->flavor, T->key_type, T->value_type);
+    check(C != NULL, "failed to create new tree");
+
+    if (T->count > 0) C->root = btn_copy_rec(C, T->root);
+    C->count = T->count;
+
+    return C;
+error:
+    if (C) bt_delete(C);
+    return NULL;
+}

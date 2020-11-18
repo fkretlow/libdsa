@@ -53,7 +53,7 @@ bt *    bt_new                 (       uint8_t flavor, t_intf *kt, t_intf *vt);
 void    bt_destroy             (bt *T);
 void    bt_delete              (bt *T);
 
-int     bt_copy                (bt *dest, bt *src);
+bt *    bt_copy                (bt *T);
 void    bt_clear               (bt *T);
 
 int     bt_insert              (bt *T, const void *k);
