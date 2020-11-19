@@ -23,19 +23,19 @@ int test_node_handlers(void)
 
     btn_set_key(T, n, k1);
     test(btn_has_key(n) == 1);
-    test(str_compare(btn_get_key(T, n), k1) == 0);
+    test(str_compare(btn_key(T, n), k1) == 0);
 
     btn_destroy_key(T, n);
     test(btn_has_key(n) == 0);
 
     btn_set_key(T, n, k2);
     test(btn_has_key(n) == 1);
-    test(str_compare(btn_get_key(T, n), k2) == 0);
+    test(str_compare(btn_key(T, n), k2) == 0);
 
     int v = 10;
     btn_set_value(T, n, &v);
     test(btn_has_value(n) == 1);
-    test(*(int*)btn_get_value(T, n) == v);
+    test(*(int*)btn_value(T, n) == v);
 
     btn_destroy_value(T, n);
     test(btn_has_value(n) == 0);
@@ -184,22 +184,22 @@ int test_bt_copy(void)
     btn *crl = c->right->left;
 
     test(c);
-    test(str_compare(btn_get_key  (T, c), kn)  == 0);
-    test(int_compare(btn_get_value(T, c), &vn) == 0);
+    test(str_compare(btn_key  (T, c), kn)  == 0);
+    test(int_compare(btn_value(T, c), &vn) == 0);
 
     test(cl);
-    test(str_compare(btn_get_key  (T, cl), kl)  == 0);
-    test(int_compare(btn_get_value(T, cl), &vl) == 0);
+    test(str_compare(btn_key  (T, cl), kl)  == 0);
+    test(int_compare(btn_value(T, cl), &vl) == 0);
     test(cl->left == NULL && cl->right == NULL);
 
     test(cr);
-    test(str_compare(btn_get_key  (T, cr), kr)  == 0);
-    test(int_compare(btn_get_value(T, cr), &vr) == 0);
+    test(str_compare(btn_key  (T, cr), kr)  == 0);
+    test(int_compare(btn_value(T, cr), &vr) == 0);
     test(cr->left != NULL && cr->right == NULL);
 
     test(crl);
-    test(str_compare(btn_get_key  (T, crl), krl)  == 0);
-    test(int_compare(btn_get_value(T, crl), &vrl) == 0);
+    test(str_compare(btn_key  (T, crl), krl)  == 0);
+    test(int_compare(btn_value(T, crl), &vrl) == 0);
     test(crl->left == NULL && crl->right == NULL);
 
     /* also do it once on the stack */
@@ -304,6 +304,61 @@ int test_bt_insert(void)
     return 0;
 }
 
+int test_bt_remove(void)
+{
+    bt *T = bt_new(NONE, &int_type, NULL);
+
+    int rc, i, v;
+    int values[NMEMB] = { 0 };
+    uint32_t count = 0;
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_insert(T, &i);
+        ++count;
+        test(rc == 1);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_remove(T, &i);
+        --count;
+        test(rc == 1);
+        test(bt_count(T) == count);
+    }
+
+    test(T->root == NULL);
+
+    /* from here on it's just testing insert... */
+    v = 0;
+    rc = bt_remove(T, &v);
+    test(rc == 0);
+
+    bt_clear(T);
+    count = 0;
+
+    for (i = 0; i < NMEMB; ++i) {
+        v = rand() % MAXV;
+        rc = bt_insert(T, &v);
+        test(rc >= 0);
+        if (rc == 1) {
+            ++count;
+            values[i] = v;
+        } else {
+            --i;
+        }
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_remove(T, values + i);
+        --count;
+        test(rc == 1);
+        test(bt_count(T) == count);
+    }
+
+    test(T->root == NULL);
+
+    bt_delete(T);
+    return 0;
+}
 int main(void)
 {
     test_suite_start();
@@ -318,6 +373,7 @@ int main(void)
     run_test(test_bt_copy);
     run_test(test_bt_has);
     run_test(test_bt_insert);
+    run_test(test_bt_remove);
 
     test_suite_end();
 }

@@ -80,14 +80,14 @@ void    btn_delete_rec          (const bt *T, btn *n);
 
 btn *   btn_copy_rec            (const bt *T, const btn *n);
 
-int     btn_insert_rec          (const bt *T, btn *n, const void *k, btn **n_out);
-int     btn_remove_rec          (const bt *T, btn *n);
+int     btn_insert              (bt *T, btn *n, const void *k, btn **n_out);
+int     btn_remove              (bt *T, btn *n, const void *k);
 
 #define btn_has_key(n)   ((n)->flags.plain.has_key)
 #define btn_has_value(n) ((n)->flags.plain.has_value)
 
-#define btn_get_key(T, n) (void*)(((char *)(n)) + sizeof(btn))
-#define btn_get_value(T, n) \
+#define btn_key(T, n) (void*)(((char *)(n)) + sizeof(btn))
+#define btn_value(T, n) \
     ((T)->value_type ? (void*)((char *)(n)) + sizeof(btn) + t_size((T)->key_type) : NULL)
 
 void    btn_set_key             (const bt *T, btn *n, const void *k);

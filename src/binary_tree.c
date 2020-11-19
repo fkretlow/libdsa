@@ -6,15 +6,15 @@
 #include "binary_tree.h"
 #include "log.h"
 
-/***************************************************************************************
+/*************************************************************************************************
  * btn *btn_new(const bt *T);
- * Create a new node on the heap and return a pointer to it, or NULL on error. Enough
- * memory is requested to store the node header, one key, and zero or one value objects
- * according to the type interfaces stored in T. */
+ * Create a new node on the heap and return a pointer to it, or NULL on error. Enough memory is
+ * requested to store the node header, one key, and zero or one value objects according to the
+ * type interfaces stored in T. */
 
-#define btn_size(T) \
-    (sizeof(btn) + t_size((T)->key_type) \
-                 + ((T)->value_type ? t_size((T)->value_type) : 0))
+#define btn_data_size(T) \
+    (t_size((T)->key_type) + ((T)->value_type ? t_size((T)->value_type) : 0))
+#define btn_size(T) (sizeof(btn) + btn_data_size(T))
 
 btn *btn_new(const bt *T) {
     log_call("T=%p", T);
@@ -29,13 +29,12 @@ error:
     return NULL;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * void btn_delete    (const bt *T, btn *n);
  * void btn_delete_rec(const bt *T, btn *n);
- * Delete n, destroying stored data and freeing associated memory. No links are altered
- * in adjacent nodes. Don't call btn_delete on a node with children lest they become
- * unreachable in the void... use btn_delete_rec[ursively] to wipe out the whole
- * subtree. */
+ * Delete n, destroying stored data and freeing associated memory. No links are altered in
+ * adjacent nodes. Don't call btn_delete on a node with children lest they become unreachable in
+ * the void... use btn_delete_rec[ursively] to wipe out the whole subtree. */
 
 void btn_delete(const bt *T, btn *n)
 {
@@ -43,11 +42,11 @@ void btn_delete(const bt *T, btn *n)
     assert(T && T->key_type && n);
 
     if (btn_has_key(n)) {
-        t_destroy(T->key_type, btn_get_key(T, n));
+        t_destroy(T->key_type, btn_key(T, n));
     }
     if (btn_has_value(n)) {
         assert(T->value_type);
-        t_destroy(T->value_type, btn_get_value(T, n));
+        t_destroy(T->value_type, btn_value(T, n));
     }
     free(n);
 }
@@ -61,13 +60,13 @@ void btn_delete_rec(const bt *T, btn *n)
     btn_delete(T, n);
 }
 
-/***************************************************************************************
- * int btn_insert_rec(const bt *T, btn *n, const void *k, btn **n_out);
- * Insert a node with the key k into the subtree rooted at n. A pointer to the new node
- * is saved in n_out. */
+/*************************************************************************************************
+ * int btn_insert(const bt *T, btn *n, const void *k, btn **n_out);
+ * Insert a node with the key k into the subtree rooted at n. A pointer to the new node is saved
+ * in n_out. Returns 1 if a node was added, 0 if k was already there, and -1 on error. */
 
-int btn_insert_rec(
-        const bt *T,
+int btn_insert(
+        bt *T,
         btn *n,         /* the root of the subtree */
         const void *k,  /* the key to insert */
         btn **n_out)    /* pass back a pointer to the new node, can be NULL */
@@ -75,14 +74,14 @@ int btn_insert_rec(
     log_call("T=%p, n=%p, k=%p, n_out=%p", T, n, k, n_out);
     assert(T && T->key_type && n && k);
 
-    int comp = t_compare(T->key_type, k, btn_get_key(T, n));
+    int comp = t_compare(T->key_type, k, btn_key(T, n));
     if (comp == 0) {
         if (n_out) *n_out = n;
         return 0; /* no new nodes */
     } else if (comp < 0 && n->left) {
-        return btn_insert_rec(T, n->left, k, n_out);
+        return btn_insert(T, n->left, k, n_out);
     } else if (comp > 0 && n->right) {
-        return btn_insert_rec(T, n->right, k, n_out);
+        return btn_insert(T, n->right, k, n_out);
     }
 
     else {
@@ -102,17 +101,81 @@ int btn_insert_rec(
     }
 }
 
-/***************************************************************************************
+/*************************************************************************************************
+ * int btn_remove(const bt *T, btn *n, const void *k);
+ * Remove the node with the key k from the subtree roted at n. Returns 1 if a node was deleted, 0
+ * if k wasn't found, and -1 on error. */
+
+int btn_remove(
+        bt *T,
+        btn *n,         /* the root of the subtree to delete from */
+        const void *k)  /* the key to delete */
+{
+    log_call("T=%p, n=%p, k=%p", T, n, k);
+    assert(T && T->key_type && n && k);
+
+    int comp;
+    for ( ;; ) {
+        if (!n) return 0;
+        comp = t_compare(T->key_type, k, btn_key(T, n));
+        if      (comp < 0) n = n->left;
+        else if (comp > 0) n = n->right;
+        else break;
+    }
+
+    if (n->left && n->right) {
+        /* find the node with the next greater key to swap */
+        btn *s = n->right;
+        while (s->left) s = s->left;
+
+        /* destroy the data in n */
+        btn_destroy_key(T, n);
+        if (btn_has_value(n)) btn_destroy_value(T, n);
+
+        /* copy over the data from s, assuming that nested types remain intact when only the top
+         * level data is moved */
+        memcpy(btn_key(T, n), btn_key(T, s), btn_data_size(T));
+        n->flags.plain.has_key = 1;
+        if (T->value_type) n->flags.plain.has_value = 1;
+
+        /* zero out the data in s to avoid destroying nested data when s is deleted */
+        memset(btn_key(T, s), 0, btn_data_size(T));
+        s->flags.plain.has_key = s->flags.plain.has_value = 0;
+
+        /* move on, delete s, now stored in n */
+        n = s;
+    }
+
+    if (n->left) {
+        btn_replace_child(T, n->parent, n, n->left);
+    } else if (n->right) {
+        btn_replace_child(T, n->parent, n, n->right);
+    } else { /* no children, btn_replace_child can't handle this case */
+        if (n->parent == NULL) {
+            assert(n == T->root);
+            T->root = NULL;
+        } else if (n == n->parent->left) {
+            n->parent->left = NULL;
+        } else if (n == n->parent->right) {
+            n->parent->right = NULL;
+        }
+    }
+    /* Now n is decoupled. btn_delete doesn't care about the links in n. */
+    btn_delete(T, n);
+    return 1;
+}
+
+/*************************************************************************************************
  * void btn_set_key  (const bt *T, btn *n, const void *k);
  * void btn_set_value(const bt *T, btn *n, const void *v);
- * Set the key/value stored in n to k/v by copying it into the node. We assume that no
- * previous key/value is present. */
+ * Set the key/value stored in n to k/v by copying it into the node. We assume that no previous
+ * key/value is present. */
 
 void btn_set_key(const bt *T, btn *n, const void *k)
 {
     log_call("T=%p, n=%p, k=%p", T, n, k);
     assert(T && n && k && T->key_type && !btn_has_key(n));
-    t_copy(T->key_type, btn_get_key(T, n), k);
+    t_copy(T->key_type, btn_key(T, n), k);
     n->flags.plain.has_key = 1;
 }
 
@@ -120,11 +183,11 @@ void btn_set_value(const bt *T, btn *n, const void *v)
 {
     log_call("T=%p, n=%p, v=%p", T, n, v);
     assert(T && n && v && T->value_type && !btn_has_value(n));
-    t_copy(T->value_type, btn_get_value(T, n), v);
+    t_copy(T->value_type, btn_value(T, n), v);
     n->flags.plain.has_value = 1;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * void btn_destroy_key  (const bt *T, btn *n);
  * void btn_destroy_value(const bt *T, btn *n, const void *v);
  * Destroy the key/value stored in n, freeing any associated memory. We assume that a
@@ -133,8 +196,10 @@ void btn_set_value(const bt *T, btn *n, const void *v)
 void btn_destroy_key(const bt *T, btn *n)
 {
     log_call("T=%p, n=%p", T, n);
-    assert(T && n && T->key_type && btn_has_key(n));
-    t_destroy(T->key_type, btn_get_key(T, n));
+    assert(T && T->key_type);
+    assert(n);
+    assert(btn_has_key(n));
+    t_destroy(T->key_type, btn_key(T, n));
     n->flags.plain.has_key = 0;
 }
 
@@ -142,14 +207,14 @@ void btn_destroy_value(const bt *T, btn *n)
 {
     log_call("T=%p, n=%p", T, n);
     assert(T && n && T->value_type && btn_has_value(n));
-    t_destroy(T->value_type, btn_get_value(T, n));
+    t_destroy(T->value_type, btn_value(T, n));
     n->flags.plain.has_value = 0;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * btn *btn_copy_rec(const bt *T, const btn *n);
- * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree
- * has the exact same layout. */
+ * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree has the
+ * exact same layout. */
 
 btn *btn_copy_rec(const bt *T, const btn *n)
 {
@@ -160,8 +225,8 @@ btn *btn_copy_rec(const bt *T, const btn *n)
     check(c != NULL, "failed to create new node");
 
     /* copy the data */
-    if (btn_has_key(n))     btn_set_key(T, c, btn_get_key(T, n));
-    if (btn_has_value(n))   btn_set_value(T, c, btn_get_value(T, n));
+    if (btn_has_key(n))     btn_set_key(T, c, btn_key(T, n));
+    if (btn_has_value(n))   btn_set_value(T, c, btn_value(T, n));
 
     /* recursively copy the subtrees */
     if (n->left) {
@@ -182,11 +247,9 @@ error:
     return NULL;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * void btn_rotate_left    (bt *T, btn *n, btn **n_out);
- * void btn_rotate_right   (bt *T, btn *n, btn **n_out);
- * void btn_replace_child  (bt *T, btn *p, btn *c, btn *s);
- * The usual tree rotations. */
+ * void btn_rotate_right   (bt *T, btn *n, btn **n_out);  The usual tree rotations. */
 
 void btn_rotate_left(
         bt *T,          /* the tree, needed for btn_replace_child */
@@ -227,6 +290,11 @@ void btn_rotate_right(bt *T, btn *n, btn **n_out)
     if (n_out) *n_out = l;
 }
 
+
+/*************************************************************************************************
+ * void btn_replace_child(bt *T, btn *p, btn *c, btn *s);
+ * Replace the child c of p by a successor s. */
+
 void btn_replace_child(
         bt *T,  /* the tree, needed if c is the root */
         btn *p, /* the parent where a child should be replaced, NULL if c is the root */
@@ -248,14 +316,13 @@ void btn_replace_child(
     }
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * int bt_initialize(bt *T, uint8_t flavor, t_intf *kt, t_intf *vt);
  * bt *bt_new       (       uint8_t flavor, t_intf *kt, t_intf *vt);
- * bt_initialize initializes a bt at the address pointed to by T (assuming there's
- * sufficient space). bt_new allocates and initializes a new bt and returns a pointer to
- * it. The type interface for keys is required and must contain a at least a size and a
- * comparison function. The type interface for values can be NULL if the tree is going
- * to store single elements. */
+ * bt_initialize initializes a bt at the address pointed to by T (assuming there's sufficient
+ * space). bt_new allocates and initializes a new bt and returns a pointer to it. The type
+ * interface for keys is required and must contain a at least a size and a comparison function.
+ * The type interface for values can be NULL if the tree is going to store single elements. */
 
 int bt_initialize(
         bt *T,          /* address of the bt to initialize */
@@ -299,7 +366,7 @@ error:
     return NULL;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * void bt_clear(bt *T);
  * Delete all nodes, freeing associated memory, and reset T. */
 
@@ -313,7 +380,7 @@ void bt_clear(bt *T)
     }
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * void bt_destroy(bt *T);
  * void bt_delete (bt *T);
  * Destroy T, freeing any associated memory. bt_delete also calls free on T. */
@@ -336,11 +403,11 @@ void bt_delete(bt *T)
     }
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * bt *bt_copy   (          const bt *src);
  * int bt_copy_to(bt *dest, const bt *src);
- * Copy a binary tree, duplicating all content and preserving the exact same layout.
- * bt_copy makes the copy on the heap, bt_copy_to creates it where dest points to. */
+ * Copy a binary tree, duplicating all content and preserving the exact same layout.  bt_copy
+ * makes the copy on the heap, bt_copy_to creates it where dest points to. */
 
 bt *bt_copy(const bt *src)
 {
@@ -377,7 +444,7 @@ error:
     return -1;
 }
 
-/***************************************************************************************
+/*************************************************************************************************
  * int bt_has(const bt *T, const void *k); Check if k is in T. */
 
 int bt_has(const bt *T, const void *k)
@@ -389,7 +456,7 @@ int bt_has(const bt *T, const void *k)
     int comp;
     for ( ;; ) {
         if (!n) return 0;
-        comp = t_compare(T->key_type, k, btn_get_key(T, n));
+        comp = t_compare(T->key_type, k, btn_key(T, n));
         if (comp == 0) return 1;
         else if (comp < 0) n = n->left;
         else if (comp > 0) n = n->right;
@@ -400,7 +467,7 @@ error:
 }
 
 
-/***************************************************************************************
+/*************************************************************************************************
  * int bt_insert(bt *T, const void *k);
  * Insert k into the tree. Return 0 or 1 depending on whether a node was added or k was
  * already there, or -1 on error. */
@@ -415,7 +482,7 @@ int bt_insert(bt *T, const void *k)
     int rc;
 
     if (T->root) {
-        rc = btn_insert_rec(T, T->root, k, NULL);
+        rc = btn_insert(T, T->root, k, NULL);
     } else {
         T->root = btn_new(T);
         T->root->parent = NULL;
@@ -423,6 +490,26 @@ int bt_insert(bt *T, const void *k)
         rc = 1;
     }
     if (rc == 1) ++T->count;
+    return rc;
+error:
+    return -1;
+}
+
+/*************************************************************************************************
+ * int bt_remove(bt *T, const void *k);
+ * Remove k from the tree. Return 0 or 1 depending on whether k was found and removed or not, or
+ * -1 on error. */
+
+int bt_remove(bt *T, const void *k)
+{
+    log_call("T=%p, k=%p", T, k);
+    check_ptr(T);
+    check_ptr(k);
+    assert(T->key_type);
+
+    int rc = (T->root) ? btn_remove(T, T->root, k) : 0;
+    if (rc == 1) --T->count;
+
     return rc;
 error:
     return -1;
