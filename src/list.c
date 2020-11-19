@@ -102,7 +102,7 @@ static listn *list_get_node(const list *L, size_t i)
 {
     check_ptr(L);
     assert(!list_invariant(L));
-    check(i < L->count, "Index out of range: %lu >= %lu", i, L->count);
+    check(i < L->count, "index out of range: %lu >= %lu", i, L->count);
 
     listn *cur = L->first;
     for (size_t j = 0; j < i; ++j) cur = cur->next;
@@ -112,19 +112,18 @@ error:
     return NULL;
 }
 
-int list_get(const list *L, const size_t i, void *out)
+void *list_get(list *L, const size_t i)
 {
     check_ptr(L);
     assert(!list_invariant(L));
-    check_ptr(out);
+
+    if (i >= L->count) return NULL;
 
     listn *n = list_get_node(L, i);
     check(n != NULL, "failed to get node at index %lu", i);
-    t_copy(L->data_type, out, listn_data(n));
-
-    return 0;
+    return listn_data(n);
 error:
-    return -1;
+    return NULL;
 }
 
 int list_set(list *L, const size_t i, const void *in)
@@ -235,36 +234,42 @@ error:
     return -1;
 }
 
-int list_pop_front(list *L, void *out)
+int list_pop_front(list *L)
 {
     check_ptr(L);
     assert(!list_invariant(L));
-    check_ptr(out);
-    check(L->count > 0, "Attempt to pop from empty list.");
+
+    if (L->count == 0) return 0;
 
     listn *n = L->first;
-    t_copy(L->data_type, out, listn_data(n));
-    check(!list_remove(L, 0), "Failed to remove first node.");
+    if (n->next) L->first = n->next;
+    else         L->first = L->last = NULL;
+    --L->count;
+
+    listn_delete(L, n);
 
     assert(!list_invariant(L));
-    return 0;
+    return 1;
 error:
     return -1;
 }
 
-int list_pop_back(list *L, void *out)
+int list_pop_back(list *L)
 {
     check_ptr(L);
     assert(!list_invariant(L));
-    check_ptr(out);
-    check(L->count > 0, "Attempt to pop from empty list.");
+
+    if (L->count == 0) return 0;
 
     listn *n = L->last;
-    t_copy(L->data_type, out, listn_data(n));
-    check(!list_remove(L, L->count - 1), "Failed to remove last node.");
+    if (n->prev) L->last = n->prev;
+    else         L->last = L->first = NULL;
+    --L->count;
+
+    listn_delete(L, n);
 
     assert(!list_invariant(L));
-    return 0;
+    return 1;
 error:
     return -1;
 }

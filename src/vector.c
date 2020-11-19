@@ -4,30 +4,30 @@
 #include "check.h"
 #include "vector.h"
 
-int Vector_initialize(Vector *V, t_intf *element_type)
+int vector_initialize(vector *V, t_intf *dt)
 {
     check_ptr(V);
-    check_ptr(element_type);
+    check_ptr(dt);
 
-    V->data = malloc(VECTOR_MIN_CAPACITY * element_type->size);
+    V->data = malloc(VECTOR_MIN_CAPACITY * t_size(dt));
     check_alloc(V->data);
 
-    V->size = 0;
+    V->count = 0;
     V->capacity = VECTOR_MIN_CAPACITY;
-    V->element_type = element_type;
+    V->data_type = dt;
 
     return 0;
 error:
     return -1;
 }
 
-Vector *Vector_new(t_intf *element_type)
+vector *vector_new(t_intf *dt)
 {
-    Vector *V = malloc(sizeof(*V));
+    vector *V = malloc(sizeof(*V));
     check_alloc(V);
 
-    int rc = Vector_initialize(V, element_type);
-    check(rc == 0, "Failed to initialize new vector.");
+    int rc = vector_initialize(V, dt);
+    check(rc == 0, "failed to initialize new vector");
 
     return V;
 error:
@@ -36,26 +36,26 @@ error:
     return NULL;
 }
 
-void Vector_destroy(Vector *V)
+void vector_destroy(vector *V)
 {
     if (V && V->data) {
-        Vector_clear(V);
+        vector_clear(V);
         free(V->data);
         V->data = NULL;
-        V->size = 0;
+        V->count = 0;
     }
 }
 
-void Vector_delete(Vector *V)
+void vector_delete(vector *V)
 {
     if (V) {
-        Vector_destroy(V);
+        vector_destroy(V);
         free(V);
     }
 }
 
 /* Reserve internal memory for at least `capacity` elements. */
-int Vector_reserve(Vector *V, const size_t capacity)
+int vector_reserve(vector *V, const size_t capacity)
 {
     check_ptr(V);
 
@@ -67,16 +67,16 @@ int Vector_reserve(Vector *V, const size_t capacity)
 
     /* If we have an element destructor, we need to make sure that all elements
      * that we are going to cut off are properly destroyed. */
-    if (c < V->size) {
-        for (size_t i = c; i < V->size; ++i) {
-            t_destroy(V->element_type, V->data + i * t_size(V->element_type));
+    if (c < V->count) {
+        for (size_t i = c; i < V->count; ++i) {
+            t_destroy(V->data_type, V->data + i * t_size(V->data_type));
         }
     }
 
     /* Assume that reallocarray doesn't touch the original array if it fails.
      * Also assume that nested types remain intact when only the top level data
      * is moved. */
-    char *new_data = reallocarray(V->data, c, t_size(V->element_type));
+    char *new_data = reallocarray(V->data, c, t_size(V->data_type));
     check(new_data != NULL, "Failed to reserve the requested amonut of memory.");
     V->data = new_data;
     V->capacity = c;
@@ -88,20 +88,20 @@ error:
 
 /* Contract the internal storage if and as possible. Does not necessarily
  * shrink to the exact size. */
-int Vector_shrink_to_fit(Vector *V)
+int vector_shrink_to_fit(vector *V)
 {
     check_ptr(V);
 
-    if (V->size > V->capacity >> 1) return 0;
+    if (V->count > V->capacity >> 1 || V->capacity <= VECTOR_MIN_CAPACITY) return 0;
 
     /* Shrink to at least twice the currently used memory to avoid expanding
      * again immediately. */
     size_t c = V->capacity;
-    while (c > V->size << 1) c >>= 1;
+    while (c > V->count << 1) c >>= 1;
 
-    /* Assumptions as above. */
-    char *new_data = reallocarray(V->data, c, t_size(V->element_type));
-    check(new_data != NULL, "Failed to reduce the internal memory.");
+    /* Assumptions as above. TODO: Use t_move. */
+    char *new_data = reallocarray(V->data, c, t_size(V->data_type));
+    check(new_data != NULL, "failed to shrink the internal memory with reallocarray");
     V->data = new_data;
     V->capacity = c;
 
@@ -110,50 +110,36 @@ error:
     return -1;
 }
 
-void Vector_clear(Vector *V)
+void vector_clear(vector *V)
 {
     if (V && V->data) {
-        for (size_t i = 0; i < V->size; ++i) {
-            t_destroy(V->element_type,
-                                  V->data + i * t_size(V->element_type));
+        for (size_t i = 0; i < V->count; ++i) {
+            t_destroy(V->data_type,
+                                  V->data + i * t_size(V->data_type));
         }
-        V->size = 0;
-        Vector_reserve(V, VECTOR_MIN_CAPACITY);
+        V->count = 0;
+        vector_reserve(V, VECTOR_MIN_CAPACITY);
     }
 }
 
-int Vector_get(const Vector *V, const size_t i, void *out)
-{
-    check_ptr(V);
-    check_ptr(out);
-    check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
-
-    t_copy(V->element_type,
-                       out,
-                       V->data + i * t_size(V->element_type));
-    return 0;
-error:
-    return -1;
-}
-
-int Vector_set(Vector *V, const size_t i, const void *in)
+int vector_set(vector *V, const size_t i, const void *in)
 {
     check_ptr(V);
     check_ptr(in);
-    check(i <= V->size, "Index out of range: %lu > %lu", i, V->size);
+    check(i <= V->count, "Index out of range: %lu > %lu", i, V->count);
 
-    if (i == V->size) {
-        if (V->size >= V->capacity) {
-            check(!Vector_reserve(V, V->capacity << 1), "Failed to expand.");
+    if (i == V->count) {
+        if (V->count >= V->capacity) {
+            check(!vector_reserve(V, V->capacity << 1), "Failed to expand.");
         }
-        ++V->size;
-    } else if (i < V->size) {
-        t_destroy(V->element_type,
-                              V->data + i * t_size(V->element_type));
+        ++V->count;
+    } else if (i < V->count) {
+        t_destroy(V->data_type,
+                              V->data + i * t_size(V->data_type));
     }
 
-    t_copy(V->element_type,
-                       V->data + i * t_size(V->element_type),
+    t_copy(V->data_type,
+                       V->data + i * t_size(V->data_type),
                        in);
 
     return 0;
@@ -161,28 +147,28 @@ error:
     return -1;
 }
 
-int Vector_insert(Vector *V, const size_t i, const void *in)
+int vector_insert(vector *V, const size_t i, const void *in)
 {
     check_ptr(V);
     check_ptr(in);
-    check(i <= V->size, "Index out of range: %lu > %lu", i, V->size);
+    check(i <= V->count, "Index out of range: %lu > %lu", i, V->count);
 
-    if (V->size >= V->capacity) {
-        check(!Vector_reserve(V, V->capacity << 1), "Failed to expand.");
+    if (V->count >= V->capacity) {
+        check(!vector_reserve(V, V->capacity << 1), "Failed to expand.");
     }
 
-    if (i < V->size) {
+    if (i < V->count) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + (i + 1) * t_size(V->element_type),
-                V->data + i * t_size(V->element_type),
-                (V->size - i) * t_size(V->element_type));
+        memmove(V->data + (i + 1) * t_size(V->data_type),
+                V->data + i * t_size(V->data_type),
+                (V->count - i) * t_size(V->data_type));
     }
 
-    t_copy(V->element_type,
-                       V->data + i * t_size(V->element_type),
+    t_copy(V->data_type,
+                       V->data + i * t_size(V->data_type),
                        in);
-    ++V->size;
+    ++V->count;
 
     return 0;
 error:
@@ -190,30 +176,29 @@ error:
 }
 
 /* Delete the element at index i. All subsequent elements are moved, so any
- * pointers into the Vector become invalid. */
-int Vector_remove(Vector *V, const size_t i)
+ * pointers into the vector become invalid. */
+int vector_remove(vector *V, const size_t i)
 {
     check_ptr(V);
-    check(i < V->size, "Index out of range: %lu > %lu", i, V->size);
+    check(i < V->count, "Index out of range: %lu > %lu", i, V->count);
 
-    t_destroy(V->element_type,
-                          V->data + i * t_size(V->element_type));
+    t_destroy(V->data_type, V->data + i * t_size(V->data_type));
 
-    if (i < V->size - 1) {
+    if (i < V->count - 1) {
         /* Assume that nested types remain intact when only the top level data
          * is moved. */
-        memmove(V->data + i * t_size(V->element_type),
-                V->data + (i + 1) * t_size(V->element_type),
-                (V->size - (i + 1)) * t_size(V->element_type));
+        memmove(V->data + i * t_size(V->data_type),
+                V->data + (i + 1) * t_size(V->data_type),
+                (V->count - (i + 1)) * t_size(V->data_type));
     }
 
-    --V->size;
+    --V->count;
 
     /* Contract if we are below 25% memory usage. If this fails it's not a
      * disaster so we just log it. */
-    if (V->size < (V->capacity >> 2) && V->capacity > VECTOR_MIN_CAPACITY) {
-        int rc = Vector_shrink_to_fit(V);
-        if (rc != 0) log_info("Failed to contract internal memory.");
+    if (V->count < (V->capacity >> 2) && V->capacity > VECTOR_MIN_CAPACITY) {
+        int rc = vector_shrink_to_fit(V);
+        if (rc < 0) log_warn("failed to contract internal memory");
     }
 
     return 0;
@@ -221,23 +206,29 @@ error:
     return -1;
 }
 
-int Vector_push_back(Vector *V, const void *in)
+int vector_push_back(vector *V, const void *in)
 {
-    return Vector_set(V, V->size, in);
+    return vector_set(V, V->count, in);
 }
 
-int Vector_pop_back(Vector *V, void *out)
+/*************************************************************************************************
+ * int vector_pop_back(vector *V);
+ * Pop the last element. Return 1 if there was one, 0 if the vector was empty, or -1 on error. */
+
+int vector_pop_back(vector *V)
 {
     check_ptr(V);
-    check(V->size > 0, "Attempt to pop_back from empty vector.");
+    if (V->count == 0) return 0;
 
-    if (out) {
-        check(!Vector_get(V, V->size - 1, out), "Failed to get element.");
+    t_destroy(V->data_type, vector_get(V, V->count - 1));
+    --V->count;
+
+    if (V->count < (V->capacity >> 2) && V->capacity > VECTOR_MIN_CAPACITY) {
+        int rc = vector_shrink_to_fit(V);
+        if (rc < 0) log_warn("failed to contract internal memory");
     }
 
-    check(!Vector_remove(V, V->size - 1), "Failed to remove element.");
-
-    return 0;
+    return 1;
 error:
     return -1;
 }

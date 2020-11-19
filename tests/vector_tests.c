@@ -5,88 +5,84 @@
 #include "type_interface.h"
 #include "vector.h"
 
-static Vector *V;
-static int rc;
+static vector *V;
 
 int test_vector_new(void)
 {
-    V = Vector_new(&int_type);
+    V = vector_new(&int_type);
     test(V->data != NULL);
-    test(V->size == 0);
+    test(V->count == 0);
     test(V->capacity == VECTOR_MIN_CAPACITY);
-    test(V->element_type->size == sizeof(int));
+    test(V->data_type->size == sizeof(int));
     return 0;
 }
 
 int test_vector_usage(void)
 {
-    int in = 1;
-    int out = 0;
+    int rc, in, *out;
+    in = 1;
 
-    rc = Vector_push_back(V, &in);
+    rc = vector_push_back(V, &in);
     test(rc == 0);
-    test(V->size == 1);
+    test(V->count == 1);
 
-    rc = Vector_get(V, 0, &out);
-    test(rc == 0);
-    test(out == in);
+    out = vector_get(V, 0);
+    test(*out == in);
 
-    out = 0;
-    rc = Vector_pop_back(V, &out);
-    test(rc == 0);
-    test(V->size == 0);
-    test(out == in);
+    rc = vector_pop_back(V);
+    test(rc == 1);
+    test(V->count == 0);
 
     for (int i = 0; i < 17; ++i) {
-        rc = Vector_push_back(V, &i);
+        rc = vector_push_back(V, &i);
         test(rc == 0);
-        test(V->size == (size_t)i + 1);
+        test(V->count == (size_t)i + 1);
     }
     test(V->capacity == 32);
 
     for (int i = 16; i >= 0; --i) {
-        rc = Vector_pop_back(V, &out);
-        test(rc == 0);
-        test(out == i);
+        rc = vector_pop_back(V);
+        test(rc == 1);
     }
     test(V->capacity == VECTOR_MIN_CAPACITY);
 
-    test_fail(Vector_pop_back(V, &out) == -1, "Vector_pop_back should fail.");
+    rc = vector_pop_back(V);
+    test(rc == 0);
 
     return 0;
 }
 
 int test_vector_teardown(void)
 {
-    Vector_clear(V);
+    vector_clear(V);
     test(V->data != NULL);
     test(V->capacity == VECTOR_MIN_CAPACITY);
-    test(V->size == 0);
-    Vector_delete(V);
+    test(V->count == 0);
+    vector_delete(V);
     return 0;
 }
 
 int test_vector_of_strings(void)
 {
-    V = Vector_new(&str_type);
+    V = vector_new(&str_type);
     test(V != NULL);
 
     str *s = str_new();
     str_assign_cstr(s, "Haydn");
-    Vector_push_back(V, s);
+    vector_push_back(V, s);
 
     str_assign_cstr(s, "Mozart");
-    Vector_push_back(V, s);
+    vector_push_back(V, s);
 
     str_assign_cstr(s, "Beethoven");
-    Vector_push_back(V, s);
+    vector_push_back(V, s);
 
-    str out;
-    Vector_pop_back(V, &out);
-    test(str_compare(s, &out) == 0);
-    str_destroy(&out);
+    str *last = vector_last(V);
+    test(str_compare(s, last) == 0);
 
-    Vector_delete(V);
+    vector_pop_back(V);
+
+    vector_delete(V);
     str_delete(s);
     return 0;
 }

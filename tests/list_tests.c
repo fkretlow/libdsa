@@ -29,13 +29,14 @@ int test_list_usage(void)
     test(L->first->next == NULL && L->first->prev == NULL);
     test(L->count == 1);
 
-    val = 0;
-    rc = list_pop_back(L, &val);
-    test(rc == 0);
+    ip = list_last(L);
+    test(*ip == val);
+
+    rc = list_pop_back(L);
+    test(rc == 1);
     test(L->first == NULL);
     test(L->last == NULL);
     test(L->count == 0);
-    test(val == 1);
 
     for (int i = 0; i < 8; ++i) {
         rc = list_push_back(L, &i);
@@ -44,9 +45,8 @@ int test_list_usage(void)
     test(L->count == 8);
 
     for (int i = 7; i >= 0; --i) {
-        rc = list_pop_back(L, &val);
-        test(rc == 0);
-        test(val == i);
+        rc = list_pop_back(L);
+        test(rc == 1);
     }
     test(L->count == 0);
 
@@ -67,23 +67,22 @@ int test_list_usage(void)
     test(rc == 0);
     test(L->count == 9);
 
-    val = 0;
-    rc = list_get(L, 3, &val);
-    test(rc == 0);
-    test(val == -1);
+    ip = list_get(L, 3);
+    test(ip != NULL);
+    test(*ip == -1);
 
     rc = list_remove(L, 3);
     test(rc == 0);
     test(L->count == 8);
 
     for (int i = 7; i >= 0; --i) {
-        rc = list_pop_front(L, &val);
-        test(rc == 0);
-        test(val == i);
+        rc = list_pop_front(L);
+        test(rc == 1);
     }
     test(L->count == 0);
 
-    test_fail(list_pop_back(L, NULL) == -1, "list_pop_back on empty list didn't fail.");
+    rc = list_pop_back(L);
+    test(rc == 0);
 
     return 0;
 }
@@ -98,6 +97,8 @@ int test_list_teardown(void)
 
 int test_list_of_strings(void)
 {
+    int rc;
+
     L = list_new(&str_type);
     test(L != NULL);
 
@@ -111,10 +112,17 @@ int test_list_of_strings(void)
     str_assign_cstr(s, "Beethoven");
     list_push_back(L, s);
 
-    str out;
-    list_pop_back(L, &out);
-    test(str_compare(s, &out) == 0);
-    str_destroy(&out);
+    str *out;
+    out = list_last(L);
+    test(str_compare(s, out) == 0);
+
+    for (int i = 0; i < 3; ++i) {
+        rc = list_pop_back(L);
+        test(rc == 1);
+    }
+
+    rc = list_pop_back(L);
+    test(rc == 0);
 
     list_delete(L);
     str_delete(s);

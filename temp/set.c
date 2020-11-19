@@ -91,13 +91,13 @@ Set *Set_union(Set *S1, Set *S2)
 
 static inline int push_pointer_into_vector(void *e, void *V)
 {
-    return Vector_push_back(V, &e);
+    return vector_push_back(V, &e);
 }
 
 Set *Set_intersection(Set *S1, Set *S2)
 {
     Set *I = NULL;
-    Vector V1, V2;
+    vector V1, V2;
     void *e1, *e2;
     int comp;
 
@@ -106,36 +106,36 @@ Set *Set_intersection(Set *S1, Set *S2)
     check(S1->key_type == S2->key_type, "Element types don't match.");
 
     I = Set_new(S1->key_type);
-    Vector_initialize(&V1, &pointer_type);
-    Vector_initialize(&V2, &pointer_type);
+    vector_initialize(&V1, &pointer_type);
+    vector_initialize(&V2, &pointer_type);
 
-    Vector_reserve(&V1, Set_size(S1));
-    Vector_reserve(&V2, Set_size(S2));
+    vector_reserve(&V1, Set_size(S1));
+    vector_reserve(&V2, Set_size(S2));
 
     Set_traverse_r(S1, push_pointer_into_vector, &V1);
     Set_traverse_r(S2, push_pointer_into_vector, &V2);
 
-    Vector_pop_back(&V1, &e1);
-    Vector_pop_back(&V2, &e2);
+    vector_pop_back(&V1, &e1);
+    vector_pop_back(&V2, &e2);
 
     for ( ;; ) {
         comp = t_compare(S1->key_type, e1, e2);
         if (comp < 0) {
-            if (Vector_size(&V1) == 0) break;
-            Vector_pop_back(&V1, &e1);
+            if (vector_size(&V1) == 0) break;
+            vector_pop_back(&V1, &e1);
         } else if (comp > 0) {
-            if (Vector_size(&V2) == 0) break;
-            Vector_pop_back(&V2, &e2);
+            if (vector_size(&V2) == 0) break;
+            vector_pop_back(&V2, &e2);
         } else { /* comp == 0 */
             Set_insert(I, e1);
-            if (Vector_size(&V1) == 0 || Vector_size(&V2) == 0) break;
-            Vector_pop_back(&V1, &e1);
-            Vector_pop_back(&V2, &e2);
+            if (vector_size(&V1) == 0 || vector_size(&V2) == 0) break;
+            vector_pop_back(&V1, &e1);
+            vector_pop_back(&V2, &e2);
         }
     }
 
-    Vector_destroy(&V1);
-    Vector_destroy(&V2);
+    vector_destroy(&V1);
+    vector_destroy(&V2);
 
     return I;
 

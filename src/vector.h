@@ -7,29 +7,35 @@
 #define VECTOR_MIN_CAPACITY 8lu
 
 typedef struct {
-    char *data;
-    size_t size;
-    size_t capacity;
-    t_intf *element_type;
-} Vector;
+    char *      data;
+    size_t      count;
+    size_t      capacity;
+    t_intf *    data_type;
+} vector;
 
-#define Vector_capacity(V) (V)->capacity
-#define Vector_size(V) (V)->size
-#define Vector_empty(V) ((V)->size == 0)
+#define vector_capacity(V)  (V)->capacity
+#define vector_count(V)     (V)->count
+#define vector_empty(V)     ((V)->count == 0)
 
-int Vector_initialize(Vector *V, t_intf *element_type);
-void Vector_destroy(Vector *V);
-Vector *Vector_new(t_intf *element_type);
-void Vector_delete(Vector *V);
+#define vector_get(V, i) \
+    (i < ((V)->count) ? (void*)((V)->data + (i) * t_size((V)->data_type)) : NULL)
+#define vector_first(V) \
+    ((V)->count > 0 ? (void*)(V)->data : NULL)
+#define vector_last(V) \
+    ((V)->count > 0 ? (void*)((V)->data + ((V)->count - 1) * t_size((V)->data_type)) : NULL)
 
-int Vector_reserve(Vector *V, const size_t capacity);
-int Vector_shrink_to_fit(Vector *V);
-void Vector_clear(Vector *V);
-int Vector_get(const Vector *V, const size_t i, void *out);
-int Vector_set(Vector *V, const size_t i, const void *in);
-int Vector_insert(Vector *V, const size_t i, const void *in);
-int Vector_remove(Vector *V, const size_t i);
-int Vector_push_back(Vector *V, const void *in);
-int Vector_pop_back(Vector *V, void *out);
+int         vector_initialize       (vector *V, t_intf *dt);
+vector *    vector_new              (           t_intf *dt);
+void        vector_destroy          (vector *V);
+void        vector_delete           (vector *V);
+
+int         vector_reserve          (vector *V, const size_t capacity);
+int         vector_shrink_to_fit    (vector *V);
+void        vector_clear            (vector *V);
+int         vector_set              (vector *V, const size_t i, const void *in);
+int         vector_insert           (vector *V, const size_t i, const void *in);
+int         vector_remove           (vector *V, const size_t i);
+int         vector_push_back        (vector *V, const void *in);
+int         vector_pop_back         (vector *V);
 
 #endif // _vector_h
