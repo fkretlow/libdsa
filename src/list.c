@@ -4,17 +4,24 @@
 
 static inline int list_invariant(const list *L)
 {
-    if (L->first) check(L->last, "list invariant violated: L->first && !L->last");
-    if (L->last) check(L->first, "list invariant violated: !L->first && L->last");
-    if (L->first) check(L->count > 0, "list invariant violated: L->first && L->count == 0");
+    if (L->first)   check(L->last,      "list invariant violated: L->first && !L->last");
+    if (L->last)    check(L->first,     "list invariant violated: !L->first && L->last");
+    if (L->first)   check(L->count > 0, "list invariant violated: L->first && L->count == 0");
     return 0;
 error:
     return -1;
 }
 
-static inline listn *listn_new(void)
+#define listn_size(L) (sizeof(listn) + t_size((L)->data_type))
+
+static inline listn *listn_new(const list *L)
 {
-    listn *n = calloc(1, sizeof(*n));
+    log_call("L=%p", L);
+    assert(L && L->data_type);
+    size_t size = listn_size(L);
+    assert(size > sizeof(listn));
+
+    listn *n = calloc(1, size);
     check_alloc(n);
     return n;
 error:
@@ -23,55 +30,28 @@ error:
 
 static inline void listn_delete(const list *L, listn *n)
 {
-    if (n) {
-        if (n->data && L) {
-            t_destroy(L->element_type, n->data);
-        }
-        free(n->data);
-        free(n);
-    }
+    log_call("L=%p, n=%p", L, n);
+    assert(L && L->data_type && n);
+    if (n->has_data) t_destroy(L->data_type, listn_data(n));
+    free(n);
 }
 
-static int listn_set(const list *L, listn *n, const void *in)
+static void listn_set(const list *L, listn *n, const void *in)
 {
-    check_ptr(L);
-    check_ptr(n);
-    check_ptr(in);
+    log_call("L=%p, n=%p, in=%p", L, n, in);
+    assert(L && L->data_type && n && in);
 
-    if (n->data) {
-        t_destroy(L->element_type, n->data);
-    } else {
-        n->data = t_allocate(L->element_type, 1);
-        check(n->data != NULL, "Failed to allocate memory for new element.");
-    }
-
-    t_copy(L->element_type, n->data, in);
-
-    return 0;
-error:
-    return -1;
+    if (n->has_data) t_destroy(L->data_type, listn_data(n));
+    t_copy(L->data_type, listn_data(n), in);
 }
 
-static inline int listn_get(const list *L, listn *n, void *out)
+int list_initialize(list *L, t_intf *t)
 {
-    check_ptr(L);
-    check_ptr(n);
-    check_ptr(out);
-
-    t_copy(L->element_type, out, n->data);
-
-    return 0;
-error:
-    return -1;
-}
-
-int list_initialize(list *L, t_intf *element_type)
-{
-    check_ptr(element_type);
+    check_ptr(t);
 
     L->first = L->last = NULL;
     L->count = 0;
-    L->element_type = element_type;
+    L->data_type = t;
 
     assert(!list_invariant(L));
     return 0;
@@ -79,12 +59,12 @@ error:
     return -1;
 }
 
-list *list_new(t_intf *element_type)
+list *list_new(t_intf *t)
 {
     list *L = malloc(sizeof(*L));
     check_alloc(L);
 
-    int rc = list_initialize(L, element_type);
+    int rc = list_initialize(L, t);
     check(rc == 0, "Failed to initialize new list.");
 
     return L;
@@ -139,8 +119,8 @@ int list_get(const list *L, const size_t i, void *out)
     check_ptr(out);
 
     listn *n = list_get_node(L, i);
-    check(n != NULL, "Failed to get node at index %lu.", i);
-    check(!listn_get(L, n, out), "Failed to hand out data.");
+    check(n != NULL, "failed to get node at index %lu", i);
+    t_copy(L->data_type, out, listn_data(n));
 
     return 0;
 error:
@@ -155,7 +135,7 @@ int list_set(list *L, const size_t i, const void *in)
 
     listn *n = list_get_node(L, i);
     check(n != NULL, "Failed to get node at index %lu.", i);
-    check(!listn_set(L, n, in), "Failed to write data to new node.");
+    listn_set(L, n, in);
 
     return 0;
 error:
@@ -168,9 +148,9 @@ int list_insert(list *L, const size_t i, const void *in)
     assert(!list_invariant(L));
     check_ptr(in);
 
-    listn *n = listn_new();
+    listn *n = listn_new(L);
     check(n != NULL, "Failed to make new node.");
-    check(!listn_set(L, n, in), "Failed to write data to new node.");
+    listn_set(L, n, in);
 
     if (i == 0) {
         n->next = L->first;
@@ -236,9 +216,9 @@ int list_push_back(list *L, const void *in)
     assert(!list_invariant(L));
     check_ptr(in);
 
-    listn *n = listn_new();
+    listn *n = listn_new(L);
     check(n != NULL, "Failed to make new node.");
-    check(!listn_set(L, n, in), "Failed to write data to new node.");
+    listn_set(L, n, in);
 
     if (L->count == 0) {
         L->first = L->last = n;
@@ -263,7 +243,7 @@ int list_pop_front(list *L, void *out)
     check(L->count > 0, "Attempt to pop from empty list.");
 
     listn *n = L->first;
-    check(!listn_get(L, n, out), "Failed to hand out data.");
+    t_copy(L->data_type, out, listn_data(n));
     check(!list_remove(L, 0), "Failed to remove first node.");
 
     assert(!list_invariant(L));
@@ -280,7 +260,7 @@ int list_pop_back(list *L, void *out)
     check(L->count > 0, "Attempt to pop from empty list.");
 
     listn *n = L->last;
-    check(!listn_get(L, n, out), "Failed to hand out data.");
+    t_copy(L->data_type, out, listn_data(n));
     check(!list_remove(L, L->count - 1), "Failed to remove last node.");
 
     assert(!list_invariant(L));

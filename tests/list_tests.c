@@ -13,7 +13,7 @@ int test_list_new(void)
     L = list_new(&int_type);
     test(L != NULL);
     test(L->first == NULL && L->last == NULL);
-    test(L->element_type->size == sizeof(int));
+    test(L->data_type->size == sizeof(int));
     test(L->count == 0);
     return 0;
 }

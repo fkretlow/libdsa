@@ -12,7 +12,7 @@ int test_queue_new(void)
     Q = Queue_new(&int_type);
     test(Q != NULL);
     test(Q->first == NULL && Q->last == NULL);
-    test(Q->element_type->size == sizeof(int));
+    test(Q->data_type->size == sizeof(int));
     test(Q->count == 0);
     return 0;
 }
