@@ -67,12 +67,21 @@ void btn_delete_rec(const bt *T, btn *n)
 
 int btn_insert(
         bt *T,
-        btn *n,         /* the root of the subtree */
+        btn *n,         /* the root of the subtree, NULL if the tree is empty */
         const void *k,  /* the key to insert */
         btn **n_out)    /* pass back a pointer to the new node, can be NULL */
 {
     log_call("T=%p, n=%p, k=%p, n_out=%p", T, n, k, n_out);
-    assert(T && T->key_type && n && k);
+    assert(T && T->key_type && k);
+
+    if (n == NULL) {
+        assert(T->count == 0);
+        T->root = btn_new(T);
+        T->root->parent = NULL;
+        btn_set_key(T, T->root, k);
+        if (n_out) *n_out = T->root;
+        return 1;
+    }
 
     int comp = t_compare(T->key_type, k, btn_key(T, n));
     if (comp == 0) {
@@ -124,7 +133,7 @@ int btn_remove(
     }
 
     if (n->left && n->right) {
-        /* find the node with the next greater key to swap */
+        /* find the node with the next greater key and swap */
         btn *s = n->right;
         while (s->left) s = s->left;
 
@@ -132,8 +141,7 @@ int btn_remove(
         btn_destroy_key(T, n);
         if (btn_has_value(n)) btn_destroy_value(T, n);
 
-        /* copy over the data from s */
-        /* memcpy(btn_key(T, n), btn_key(T, s), btn_data_size(T)); */
+        /* move over the data from s */
         t_move(T->key_type, btn_key(T, n), btn_key(T, s));
         s->flags.plain.has_key = 0;
         n->flags.plain.has_key = 1;
@@ -443,6 +451,7 @@ int bt_has(const bt *T, const void *k)
 {
     check_ptr(T);
     check_ptr(k);
+    check(T->key_type, "no key type defined");
 
     btn *n = T->root;
     int comp;
@@ -469,19 +478,11 @@ int bt_insert(bt *T, const void *k)
     log_call("T=%p, k=%p", T, k);
     check_ptr(T);
     check_ptr(k);
-    assert(T->key_type);
+    check(T->key_type, "no key type defined");
 
-    int rc;
-
-    if (T->root) {
-        rc = btn_insert(T, T->root, k, NULL);
-    } else {
-        T->root = btn_new(T);
-        T->root->parent = NULL;
-        btn_set_key(T, T->root, k);
-        rc = 1;
-    }
+    int rc = btn_insert(T, T->root, k, NULL);
     if (rc == 1) ++T->count;
+
     return rc;
 error:
     return -1;
@@ -497,7 +498,7 @@ int bt_remove(bt *T, const void *k)
     log_call("T=%p, k=%p", T, k);
     check_ptr(T);
     check_ptr(k);
-    assert(T->key_type);
+    check(T->key_type, "no key type defined");
 
     int rc = (T->root) ? btn_remove(T, T->root, k) : 0;
     if (rc == 1) --T->count;
@@ -505,4 +506,57 @@ int bt_remove(bt *T, const void *k)
     return rc;
 error:
     return -1;
+}
+
+/*************************************************************************************************
+ * int bt_set(bt *T, const void *k, const void *v)
+ * Set the value of the node with the key k to v, or insert a node with k and v if k doesn't
+ * exsit. Return 0 or 1 depending on whether a node was added or k was already there, or -1 on
+ * error. */
+
+int bt_set(bt *T, const void *k, const void *v)
+{
+    log_call("T=%p, k=%p, v=%p", T, k, v);
+    check_ptr(T);
+    check_ptr(k);
+    check_ptr(v);
+    check(T->key_type, "no key type defined");
+    check(T->value_type, "no value type defined");
+
+    btn *n = NULL;
+    int rc = btn_insert(T, T->root, k, &n);
+    if (rc == 1) ++T->count;
+
+    if (btn_has_value(n)) btn_destroy_value(T, n);
+    btn_set_value(T, n, v);
+
+    return rc;
+error:
+    return -1;
+}
+
+/*************************************************************************************************
+ * void *bt_get(bt *T, const void *k);
+ * Return a pointer to the value mapped to k in T or NULL if k doesn't exist. */
+
+void *bt_get(bt *T, const void *k)
+{
+    check_ptr(T);
+    check_ptr(k);
+    check(T->key_type, "no key type defined");
+    check(T->value_type, "no value type defined");
+
+    btn *n = T->root;
+    int comp;
+    for ( ;; ) {
+        if (!n) return NULL;
+        comp = t_compare(T->key_type, k, btn_key(T, n));
+        if (comp == 0) return btn_value(T, n);
+        else if (comp < 0) n = n->left;
+        else if (comp > 0) n = n->right;
+    }
+
+error:
+    return NULL;
+
 }

@@ -2,11 +2,26 @@
 #define _test_utils_h
 
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include "check.h"
 #include "str.h"
+
+str *random_str(uint32_t l)
+{
+    int rc;
+    str *s = str_new();
+    rc = str_reserve(s, l + 1);
+    check_rc(rc, "str_reserve");
+
+    for (unsigned i = 0; i < l; ++i) str_push_back(s, rand() % 26 + 97);
+    return s;
+
+error:
+    return NULL;
+}
 
 str *serialize_int(const void *ip)
 {

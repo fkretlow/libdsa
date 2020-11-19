@@ -29,7 +29,7 @@ typedef struct str {
 #define str_empty(S) ((S)->slen == 0)
 #define str_data(s) ( (s)->data_external \
                             ? (s)->data.external.data \
-                            : (s)->data.internal.data )
+                            : (char*)(s)->data.internal.data )
 #define str_capacity(s) ( (s)->data_external \
                                 ? (s)->data.external.capacity \
                                 : STR_INTERNAL_CAPACITY )

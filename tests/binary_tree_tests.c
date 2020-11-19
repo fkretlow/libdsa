@@ -5,6 +5,7 @@
 #include "binary_tree.h"
 #include "str.h"
 #include "test.h"
+#include "test_utils.h"
 #include "type_interface.h"
 
 #define NMEMB 256
@@ -359,6 +360,59 @@ int test_bt_remove(void)
     bt_delete(T);
     return 0;
 }
+
+int test_bt_set_get(void)
+{
+    bt *T = bt_new(NONE, &str_type, &int_type);
+    test(T);
+
+    int rc, i, *v;
+    str *s;
+    str *keys[NMEMB] = { 0 };
+    int values[NMEMB] = { 0 };
+
+    for (i = 0; i < NMEMB; ++i) {
+        s = random_str(8);
+        while (bt_has(T, s)) {
+            str_delete(s);
+            s = random_str(8);
+        }
+        keys[i] = s;
+        values[i] = i;
+        rc = bt_set(T, s, &i);
+        test(rc == 1);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        v = bt_get(T, keys[i]);
+        test(v != NULL);
+        test(*v == values[i]);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        values[i] *= 10;
+        rc = bt_set(T, keys[i], &values[i]);
+        test(rc == 0);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        v = bt_get(T, keys[i]);
+        test(v != NULL);
+        test(*v == values[i]);
+    }
+
+    for (i = 0; i < NMEMB; ++i) {
+        rc = bt_remove(T, keys[i]);
+        test(rc == 1);
+        rc = bt_has(T, keys[i]);
+        test(rc == 0);
+    }
+
+    for (i = 0; i < NMEMB; ++i) str_delete(keys[i]);
+    bt_delete(T);
+    return 0;
+}
+
 int main(void)
 {
     test_suite_start();
@@ -374,6 +428,7 @@ int main(void)
     run_test(test_bt_has);
     run_test(test_bt_insert);
     run_test(test_bt_remove);
+    run_test(test_bt_set_get);
 
     test_suite_end();
 }
