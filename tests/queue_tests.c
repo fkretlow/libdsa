@@ -13,7 +13,7 @@ int test_queue_new(void)
     test(Q != NULL);
     test(Q->first == NULL && Q->last == NULL);
     test(Q->element_type->size == sizeof(int));
-    test(Q->size == 0);
+    test(Q->count == 0);
     return 0;
 }
 
@@ -25,14 +25,14 @@ int test_queue_usage(void)
         rc = Queue_enqueue(Q, &i);
         test(rc == 0);
     }
-    test(Q->size == 8);
+    test(Q->count == 8);
 
     for (int i = 0; i < 8; ++i) {
         rc = Queue_dequeue(Q, &val);
         test(rc == 0);
         test(val == i);
     }
-    test(Q->size == 0);
+    test(Q->count == 0);
 
     return 0;
 }
@@ -41,7 +41,7 @@ int test_queue_teardown(void)
 {
 
     Queue_clear(Q);
-    test(Q->size == 0);
+    test(Q->count == 0);
     Queue_delete(Q);
     return 0;
 }

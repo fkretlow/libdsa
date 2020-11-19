@@ -6,41 +6,41 @@
 
 #include "type_interface.h"
 
-struct ListNode;
-typedef struct ListNode {
-    struct ListNode *prev;
-    struct ListNode *next;
+struct listn;
+typedef struct listn {
+    struct listn *prev;
+    struct listn *next;
     char *data;
-} ListNode;
+} listn;
 
-typedef struct List {
-    ListNode *first;
-    ListNode *last;
-    size_t size;
+typedef struct list {
+    listn *first;
+    listn *last;
+    size_t count;
     t_intf *element_type;
-} List;
+} list;
 
-#define List_first(L) ((L)->first ? (L)->first->data : NULL)
-#define List_last(L) ((L)->last ? (void*)((L)->last->data) : NULL)
-#define List_size(L) (L)->size
-#define List_empty(L) ((L)->size == 0)
+#define list_first(L)   ((L)->first ? (L)->first->data : NULL)
+#define list_last(L)    ((L)->last ? (void*)((L)->last->data) : NULL)
+#define list_count(L)    (L)->count
+#define list_empty(L)   ((L)->count == 0)
 
-int List_initialize(List *L, t_intf *element_type);
-List *List_new(t_intf *element_type);
-void List_delete(List *L);
-void List_clear(List *L);
+int     list_initialize     (list *L, t_intf *element_type);
+list *  list_new            (t_intf *element_type);
+void    list_delete         (list *L);
+void    list_clear          (list *L);
 
-int List_get(const List *L, const size_t i, void *out);
-int List_set(List *L, const size_t i, const void *in);
-int List_insert(List *L, const size_t i, const void *in);
-int List_remove(List *L, const size_t i);
-#define List_push_front(l, in) List_insert((l), 0, (in))
-int List_push_back(List *L, const void *in);
-int List_pop_front(List *L, void *out);
-int List_pop_back(List *L, void *out);
+int     list_get            (const list *L, const size_t i, void *out);
+int     list_set            (      list *L, const size_t i, const void *in);
+int     list_insert         (      list *L, const size_t i, const void *in);
+int     list_remove         (      list *L, const size_t i);
+#define list_push_front(l, in) list_insert((l), 0, (in))
+int     list_push_back      (      list *L,                 const void *in);
+int     list_pop_front      (      list *L,                 void *out);
+int     list_pop_back       (      list *L,                 void *out);
 
-ListNode* __N;
-#define List_foreach(L, D) \
+listn* __N;
+#define list_foreach(L, D) \
     for (__N = (L)->first, D = (void*)(__N->data); \
             __N != NULL; __N = __N->next, D = __N ? (void*)(__N->data) : NULL)
 
