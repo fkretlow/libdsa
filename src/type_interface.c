@@ -20,6 +20,33 @@ void t_copy(const t_intf *T, void *dest, const void *src)
     }
 }
 
+void t_move(const t_intf *T, void *dest, void *src)
+{
+    if (T->move) {
+        T->move(dest, src);
+    } else {
+        memmove(dest, src, T->size);
+        memset(src, 0, T->size);
+    }
+}
+
+int t_swap(const t_intf *T, void *a, void *b)
+{
+    if (T->swap) {
+        T->swap(a, b);
+    } else {
+        void *temp = malloc(T->size);
+        check_alloc(temp);
+        t_move(T, temp, a);
+        t_move(T, a, b);
+        t_move(T, b, temp);
+        free(temp);
+    }
+    return 0;
+error:
+    return -1;
+}
+
 void t_destroy(const t_intf *T, void *obj)
 {
     if (T->destroy) T->destroy(obj);

@@ -132,35 +132,27 @@ int btn_remove(
         btn_destroy_key(T, n);
         if (btn_has_value(n)) btn_destroy_value(T, n);
 
-        /* copy over the data from s, assuming that nested types remain intact when only the top
-         * level data is moved */
-        memcpy(btn_key(T, n), btn_key(T, s), btn_data_size(T));
+        /* copy over the data from s */
+        /* memcpy(btn_key(T, n), btn_key(T, s), btn_data_size(T)); */
+        t_move(T->key_type, btn_key(T, n), btn_key(T, s));
+        s->flags.plain.has_key = 0;
         n->flags.plain.has_key = 1;
-        if (T->value_type) n->flags.plain.has_value = 1;
 
-        /* zero out the data in s to avoid destroying nested data when s is deleted */
-        memset(btn_key(T, s), 0, btn_data_size(T));
-        s->flags.plain.has_key = s->flags.plain.has_value = 0;
+        if (btn_has_value(s)) {
+            t_move(T->value_type, btn_value(T, n), btn_value(T, s));
+            s->flags.plain.has_value = 0;
+            n->flags.plain.has_value = 1;
+        }
 
         /* move on, delete s, now stored in n */
         n = s;
     }
 
-    if (n->left) {
-        btn_replace_child(T, n->parent, n, n->left);
-    } else if (n->right) {
-        btn_replace_child(T, n->parent, n, n->right);
-    } else { /* no children, btn_replace_child can't handle this case */
-        if (n->parent == NULL) {
-            assert(n == T->root);
-            T->root = NULL;
-        } else if (n == n->parent->left) {
-            n->parent->left = NULL;
-        } else if (n == n->parent->right) {
-            n->parent->right = NULL;
-        }
-    }
-    /* Now n is decoupled. btn_delete doesn't care about the links in n. */
+    if      (n->left)   btn_replace_child(T, n->parent, n, n->left);
+    else if (n->right)  btn_replace_child(T, n->parent, n, n->right);
+    else                btn_replace_child(T, n->parent, n, NULL);
+    /* Now n is decoupled from adjacent nodes and btn_delete doesn't care about the links in n
+     * itself. */
     btn_delete(T, n);
     return 1;
 }
@@ -299,20 +291,20 @@ void btn_replace_child(
         bt *T,  /* the tree, needed if c is the root */
         btn *p, /* the parent where a child should be replaced, NULL if c is the root */
         btn *c, /* the child to replace */
-        btn *s) /* the new child (successor) */
+        btn *s) /* the new child (successor), can be NULL */
 {
     log_call("T=%p, p=%p, c=%p s=%p", T, p, c, s);
-    assert(T && c && s);
+    assert(T && c);
 
     if (p == NULL) {
         assert(c == T->root);
         T->root = s;
-        s->parent = NULL;
+        if (s) s->parent = NULL;
     } else {
         assert(c == p->left || c == p->right);
         if (c == p->left)  p->left = s;
         else               p->right = s;
-        s->parent = p;
+        if (s) s->parent = p;
     }
 }
 

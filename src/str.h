@@ -35,23 +35,28 @@ typedef struct str {
                                 : STR_INTERNAL_CAPACITY )
 
 int         str_initialize      (str *s);
-void        str_destroy         (void *s);
 str *       str_new             (void);
+void        str_destroy         (void *s);
 void        str_delete          (str *s);
+
 int         str_reserve         (str *s, const size_t capacity);
 int         str_shrink_to_fit   (str *s);
+
 void        str_clear           (str *s);
+
 str *       str_copy            (const str *src);
 void        str_copy_to         (void *dest, const void *src);
+
 int         str_assign          (str *dest, const str *src);
 int         str_assign_cstr     (str *dest, const char *cstr);
 str *       str_from_cstr       (const char *cstr);
-int         str_compare         (const void *a, const void *b);
 int         str_append          (str *s1, const str *s2);
 int         str_append_cstr     (str *s, const char *cstr);
 int         str_push_back       (str *s, const char c);
 int         str_pop_back        (str *s, char *out);
 str *       str_concat          (const str *s1, const str *s2);
+
+int         str_compare         (const void *a, const void *b);
 uint32_t    str_hash            (const void *s);
 void        str_print           (FILE *stream, const void *s);
 
