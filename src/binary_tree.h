@@ -70,6 +70,8 @@ int     bt_traverse_values_r    (bt *T, int (*f)(void *v, void *p), void *p);
 int     bt_traverse_nodes       (bt *T, int (*f)(btn *n, void *p), void *p);
 int     bt_traverse_nodes_r     (bt *T, int (*f)(btn *n, void *p), void *p);
 
+int     bt_invariant            (const bt *T);
+
 #define bt_count(T) (T)->count
 
 /* Node subroutines */

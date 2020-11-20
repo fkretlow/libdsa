@@ -325,19 +325,19 @@ void btn_replace_child(
  * The type interface for values can be NULL if the tree is going to store single elements. */
 
 int bt_initialize(
-        bt *T,          /* address of the bt to initialize */
-        uint8_t flavor, /* balancing strategy, one of NONE, RED_BLACK, and AVL */
-        t_intf *kt,     /* type interface for keys */
-        t_intf *vt)     /* type interface for values, can be NULL */
+        bt *T,              /* address of the bt to initialize */
+        uint8_t flavor,     /* balancing strategy, one of NONE, RED_BLACK, and AVL */
+        t_intf *kt,         /* type interface for keys */
+        t_intf *vt)         /* type interface for values, can be NULL */
 {
     log_call("T=%p, flavor=%u, kt=%p, vt=%p", T, flavor, kt, vt);
 
-    check(T != NULL, "T == NULL");
-    check(flavor <= 2, "flavor == %u", flavor);
-    check(kt != NULL, "kt == NULL");
-    check(kt->compare != NULL, "kt->compare == NULL");
-    check(kt->size > 0, "kt->size == 0");
-    check(!vt || vt->size > 0, "vt->size == 0");
+    check_ptr(T);
+    check(flavor <= 2, "bad flavor %u", flavor);
+    check(kt != NULL, "no key type given");
+    check(kt->compare != NULL, "key type but no comparison function");
+    check(kt->size > 0, "size of 0 for keys?");
+    check(!vt || vt->size > 0, "size of 0 for values?");
 
     T->root = NULL;
     T->count = 0;
@@ -345,6 +345,7 @@ int bt_initialize(
     T->key_type = kt;
     T->value_type = vt;
 
+    assert(bt_invariant(T) == 0);
     return 0;
 error:
     return -1;
@@ -374,6 +375,7 @@ void bt_clear(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
+        assert(bt_invariant(T) == 0);
         if (T->root) btn_delete_rec(T, T->root);
         T->root = NULL;
         T->count = 0;
@@ -389,6 +391,7 @@ void bt_destroy(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
+        assert(bt_invariant(T) == 0);
         if (T->root) btn_delete_rec(T, T->root);
         memset(T, 0, sizeof(*T));
     }
@@ -398,6 +401,7 @@ void bt_delete(bt *T)
 {
     log_call("T=%p", T);
     if (T) {
+        assert(bt_invariant(T) == 0);
         if (T->root) btn_delete_rec(T, T->root);
         free(T);
     }
@@ -414,6 +418,7 @@ bt *bt_copy(const bt *src)
     log_call("src=%p", src);
     bt *dest = NULL;
     check_ptr(src);
+    assert(bt_invariant(src) == 0);
 
     dest = bt_new(src->flavor, src->key_type, src->value_type);
     check(dest != NULL, "failed to create new tree");
@@ -432,6 +437,7 @@ int bt_copy_to(bt *dest, const bt *src)
     log_call("dest=%p, src=%p", dest, src);
     check_ptr(dest);
     check_ptr(src);
+    assert(bt_invariant(src) == 0);
 
     int rc = bt_initialize(dest, src->flavor, src->key_type, src->value_type);
     check_rc(rc, "bt_initialize");
@@ -452,6 +458,7 @@ int bt_has(const bt *T, const void *k)
     check_ptr(T);
     check_ptr(k);
     check(T->key_type, "no key type defined");
+    assert(bt_invariant(T) == 0);
 
     btn *n = T->root;
     int comp;
@@ -479,10 +486,12 @@ int bt_insert(bt *T, const void *k)
     check_ptr(T);
     check_ptr(k);
     check(T->key_type, "no key type defined");
+    assert(bt_invariant(T) == 0);
 
     int rc = btn_insert(T, T->root, k, NULL);
     if (rc == 1) ++T->count;
 
+    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
@@ -499,10 +508,12 @@ int bt_remove(bt *T, const void *k)
     check_ptr(T);
     check_ptr(k);
     check(T->key_type, "no key type defined");
+    assert(bt_invariant(T) == 0);
 
     int rc = (T->root) ? btn_remove(T, T->root, k) : 0;
     if (rc == 1) --T->count;
 
+    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
@@ -522,6 +533,7 @@ int bt_set(bt *T, const void *k, const void *v)
     check_ptr(v);
     check(T->key_type, "no key type defined");
     check(T->value_type, "no value type defined");
+    assert(bt_invariant(T) == 0);
 
     btn *n = NULL;
     int rc = btn_insert(T, T->root, k, &n);
@@ -530,6 +542,7 @@ int bt_set(bt *T, const void *k, const void *v)
     if (btn_has_value(n)) btn_destroy_value(T, n);
     btn_set_value(T, n, v);
 
+    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
@@ -545,6 +558,7 @@ void *bt_get(bt *T, const void *k)
     check_ptr(k);
     check(T->key_type, "no key type defined");
     check(T->value_type, "no value type defined");
+    assert(bt_invariant(T) == 0);
 
     btn *n = T->root;
     int comp;
@@ -559,4 +573,245 @@ void *bt_get(bt *T, const void *k)
 error:
     return NULL;
 
+}
+
+/*************************************************************************************************
+ * int btn_traverse             (       btn *n, int (*f)(btn *n,  void *p), void *p);
+ * int btn_traverse_r           (       btn *n, int (*f)(btn *n,  void *p), void *p);
+ * int btn_traverse_keys        (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
+ * int btn_traverse_keys_r      (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
+ * int btn_traverse_values      (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+ * int btn_traverse_values_r    (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+ *
+ * Walk through all the nodes of the sub-tree with the root n in ascending/descending order. Call
+ * f on every node, key, or value with the additional parameter p. If f returns a non-zero
+ * integer, abort and return it.
+ *
+ * These functions are called by their counterparts bt_traverse... to do the actual work. There
+ * should be no need to call them directly from the outside. */
+
+int btn_traverse(
+        btn *n,                         /* the root of the subtree to traverse */
+        int (*f)(btn *n, void *p),      /* the function to call on every node */
+        void *p)                        /* additional parameter to pass to f */
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = btn_traverse(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = btn_traverse(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int btn_traverse_r(btn *n, int (*f)(btn *n, void *p), void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = btn_traverse_r(n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(n, p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = btn_traverse_r(n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int btn_traverse_keys(bt *T, btn *n, int (*f)(void *k, void *p), void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = btn_traverse_keys(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(btn_key(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = btn_traverse_keys(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int btn_traverse_keys_r(bt *T, btn *n, int (*f)(void *k, void *p), void *p)
+{
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = btn_traverse_keys_r(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(btn_key(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = btn_traverse_keys_r(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int btn_traverse_values(bt *T, btn *n, int (*f)(void *v, void *p), void *p)
+{
+    assert(T->value_type);
+    int rc = 0;
+
+    if (n) {
+        if (n->left) {
+            rc = btn_traverse_values(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(btn_value(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->right) {
+            rc = btn_traverse_values(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+int btn_traverse_values_r(bt *T, btn *n, int (*f)(void *v, void *p), void *p)
+{
+    assert(T->value_type);
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = btn_traverse_values_r(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(btn_value(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = btn_traverse_values_r(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+/*************************************************************************************************
+ * int bt_traverse_nodes    (bt *T, int (*f)(btn *n,  void *p), void *p);
+ * int bt_traverse_nodes_r  (bt *T, int (*f)(btn *n,  void *p), void *p);
+ * int bt_traverse_keys     (bt *T, int (*f)(void *k, void *p), void *p);
+ * int bt_traverse_keys_r   (bt *T, int (*f)(void *k, void *p), void *p);
+ * int bt_traverse_values   (bt *T, int (*f)(void *v, void *p), void *p);
+ * int bt_traverse_values_r (bt *T, int (*f)(void *v, void *p), void *p);
+ *
+ * Walk through all the nodes of the tree in ascending/descending order. Call f on every node,
+ * key, or value with the additional parameter p. If f returns a non-zero integer, abort and
+ * return it. */
+
+int bt_traverse_nodes(bt *T, int (*f)(btn *n, void *p), void *p) {
+    if (T && T->root) return btn_traverse(T->root, f, p);
+    return 0;
+}
+
+int bt_traverse_nodes_r(bt *T, int (*f)(btn *n, void *p), void *p) {
+    if (T && T->root) return btn_traverse_r(T->root, f, p);
+    return 0;
+}
+
+int bt_traverse_keys(bt *T, int (*f)(void *k, void *p), void *p) {
+    if (T && T->root) return btn_traverse_keys(T, T->root, f, p);
+    return 0;
+}
+
+int bt_traverse_keys_r(bt *T, int (*f)(void *k, void *p), void *p) {
+    if (T && T->root) return btn_traverse_keys_r(T, T->root, f, p);
+    return 0;
+}
+
+int bt_traverse_values(bt *T, int (*f)(void *v, void *p), void *p) {
+    check(T->value_type, "the tree doesn't store values");
+    if (T && T->root) return btn_traverse_values(T, T->root, f, p);
+    return 0;
+error:
+    return -1;
+}
+
+int bt_traverse_values_r(bt *T, int (*f)(void *v, void *p), void *p) {
+    check(T->value_type, "the tree doesn't store values");
+    if (T && T->root) return btn_traverse_values_r(T, T->root, f, p);
+    return 0;
+error:
+    return -1;
+}
+
+/*************************************************************************************************
+ * int btn_invariant(const bt *T, const btn *n)
+ * int bt_invariant(bt *T)
+ * Check if T satisfies the inequality properties for keys in binary trees. */
+
+int btn_invariant(const bt *T, const btn *n)
+{
+    if (n) {
+        if (n->left && btn_invariant(T, n->left) != 0) return -1;
+
+        if (n->parent) {
+            if (n == n->parent->left) {
+                check(t_compare(T->key_type, btn_key(T, n), btn_key(T, n->parent)) <= 0,
+                        "binary tree invariant violated: left child > parent");
+            } else { /* n == n->parent->right */
+                check(t_compare(T->key_type, btn_key(T, n), btn_key(T, n->parent)) >= 0,
+                        "binary tree invariant violated: right child < parent");
+            }
+        }
+
+        if (n->right && btn_invariant(T, n->right) != 0) return -1;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int bt_invariant(const bt *T)
+{
+    if (T) {
+        if (T->count > 0) {
+            check(T->root != NULL, "binary tree invariant violated: non-zero count but no root");
+            return btn_invariant(T, T->root);
+        }
+    }
+    return 0;
+error:
+    return -1;
 }

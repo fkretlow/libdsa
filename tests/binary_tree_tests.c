@@ -142,10 +142,10 @@ int test_bt_copy(void)
     bt *T = bt_new(NONE, &str_type, &int_type);
 
     /* set up a source tree */
-    str *kn  = str_from_cstr("root");
-    str *kl  = str_from_cstr("left");
-    str *kr  = str_from_cstr("right");
-    str *krl = str_from_cstr("right-left");
+    str *kn  = str_from_cstr("1 root");
+    str *kl  = str_from_cstr("0 left");
+    str *kr  = str_from_cstr("3 right");
+    str *krl = str_from_cstr("2 right-left");
     int vn  = 0;
     int vl  = 1;
     int vr  = 2;
