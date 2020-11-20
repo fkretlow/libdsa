@@ -29,7 +29,7 @@ extern struct log_file log_files[MAX_LOG_FILES];
         log_files[0].suppress_debug_messages=0; \
         log_files[0].suppress_call_logs=1; \
         log_files[0].suppress_errors=0; \
-        log_files[1].stream=fopen("log.txt", "a"); \
+        log_files[1].stream=fopen("./tests/tests.log", "a"); \
         log_files[1].use_ansi_styles=0; \
         log_files[1].suppress_debug_messages=0; \
         log_files[1].suppress_call_logs=1; \

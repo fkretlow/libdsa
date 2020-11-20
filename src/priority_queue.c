@@ -51,6 +51,7 @@ int pqueue_dequeue(pqueue *Q, void *out)
     if (Q->count == 0) return 0;
 
     if (out) t_move(Q->data_type, out, vector_first(Q));
+    else t_destroy(Q->data_type, vector_first(Q));
 
     /* move the last element to the top */
     t_move(Q->data_type, vector_first(Q), vector_last(Q));

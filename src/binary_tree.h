@@ -38,7 +38,7 @@ typedef struct btn {
 #define RED_BLACK 1
 #define AVL 2
 
-typedef struct {
+typedef struct bt {
     btn *root;
     uint32_t count;
     uint8_t flavor;

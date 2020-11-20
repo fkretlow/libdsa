@@ -23,6 +23,17 @@ error:
     return NULL;
 }
 
+int str_make_random(str *s, uint32_t l)
+{
+    int rc = str_reserve(s, l + 1);
+    check_rc(rc, "str_reserve");
+    s->length = 0; str_data(s)[0] = '\0';
+    for (unsigned i = 0; i < l; ++i) str_push_back(s, rand() % 26 + 97);
+    return 0;
+error:
+    return -1;
+}
+
 str *serialize_int(const void *ip)
 {
     int i = *(int *)ip;
