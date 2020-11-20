@@ -3,88 +3,88 @@
 #include "check.h"
 #include "stack.h"
 
-static inline int Stack_invariant(const Stack *S)
+static inline int stack_invariant(const stack *S)
 {
-    if (S->top) check(S->size > 0, "Stack invariant violated: S->top && S->size == 0");
+    if (S->top) check(S->count > 0, "stack invariant violated: S->top && S->count == 0");
     return 0;
 error:
     return -1;
 }
 
-static inline StackNode *StackNode_new(void)
+static inline stackn *stackn_new(void)
 {
-    StackNode *n = calloc(1, sizeof(*n));
+    stackn *n = calloc(1, sizeof(*n));
     check_alloc(n);
     return n;
 error:
     return NULL;
 }
 
-static inline void StackNode_delete(const Stack *S, StackNode *n)
+static inline void stackn_delete(const stack *S, stackn *n)
 {
     if (n) {
         if (n->data && S) {
-            t_destroy(S->element_type, n->data);
+            t_destroy(S->data_type, n->data);
         }
     }
     free(n->data);
     free(n);
 }
 
-static int StackNode_set(const Stack *S, StackNode *n, const void *in)
+static int stackn_set(const stack *S, stackn *n, const void *in)
 {
     check_ptr(S);
     check_ptr(n);
     check_ptr(in);
 
     if (n->data) {
-        t_destroy(S->element_type, n->data);
+        t_destroy(S->data_type, n->data);
     } else {
-        n->data = t_allocate(S->element_type, 1);
+        n->data = t_allocate(S->data_type, 1);
         check(n->data != NULL, "Failed to allocate memory for new element.");
     }
 
-    t_copy(S->element_type, n->data, in);
+    t_copy(S->data_type, n->data, in);
 
     return 0;
 error:
     return -1;
 }
 
-static inline int StackNode_get(const Stack *S, StackNode *n, void *out)
+static inline int stackn_get(const stack *S, stackn *n, void *out)
 {
     check_ptr(S);
     check_ptr(n);
     check_ptr(out);
 
-    t_copy(S->element_type, out, n->data);
+    t_copy(S->data_type, out, n->data);
 
     return 0;
 error:
     return -1;
 }
 
-int Stack_initialize(Stack *S, t_intf *element_type)
+int stack_initialize(stack *S, t_intf *dt)
 {
-    check_ptr(element_type);
+    check_ptr(dt);
 
     S->top = NULL;
-    S->size = 0;
-    S->element_type = element_type;
+    S->count = 0;
+    S->data_type = dt;
 
     return 0;
 error:
     return -1;
 }
 
-Stack *Stack_new(t_intf *element_type)
+stack *stack_new(t_intf *dt)
 {
-    Stack *S = malloc(sizeof(*S));
+    stack *S = malloc(sizeof(*S));
     check_alloc(S);
 
-    int rc = Stack_initialize(S, element_type);
+    int rc = stack_initialize(S, dt);
     check(rc == 0, "Failed to initialize stack.");
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
 
     return S;
 error:
@@ -92,66 +92,66 @@ error:
     return NULL;
 }
 
-void Stack_delete(Stack *S)
+void stack_delete(stack *S)
 {
     if (S) {
-        if (S->size) Stack_clear(S);
+        if (S->count) stack_clear(S);
         free(S);
     }
 }
 
-void Stack_clear(Stack *S)
+void stack_clear(stack *S)
 {
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
 
-    StackNode *cur;
-    StackNode *next;
+    stackn *cur;
+    stackn *next;
 
     for (cur = S->top; cur != NULL; cur = next) {
         next = cur->next;
-        StackNode_delete(S, cur);
+        stackn_delete(S, cur);
     }
     S->top = NULL;
-    S->size = 0;
+    S->count = 0;
 }
 
-int Stack_push(Stack *S, const void *in)
+int stack_push(stack *S, const void *in)
 {
     check_ptr(S);
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
     check_ptr(in);
 
-    StackNode *n = StackNode_new();
+    stackn *n = stackn_new();
     check(n != NULL, "Failed to make new node.");
-    check(!StackNode_set(S, n, in), "Failed to write data to new node.");
+    check(!stackn_set(S, n, in), "Failed to write data to new node.");
 
     n->next = S->top;
     S->top = n;
-    ++S->size;
+    ++S->count;
 
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
     return 0;
 error:
     return -1;
 }
 
-int Stack_pop(Stack *S, void *out)
+int stack_pop(stack *S, void *out)
 {
     check_ptr(S);
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
     check_ptr(out);
-    check(S->size > 0, "Attempt to pop from empty stack.");
+    check(S->count > 0, "Attempt to pop from empty stack.");
 
-    StackNode *n = S->top;
+    stackn *n = S->top;
 
-    check(!StackNode_get(S, n, out), "Failed to hand out value.");
+    check(!stackn_get(S, n, out), "Failed to hand out value.");
 
     S->top = n->next;
-    --S->size;
+    --S->count;
 
-    StackNode_delete(S, n);
+    stackn_delete(S, n);
 
-    assert(!Stack_invariant(S));
+    assert(!stack_invariant(S));
     return 0;
 error:
     return -1;

@@ -6,28 +6,30 @@
 
 #include "type_interface.h"
 
-struct StackNode;
-typedef struct StackNode {
-    struct StackNode *next;
+struct stackn;
+typedef struct stackn {
+    struct stackn *next;
     char *data;
-} StackNode;
+} stackn;
 
-typedef struct Stack {
-    StackNode *top;
-    size_t size;
-    t_intf *element_type;
-} Stack;
+typedef struct stack {
+    stackn *top;
+    size_t count;
+    t_intf *data_type;
+} stack;
 
-#define Stack_top(S) ((S)->top ? (void*)(S)->top->data : NULL)
-#define Stack_size(S) (S)->size
-#define Stack_empty(S) ((S)->size == 0)
+#define stackn_size(S) (sizeof(stackn) + t_size((S)->data_type))
 
-Stack *Stack_new(t_intf *element_type);
-int Stack_initialize(Stack *S, t_intf *element_type);
-void Stack_delete(Stack *S);
-void Stack_clear(Stack *S);
+#define stack_top(S) ((S)->top ? (void*)(S)->top->data : NULL)
+#define stack_count(S) (S)->count
+#define stack_empty(S) ((S)->count == 0)
 
-int Stack_push(Stack *S, const void *in);
-int Stack_pop(Stack *S, void *out);
+int         stack_initialize    (stack *S, t_intf *dt);
+stack *     stack_new           (t_intf *dt);
+void        stack_delete        (stack *S);
+void        stack_clear         (stack *S);
+
+int         stack_push          (stack *S, const void *in);
+int         stack_pop           (stack *S, void *out);
 
 #endif // _stack_h

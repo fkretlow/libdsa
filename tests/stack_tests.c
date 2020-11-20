@@ -4,16 +4,16 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static Stack *S;
+static stack *S;
 int rc;
 
 int test_stack_new(void)
 {
-    S = Stack_new(&int_type);
+    S = stack_new(&int_type);
     test(S != NULL);
     test(S->top == NULL);
-    test(S->element_type->size == sizeof(int));
-    test(S->size == 0);
+    test(S->data_type->size == sizeof(int));
+    test(S->count == 0);
     return 0;
 }
 
@@ -22,29 +22,29 @@ int test_stack_usage(void)
     int val;
 
     for (int i = 0; i < 8; ++i) {
-        test(!Stack_push(S, &i));
+        test(!stack_push(S, &i));
     }
-    test(S->size == 8);
+    test(S->count == 8);
 
-    test(*(int*)Stack_top(S) == 7);
+    test(*(int*)stack_top(S) == 7);
 
     for (int i = 7; i >= 0; --i) {
-        test(!Stack_pop(S, &val));
+        test(!stack_pop(S, &val));
         test(val == i);
     }
-    test(S->size == 0);
+    test(S->count == 0);
 
-    test(Stack_top(S) == NULL);
-    test_fail(Stack_pop(S, &val) == -1, "Stack_pop from empty stack should fail.");
+    test(stack_top(S) == NULL);
+    test_fail(stack_pop(S, &val) == -1, "stack_pop from empty stack should fail.");
 
     return 0;
 }
 
 int test_stack_teardown(void)
 {
-    Stack_clear(S);
-    test(S->size == 0);
-    Stack_delete(S);
+    stack_clear(S);
+    test(S->count == 0);
+    stack_delete(S);
     return 0;
 }
 
