@@ -21,6 +21,7 @@ int test_list_new(void)
 int test_list_usage(void)
 {
     int val = 1;
+    int out;
     int *ip;
 
     rc = list_push_back(L, &val);
@@ -32,8 +33,9 @@ int test_list_usage(void)
     ip = list_last(L);
     test(*ip == val);
 
-    rc = list_pop_back(L);
+    rc = list_pop_back(L, &out);
     test(rc == 1);
+    test(out == val);
     test(L->first == NULL);
     test(L->last == NULL);
     test(L->count == 0);
@@ -45,8 +47,9 @@ int test_list_usage(void)
     test(L->count == 8);
 
     for (int i = 7; i >= 0; --i) {
-        rc = list_pop_back(L);
+        rc = list_pop_back(L, &out);
         test(rc == 1);
+        test(out == i);
     }
     test(L->count == 0);
 
@@ -72,16 +75,17 @@ int test_list_usage(void)
     test(*ip == -1);
 
     rc = list_remove(L, 3);
-    test(rc == 0);
+    test(rc == 0); /* TODO: Shouldn't this return 1 for a successful deletion? */
     test(L->count == 8);
 
     for (int i = 7; i >= 0; --i) {
-        rc = list_pop_front(L);
+        rc = list_pop_front(L, &out);
         test(rc == 1);
+        test(out == i);
     }
     test(L->count == 0);
 
-    rc = list_pop_back(L);
+    rc = list_pop_back(L, NULL);
     test(rc == 0);
 
     return 0;
@@ -103,6 +107,8 @@ int test_list_of_strings(void)
     test(L != NULL);
 
     str *s = str_new();
+    str out;
+
     str_assign_cstr(s, "Haydn");
     list_push_back(L, s);
 
@@ -112,19 +118,19 @@ int test_list_of_strings(void)
     str_assign_cstr(s, "Beethoven");
     list_push_back(L, s);
 
-    str *out;
-    out = list_last(L);
-    test(str_compare(s, out) == 0);
+    rc = list_pop_back(L, &out);
+    test(str_compare(s, &out) == 0);
 
-    for (int i = 0; i < 3; ++i) {
-        rc = list_pop_back(L);
+    while (list_count(L) > 0){
+        rc = list_pop_back(L, NULL);
         test(rc == 1);
     }
 
-    rc = list_pop_back(L);
+    rc = list_pop_back(L, NULL);
     test(rc == 0);
 
     list_delete(L);
+    str_destroy(&out);
     str_delete(s);
     return 0;
 }

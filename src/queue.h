@@ -15,6 +15,6 @@ typedef list queue;
 #define queue_clear(Q)          list_clear(Q)
 
 #define queue_enqueue(Q, in)    list_push_front(Q, in)
-int queue_dequeue(queue *Q, void *out);
+#define queue_dequeue(Q, out)   list_pop_back(Q, out)
 
 #endif // _queue_h

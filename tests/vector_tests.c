@@ -88,6 +88,7 @@ int test_vector_of_strings(void)
 
     vector_delete(V);
     str_delete(s);
+    str_destroy(&out);
     return 0;
 }
 

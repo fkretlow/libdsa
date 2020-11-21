@@ -234,7 +234,7 @@ error:
     return -1;
 }
 
-int list_pop_front(list *L)
+int list_pop_front(list *L, void *out)
 {
     check_ptr(L);
     assert(!list_invariant(L));
@@ -246,6 +246,11 @@ int list_pop_front(list *L)
     else         L->first = L->last = NULL;
     --L->count;
 
+    if (out) {
+        t_move(L->data_type, out, listn_data(n));
+        n->has_data = 0;
+    }
+
     listn_delete(L, n);
 
     assert(!list_invariant(L));
@@ -254,7 +259,7 @@ error:
     return -1;
 }
 
-int list_pop_back(list *L)
+int list_pop_back(list *L, void *out)
 {
     check_ptr(L);
     assert(!list_invariant(L));
@@ -265,6 +270,11 @@ int list_pop_back(list *L)
     if (n->prev) L->last = n->prev;
     else         L->last = L->first = NULL;
     --L->count;
+
+    if (out) {
+        t_move(L->data_type, out, listn_data(n));
+        n->has_data = 0;
+    }
 
     listn_delete(L, n);
 

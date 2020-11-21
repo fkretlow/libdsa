@@ -38,8 +38,8 @@ int     list_insert         (list *L, const size_t i, const void *in);
 int     list_remove         (list *L, const size_t i);
 #define list_push_front(l, in) list_insert((l), 0, (in))
 int     list_push_back      (list *L, const void *in);
-int     list_pop_front      (list *L);
-int     list_pop_back       (list *L);
+int     list_pop_front      (list *L, void *out);
+int     list_pop_back       (list *L, void *out);
 
 
 listn* __N;
