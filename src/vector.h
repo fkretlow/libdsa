@@ -36,6 +36,6 @@ int         vector_set              (vector *V, const size_t i, const void *in);
 int         vector_insert           (vector *V, const size_t i, const void *in);
 int         vector_remove           (vector *V, const size_t i);
 int         vector_push_back        (vector *V, const void *in);
-int         vector_pop_back         (vector *V);
+int         vector_pop_back         (vector *V, void *out);
 
 #endif // _vector_h

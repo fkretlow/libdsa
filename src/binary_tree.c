@@ -6,8 +6,8 @@
 #include "binary_tree.h"
 #include "log.h"
 
-/*************************************************************************************************
- * btn *btn_new(const bt *T);
+
+/* btn *btn_new(const bt *T)
  * Create a new node on the heap and return a pointer to it, or NULL on error. Enough memory is
  * requested to store the node header, one key, and zero or one value objects according to the
  * type interfaces stored in T. */
@@ -29,9 +29,9 @@ error:
     return NULL;
 }
 
-/*************************************************************************************************
- * void btn_delete    (const bt *T, btn *n);
- * void btn_delete_rec(const bt *T, btn *n);
+
+/* void btn_delete    (const bt *T, btn *n)
+ * void btn_delete_rec(const bt *T, btn *n)
  * Delete n, destroying stored data and freeing associated memory. No links are altered in
  * adjacent nodes. Don't call btn_delete on a node with children lest they become unreachable in
  * the void... use btn_delete_rec[ursively] to wipe out the whole subtree. */
@@ -60,8 +60,8 @@ void btn_delete_rec(const bt *T, btn *n)
     btn_delete(T, n);
 }
 
-/*************************************************************************************************
- * int btn_insert(const bt *T, btn *n, const void *k, btn **n_out);
+
+/* int btn_insert(const bt *T, btn *n, const void *k, btn **n_out)
  * Insert a node with the key k into the subtree rooted at n. A pointer to the new node is saved
  * in n_out. Returns 1 if a node was added, 0 if k was already there, and -1 on error. */
 
@@ -110,8 +110,8 @@ int btn_insert(
     }
 }
 
-/*************************************************************************************************
- * int btn_remove(const bt *T, btn *n, const void *k);
+
+/* int btn_remove(const bt *T, btn *n, const void *k)
  * Remove the node with the key k from the subtree roted at n. Returns 1 if a node was deleted, 0
  * if k wasn't found, and -1 on error. */
 
@@ -165,9 +165,9 @@ int btn_remove(
     return 1;
 }
 
-/*************************************************************************************************
- * void btn_set_key  (const bt *T, btn *n, const void *k);
- * void btn_set_value(const bt *T, btn *n, const void *v);
+
+/* void btn_set_key  (const bt *T, btn *n, const void *k)
+ * void btn_set_value(const bt *T, btn *n, const void *v)
  * Set the key/value stored in n to k/v by copying it into the node. We assume that no previous
  * key/value is present. */
 
@@ -187,9 +187,9 @@ void btn_set_value(const bt *T, btn *n, const void *v)
     n->flags.plain.has_value = 1;
 }
 
-/*************************************************************************************************
- * void btn_destroy_key  (const bt *T, btn *n);
- * void btn_destroy_value(const bt *T, btn *n, const void *v);
+
+/* void btn_destroy_key  (const bt *T, btn *n)
+ * void btn_destroy_value(const bt *T, btn *n, const void *v)
  * Destroy the key/value stored in n, freeing any associated memory. We assume that a
  * key/value is present. */
 
@@ -211,8 +211,8 @@ void btn_destroy_value(const bt *T, btn *n)
     n->flags.plain.has_value = 0;
 }
 
-/*************************************************************************************************
- * btn *btn_copy_rec(const bt *T, const btn *n);
+
+/* btn *btn_copy_rec(const bt *T, const btn *n)
  * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree has the
  * exact same layout. */
 
@@ -247,9 +247,9 @@ error:
     return NULL;
 }
 
-/*************************************************************************************************
- * void btn_rotate_left    (bt *T, btn *n, btn **n_out);
- * void btn_rotate_right   (bt *T, btn *n, btn **n_out);  The usual tree rotations. */
+
+/* void btn_rotate_left    (bt *T, btn *n, btn **n_out)
+ * void btn_rotate_right   (bt *T, btn *n, btn **n_out)  The usual tree rotations. */
 
 void btn_rotate_left(
         bt *T,          /* the tree, needed for btn_replace_child */
@@ -291,8 +291,7 @@ void btn_rotate_right(bt *T, btn *n, btn **n_out)
 }
 
 
-/*************************************************************************************************
- * void btn_replace_child(bt *T, btn *p, btn *c, btn *s);
+/* void btn_replace_child(bt *T, btn *p, btn *c, btn *s)
  * Replace the child c of p by a successor s. */
 
 void btn_replace_child(
@@ -316,9 +315,9 @@ void btn_replace_child(
     }
 }
 
-/*************************************************************************************************
- * int bt_initialize(bt *T, uint8_t flavor, t_intf *kt, t_intf *vt);
- * bt *bt_new       (       uint8_t flavor, t_intf *kt, t_intf *vt);
+
+/* int bt_initialize(bt *T, uint8_t flavor, t_intf *kt, t_intf *vt)
+ * bt *bt_new       (       uint8_t flavor, t_intf *kt, t_intf *vt)
  * bt_initialize initializes a bt at the address pointed to by T (assuming there's sufficient
  * space). bt_new allocates and initializes a new bt and returns a pointer to it. The type
  * interface for keys is required and must contain a at least a size and a comparison function.
@@ -367,8 +366,8 @@ error:
     return NULL;
 }
 
-/*************************************************************************************************
- * void bt_clear(bt *T);
+
+/* void bt_clear(bt *T)
  * Delete all nodes, freeing associated memory, and reset T. */
 
 void bt_clear(bt *T)
@@ -382,9 +381,9 @@ void bt_clear(bt *T)
     }
 }
 
-/*************************************************************************************************
- * void bt_destroy(bt *T);
- * void bt_delete (bt *T);
+
+/* void bt_destroy(bt *T)
+ * void bt_delete (bt *T)
  * Destroy T, freeing any associated memory. bt_delete also calls free on T. */
 
 void bt_destroy(bt *T)
@@ -407,9 +406,9 @@ void bt_delete(bt *T)
     }
 }
 
-/*************************************************************************************************
- * bt *bt_copy   (          const bt *src);
- * int bt_copy_to(bt *dest, const bt *src);
+
+/* bt *bt_copy   (          const bt *src)
+ * int bt_copy_to(bt *dest, const bt *src)
  * Copy a binary tree, duplicating all content and preserving the exact same layout.  bt_copy
  * makes the copy on the heap, bt_copy_to creates it where dest points to. */
 
@@ -450,8 +449,8 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * int bt_has(const bt *T, const void *k); Check if k is in T. */
+
+/* int bt_has(const bt *T, const void *k) Check if k is in T. */
 
 int bt_has(const bt *T, const void *k)
 {
@@ -475,8 +474,7 @@ error:
 }
 
 
-/*************************************************************************************************
- * int bt_insert(bt *T, const void *k);
+/* int bt_insert(bt *T, const void *k)
  * Insert k into the tree. Return 0 or 1 depending on whether a node was added or k was
  * already there, or -1 on error. */
 
@@ -497,8 +495,8 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * int bt_remove(bt *T, const void *k);
+
+/* int bt_remove(bt *T, const void *k)
  * Remove k from the tree. Return 0 or 1 depending on whether k was found and removed or not, or
  * -1 on error. */
 
@@ -519,8 +517,8 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * int bt_set(bt *T, const void *k, const void *v)
+
+/* int bt_set(bt *T, const void *k, const void *v)
  * Set the value of the node with the key k to v, or insert a node with k and v if k doesn't
  * exsit. Return 0 or 1 depending on whether a node was added or k was already there, or -1 on
  * error. */
@@ -548,8 +546,8 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * void *bt_get(bt *T, const void *k);
+
+/* void *bt_get(bt *T, const void *k)
  * Return a pointer to the value mapped to k in T or NULL if k doesn't exist. */
 
 void *bt_get(bt *T, const void *k)
@@ -575,13 +573,13 @@ error:
 
 }
 
-/*************************************************************************************************
- * int btn_traverse             (       btn *n, int (*f)(btn *n,  void *p), void *p);
- * int btn_traverse_r           (       btn *n, int (*f)(btn *n,  void *p), void *p);
- * int btn_traverse_keys        (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
- * int btn_traverse_keys_r      (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
- * int btn_traverse_values      (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
- * int btn_traverse_values_r    (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+
+/* int btn_traverse             (       btn *n, int (*f)(btn *n,  void *p), void *p)
+ * int btn_traverse_r           (       btn *n, int (*f)(btn *n,  void *p), void *p)
+ * int btn_traverse_keys        (bt *T, btn *n, int (*f)(void *k, void *p), void *p)
+ * int btn_traverse_keys_r      (bt *T, btn *n, int (*f)(void *k, void *p), void *p)
+ * int btn_traverse_values      (bt *T, btn *n, int (*f)(void *v, void *p), void *p)
+ * int btn_traverse_values_r    (bt *T, btn *n, int (*f)(void *v, void *p), void *p)
  *
  * Walk through all the nodes of the sub-tree with the root n in ascending/descending order. Call
  * f on every node, key, or value with the additional parameter p. If f returns a non-zero
@@ -727,13 +725,13 @@ int btn_traverse_values_r(bt *T, btn *n, int (*f)(void *v, void *p), void *p)
     return rc;
 }
 
-/*************************************************************************************************
- * int bt_traverse_nodes    (bt *T, int (*f)(btn *n,  void *p), void *p);
- * int bt_traverse_nodes_r  (bt *T, int (*f)(btn *n,  void *p), void *p);
- * int bt_traverse_keys     (bt *T, int (*f)(void *k, void *p), void *p);
- * int bt_traverse_keys_r   (bt *T, int (*f)(void *k, void *p), void *p);
- * int bt_traverse_values   (bt *T, int (*f)(void *v, void *p), void *p);
- * int bt_traverse_values_r (bt *T, int (*f)(void *v, void *p), void *p);
+
+/* int bt_traverse_nodes    (bt *T, int (*f)(btn *n,  void *p), void *p)
+ * int bt_traverse_nodes_r  (bt *T, int (*f)(btn *n,  void *p), void *p)
+ * int bt_traverse_keys     (bt *T, int (*f)(void *k, void *p), void *p)
+ * int bt_traverse_keys_r   (bt *T, int (*f)(void *k, void *p), void *p)
+ * int bt_traverse_values   (bt *T, int (*f)(void *v, void *p), void *p)
+ * int bt_traverse_values_r (bt *T, int (*f)(void *v, void *p), void *p)
  *
  * Walk through all the nodes of the tree in ascending/descending order. Call f on every node,
  * key, or value with the additional parameter p. If f returns a non-zero integer, abort and
@@ -775,8 +773,8 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * int btn_invariant(const bt *T, const btn *n)
+
+/* int btn_invariant(const bt *T, const btn *n)
  * int bt_invariant(bt *T)
  * Check if T satisfies the inequality properties for keys in binary trees. */
 

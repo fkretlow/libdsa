@@ -211,16 +211,17 @@ int vector_push_back(vector *V, const void *in)
     return vector_set(V, V->count, in);
 }
 
-/*************************************************************************************************
- * int vector_pop_back(vector *V);
- * Pop the last element. Return 1 if there was one, 0 if the vector was empty, or -1 on error. */
+/* int vector_pop_back(vector *V, void *out)
+ * Pop the last element, moving it to out unless out is NULL. Return 1 if there was one, 0 if the
+ * vector was empty, or -1 on error. */
 
-int vector_pop_back(vector *V)
+int vector_pop_back(vector *V, void *out)
 {
     check_ptr(V);
     if (V->count == 0) return 0;
 
-    t_destroy(V->data_type, vector_get(V, V->count - 1));
+    if (out) t_move(V->data_type, out, vector_last(V));
+    else t_destroy(V->data_type, vector_last(V));
     --V->count;
 
     if (V->count < (V->capacity >> 2) && V->capacity > VECTOR_MIN_CAPACITY) {

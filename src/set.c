@@ -27,9 +27,8 @@ void set_delete(set *S)
     }
 }
 
-/*************************************************************************************************
- * set *set_union(set *S1, set *S2)
- *
+
+/* set *set_union(set *S1, set *S2)
  * Return a new set that contains all elements that are in either of S1 and S2 or both, or NULL on
  * error.
  *
@@ -53,20 +52,16 @@ set *set_union(set *S1, set *S2)
     return U;
 }
 
-/*************************************************************************************************
- * set *set_intersection(set *S1, set *S2)
- *
+/* set *set_intersection(set *S1, set *S2)
  * Return a new set that contains all elements that are in both S1 and S2 or NULL on error.
  *
  * The naive approach would be to create a new set, then traverse both sets and insert every
  * element into the new set. If m is the size of the larger set, and n of the other one, that
  * would require m + n insertions with a logarithmic number of steps each, resulting in an upper
- * bound of (m + n) * log n steps.
- *
- * We trade space for time and create two arrays of pointers to data elements as an in-between
- * data structure in linear time. Then we walk through both arrays simultaneously, comparing
- * elements and inserting only elements that are in both arrays. This should give us slightly
- * fewer m + n + n * log n steps. */
+ * bound of (m + n) * log n steps.  We trade space for time and create two arrays of pointers to
+ * data elements as an in-between data structure in linear time. Then we walk through both arrays
+ * simultaneously, comparing elements and inserting only elements that are in both arrays. This
+ * should give us slightly fewer m + n + n * log n steps. */
 
 static inline int push_pointer_into_vector(void *e, void *V)
 {
@@ -94,29 +89,22 @@ set *set_intersection(set *S1, set *S2)
     set_traverse_r(S1, push_pointer_into_vector, &V1);
     set_traverse_r(S2, push_pointer_into_vector, &V2);
 
-    e1 = *(void**)vector_last(&V1);
-    vector_pop_back(&V1);
-
-    e2 = *(void**)vector_last(&V2);
-    vector_pop_back(&V2);
+    vector_pop_back(&V1, &e1);
+    vector_pop_back(&V2, &e2);
 
     for ( ;; ) {
         comp = t_compare(S1->key_type, e1, e2);
         if (comp < 0) {
             if (vector_count(&V1) == 0) break;
-            e1 = *(void**)vector_last(&V1);
-            vector_pop_back(&V1);
+            vector_pop_back(&V1, &e1);
         } else if (comp > 0) {
             if (vector_count(&V2) == 0) break;
-            e2 = *(void**)vector_last(&V2);
-            vector_pop_back(&V2);
+            vector_pop_back(&V2, &e2);
         } else { /* comp == 0 */
             set_insert(I, e1);
             if (vector_count(&V1) == 0 || vector_count(&V2) == 0) break;
-            e1 = *(void**)vector_last(&V1);
-            vector_pop_back(&V1);
-            e2 = *(void**)vector_last(&V2);
-            vector_pop_back(&V2);
+            vector_pop_back(&V1, &e1);
+            vector_pop_back(&V2, &e2);
         }
     }
 
@@ -130,9 +118,7 @@ error:
     return NULL;
 }
 
-/*************************************************************************************************
- * set *set_difference(set *S1, set *S2);
- *
+/* set *set_difference(set *S1, set *S2)
  * Return a new set that contains all elements that are in the first but not in the second set.
  *
  * Create an exact copy of the larger set and traverse the smaller set, removing each of its

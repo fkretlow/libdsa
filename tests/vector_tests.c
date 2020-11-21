@@ -19,18 +19,18 @@ int test_vector_new(void)
 
 int test_vector_usage(void)
 {
-    int rc, in, *out;
+    int rc, in, out;
     in = 1;
 
     rc = vector_push_back(V, &in);
     test(rc == 0);
     test(V->count == 1);
 
-    out = vector_get(V, 0);
-    test(*out == in);
+    test(*(int*)vector_get(V, 0) == in);
 
-    rc = vector_pop_back(V);
+    rc = vector_pop_back(V, &out);
     test(rc == 1);
+    test(out == in);
     test(V->count == 0);
 
     for (int i = 0; i < 17; ++i) {
@@ -41,12 +41,13 @@ int test_vector_usage(void)
     test(V->capacity == 32);
 
     for (int i = 16; i >= 0; --i) {
-        rc = vector_pop_back(V);
+        rc = vector_pop_back(V, &out);
         test(rc == 1);
+        test(out == i);
     }
     test(V->capacity == VECTOR_MIN_CAPACITY);
 
-    rc = vector_pop_back(V);
+    rc = vector_pop_back(V, NULL);
     test(rc == 0);
 
     return 0;
@@ -67,7 +68,9 @@ int test_vector_of_strings(void)
     V = vector_new(&str_type);
     test(V != NULL);
 
+    str out;
     str *s = str_new();
+
     str_assign_cstr(s, "Haydn");
     vector_push_back(V, s);
 
@@ -80,7 +83,8 @@ int test_vector_of_strings(void)
     str *last = vector_last(V);
     test(str_compare(s, last) == 0);
 
-    vector_pop_back(V);
+    vector_pop_back(V, &out);
+    test(str_compare(s, &out) == 0);
 
     vector_delete(V);
     str_delete(s);
