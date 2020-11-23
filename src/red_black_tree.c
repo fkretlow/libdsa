@@ -3,9 +3,6 @@
 #include "check.h"
 #include "binary_tree.h"
 
-#define rbtn_color(n)           ((n)->flags.rb.color)
-#define rbtn_set_color(n, c)    ((n)->flags.rb.color = c)
-
 /* Return the weight of the group that contains n. n can be any node in the group. */
 static inline unsigned short rbt_group_weight(btn *n)
 {
@@ -105,6 +102,7 @@ int rbtn_insert(
     assert(T && T->key_type && k);
 
     if (n == NULL) {
+        /* log_debug("inserting a root"); */
         assert(T->count == 0);
         T->root = btn_new(T);
         T->root->parent = NULL;
@@ -129,6 +127,7 @@ int rbtn_insert(
         if (comp < 0) {
             /* log_debug("Case 1 left"); */
             n->left = btn_new(T);
+            assert(!btn_has_key(n->left));
             btn_set_key(T, n->left, k);
             n->left->parent = n;
             rbtn_set_color(n->left, RED);
@@ -136,6 +135,7 @@ int rbtn_insert(
         } else { /* comp > 0 */
             /* log_debug("Case 1 right"); */
             n->right = btn_new(T);
+            assert(!btn_has_key(n->right));
             btn_set_key(T, n->right, k);
             n->right->parent = n;
             rbtn_set_color(n->right, RED);
@@ -187,8 +187,13 @@ int rbtn_insert(
                 rbtn_set_color(p->left, RED);
 
                 t_move(T->key_type, btn_key(T, p->left), btn_key(T, p));
-                if (p->flags.rb.has_value)
+                p->flags.rb.has_key = 0;
+                p->left->flags.rb.has_key = 1;
+                if (p->flags.rb.has_value) {
                     t_move(T->value_type, btn_value(T, p->left), btn_value(T, p));
+                    p->flags.rb.has_value = 0;
+                    p->left->flags.rb.has_value = 1;
+                }
                 btn_set_key(T, p, k);
 
                 if (n_out) *n_out = p;
@@ -199,9 +204,15 @@ int rbtn_insert(
                 p->right->parent = p;
                 rbtn_set_color(p->right, RED);
 
-                t_move(T->key_type, btn_key(T, p->left), btn_key(T, p));
-                if (p->flags.rb.has_value)
-                    t_move(T->value_type, btn_value(T, p->left), btn_value(T, p));
+                t_move(T->key_type, btn_key(T, p->right), btn_key(T, p));
+                p->flags.rb.has_key = 0;
+                p->right->flags.rb.has_key = 1;
+                if (p->flags.rb.has_value) {
+                    t_move(T->value_type, btn_value(T, p->right), btn_value(T, p));
+                    p->flags.rb.has_value = 0;
+                    p->right->flags.rb.has_value = 1;
+                }
+                btn_set_key(T, p, k);
 
                 if (n_out) *n_out = p;
             }
@@ -304,7 +315,7 @@ static void rbt_group_increase_weight(bt *T, btn *n)
 
     /* Case 2: ancestor group is empty. */
     else { /* rbt_group_weight(p) <= 1 */
-
+        assert(s); /* TODO: why do we not have an s? */
         /* Case 2.1: s is empty. */
         if (rbt_group_weight(s) == 1) {
             if (p == T->root) {
@@ -448,7 +459,7 @@ error:
  * Check if T satisfies the inequality properties for keys in binary trees and the red-black tree
  * properties. */
 
-int rbtn_invariant(const bt *T, const btn *n, int *black_count)
+int rbtn_invariant(const bt *T, btn *n, int *black_count)
 {
     if (n) {
         int rc;
@@ -484,9 +495,10 @@ int rbtn_invariant(const bt *T, const btn *n, int *black_count)
         /* leaf position? if so, correct number of black nodes the path to the root? */
         if (!n->left || !n->right) {
             int count = 0;
-            while (n != NULL) {
-                if (rbtn_color(n) == BLACK) ++count;
-                n = n->parent;
+            btn *m = n;
+            while (m != NULL) {
+                if (rbtn_color(m) == BLACK) ++count;
+                m = m->parent;
             }
             if (*(int*)black_count == -1) {
                 *(int*)black_count = count;
@@ -500,7 +512,6 @@ int rbtn_invariant(const bt *T, const btn *n, int *black_count)
             rc = rbtn_invariant(T, n->right, black_count);
             if (rc != 0) return rc;
         }
-
     }
     return 0;
 }

@@ -111,9 +111,11 @@ int     btn_traverse_values_r   (bt *T, btn *n, int (*f)(void *v, void *p), void
 /* Red-black tree subroutines */
 
 enum rbt_colors { BLACK = 0, RED = 1 };
+#define rbtn_color(n)           ((n)->flags.rb.color)
+#define rbtn_set_color(n, c)    ((n)->flags.rb.color = c)
+
 int     rbt_invariant           (const bt *T);
 int     rbtn_insert             (bt *T, btn *n, const void *k, btn **n_out);
 int     rbtn_remove             (bt *T, btn *n, const void *k);
-
 
 #endif /* _binary_tree_h */

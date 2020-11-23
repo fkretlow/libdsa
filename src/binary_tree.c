@@ -174,7 +174,12 @@ int btn_remove(
 void btn_set_key(const bt *T, btn *n, const void *k)
 {
     log_call("T=%p, n=%p, k=%p", T, n, k);
-    assert(T && n && k && T->key_type && !btn_has_key(n));
+    /* assert(T && n && k && T->key_type && !btn_has_key(n)); */
+    assert(T);
+    assert(n);
+    assert(k);
+    assert(T->key_type);
+    assert(!btn_has_key(n));
     t_copy(T->key_type, btn_key(T, n), k);
     n->flags.plain.has_key = 1;
 }
@@ -276,7 +281,7 @@ void btn_rotate_right(bt *T, btn *n, btn **n_out)
 {
     log_call("T=%p, n=%p, n_out=%p", T, n, n_out);
     assert(T && n);
-    assert(n->right);
+    assert(n->left);
 
     btn *p = n->parent;
     btn *l = n->left;
@@ -490,13 +495,15 @@ int bt_insert(bt *T, const void *k)
     switch (T->flavor) {
         case RED_BLACK:
             rc = rbtn_insert(T, T->root, k, NULL);
+            if (rc == 1) ++T->count;
+            assert(rbt_invariant(T) == 0);
             break;
         default:
             rc = btn_insert(T, T->root, k, NULL);
+            if (rc == 1) ++T->count;
+            assert(bt_invariant(T) == 0);
     }
-    if (rc == 1) ++T->count;
 
-    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
@@ -519,13 +526,15 @@ int bt_remove(bt *T, const void *k)
     switch (T->flavor) {
         case RED_BLACK:
             rc = T->root ? rbtn_remove(T, T->root, k) : 0;
+            if (rc == 1) --T->count;
+            assert(rbt_invariant(T) == 0);
             break;
         default:
             rc = T->root ? btn_remove(T, T->root, k) : 0;
+            if (rc == 1) --T->count;
+            assert(bt_invariant(T) == 0);
     }
-    if (rc == 1) --T->count;
 
-    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
@@ -548,13 +557,22 @@ int bt_set(bt *T, const void *k, const void *v)
     assert(bt_invariant(T) == 0);
 
     btn *n = NULL;
-    int rc = btn_insert(T, T->root, k, &n);
-    if (rc == 1) ++T->count;
+    int rc;
+    switch(T->flavor) {
+        case RED_BLACK:
+            rc = rbtn_insert(T, T->root, k, &n);
+            if (rc == 1) ++T->count;
+            assert(rbt_invariant(T) == 0);
+            break;
+        default:
+            rc = btn_insert(T, T->root, k, &n);
+            if (rc == 1) ++T->count;
+            assert(bt_invariant(T) == 0);
+    }
 
     if (btn_has_value(n)) btn_destroy_value(T, n);
     btn_set_value(T, n, v);
 
-    assert(bt_invariant(T) == 0);
     return rc;
 error:
     return -1;
