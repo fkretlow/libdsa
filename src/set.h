@@ -11,7 +11,7 @@ typedef bt set;
 set *set_new(t_intf *dt);
 void set_delete(set *S);
 
-#define set_initialize(S, dt)       bt_initialize(S, NONE, dt, NULL)
+#define set_initialize(S, dt)       bt_initialize(S, RED_BLACK, dt, NULL)
 #define set_clear(S)                bt_clear(S)
 #define set_insert(S, e)            bt_insert(S, e)
 #define set_remove(S, e)            bt_remove(S, e)

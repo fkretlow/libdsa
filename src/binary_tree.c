@@ -486,7 +486,14 @@ int bt_insert(bt *T, const void *k)
     check(T->key_type, "no key type defined");
     assert(bt_invariant(T) == 0);
 
-    int rc = btn_insert(T, T->root, k, NULL);
+    int rc;
+    switch (T->flavor) {
+        case RED_BLACK:
+            rc = rbtn_insert(T, T->root, k, NULL);
+            break;
+        default:
+            rc = btn_insert(T, T->root, k, NULL);
+    }
     if (rc == 1) ++T->count;
 
     assert(bt_invariant(T) == 0);
@@ -508,7 +515,14 @@ int bt_remove(bt *T, const void *k)
     check(T->key_type, "no key type defined");
     assert(bt_invariant(T) == 0);
 
-    int rc = T->root ? btn_remove(T, T->root, k) : 0;
+    int rc;
+    switch (T->flavor) {
+        case RED_BLACK:
+            rc = T->root ? rbtn_remove(T, T->root, k) : 0;
+            break;
+        default:
+            rc = T->root ? btn_remove(T, T->root, k) : 0;
+    }
     if (rc == 1) --T->count;
 
     assert(bt_invariant(T) == 0);
