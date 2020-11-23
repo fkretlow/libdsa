@@ -238,7 +238,7 @@ btn *btn_copy_rec(const bt *T, const btn *n)
         c->right->parent = c;
     }
 
-    /* copy the flags byte */
+    /* copy the complete flags byte */
     memcpy(&c->flags, &n->flags, sizeof(struct btn_flags));
 
     return c;
@@ -508,7 +508,7 @@ int bt_remove(bt *T, const void *k)
     check(T->key_type, "no key type defined");
     assert(bt_invariant(T) == 0);
 
-    int rc = (T->root) ? btn_remove(T, T->root, k) : 0;
+    int rc = T->root ? btn_remove(T, T->root, k) : 0;
     if (rc == 1) --T->count;
 
     assert(bt_invariant(T) == 0);

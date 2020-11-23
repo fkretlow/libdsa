@@ -29,7 +29,7 @@ typedef struct btn {
     struct btn *right;
     union {
         struct btn_flags   plain;
-        struct rbtn_flags  red_black;
+        struct rbtn_flags  rb;
         struct avltn_flags avl;
     } flags;
 } btn;
@@ -100,5 +100,20 @@ void    btn_destroy_value       (const bt *T, btn *n);
 void    btn_rotate_left         (bt *T, btn *n, btn **n_out);
 void    btn_rotate_right        (bt *T, btn *n, btn **n_out);
 void    btn_replace_child       (bt *T, btn *p, btn *c, btn *s);
+
+int     btn_traverse            (       btn *n, int (*f)(btn *n,  void *p), void *p);
+int     btn_traverse_r          (       btn *n, int (*f)(btn *n,  void *p), void *p);
+int     btn_traverse_keys       (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
+int     btn_traverse_keys_r     (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
+int     btn_traverse_values     (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+int     btn_traverse_values_r   (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+
+/* Red-black tree subroutines */
+
+enum rbt_colors { BLACK = 0, RED = 1 };
+int     rbt_invariant           (const bt *T);
+int     rbtn_insert             (bt *T, btn *n, const void *k, btn **n_out);
+int     rbtn_remove             (bt *T, btn *n, const void *k);
+
 
 #endif /* _binary_tree_h */

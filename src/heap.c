@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "heap.h"
-#include "container_tools.h"
 
 #define _lchild(i) (2 * (i) + 1)
 #define _rchild(i) (2 * (i) + 2)

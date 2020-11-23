@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 
-#include "container_tools.h"
 #include "hash.h"
 #include "sort_tools.h"
 #include "type_interface.h"

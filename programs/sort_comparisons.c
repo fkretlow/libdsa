@@ -13,12 +13,12 @@
 #define init_comparisons() \
     clock_t start, end; \
     double duration; \
-    Stats stats; \
+    stats S; \
     printf("%-12s  %10s  %10s  %10s\n", "algorithm", "average", "min", "max"); \
     printf("------------  ----------  ----------  ----------\n");
 
 #define measure(nruns, f, A, ...) \
-    Stats_init(&stats); \
+    stats_init(&S); \
     start = clock(); \
     while ((double)(clock() - start) / CLOCKS_PER_SEC < 1.0) { \
         make_random((A), N_ELEMENTS, MAX_VALUE); \
@@ -30,9 +30,9 @@
         f((A), ##__VA_ARGS__); \
         end = clock(); \
         duration = (double)(end - start) / CLOCKS_PER_SEC; \
-        Stats_add(&stats, duration); \
+        stats_add(&S, duration); \
     } \
-    printf("%-12s  %10f  %10f  %10f\n", #f, stats.avg, stats.min, stats.max);
+    printf("%-12s  %10f  %10f  %10f\n", #f, S.avg, S.min, S.max);
 
 
 static inline void make_random(int* A, size_t nmemb, unsigned maxv)

@@ -71,11 +71,11 @@ void node_header_delete(node_header *n)
     }
 }
 
-void measure(void (*f)(void), Stats *stats, unsigned nruns, double warm_up_time)
+void measure(void (*f)(void), stats *S, unsigned nruns, double warm_up_time)
 {
     clock_t start, end;
     double duration;
-    Stats_init(stats);
+    stats_init(S);
 
     /* warm up */
     while ((double)(clock() - start) / CLOCKS_PER_SEC < warm_up_time) f();
@@ -86,7 +86,7 @@ void measure(void (*f)(void), Stats *stats, unsigned nruns, double warm_up_time)
         f();
         end = clock();
         duration = (double)(end - start) / CLOCKS_PER_SEC;
-        Stats_add(stats, duration);
+        stats_add(S, duration);
     }
 }
 
@@ -122,7 +122,7 @@ int main(void)
 {
     srand((unsigned)time(NULL));
 
-    Stats s1, s2;
+    stats s1, s2;
     measure(first_strategy,  &s1, NRUNS, 1.0);
     measure(second_strategy, &s2, NRUNS, 1.0);
 

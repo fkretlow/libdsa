@@ -1,7 +1,7 @@
 /* A very simple finite state machine that consumes an input stream word by word, skipping
- * non-accepted characters. After each sequence of accepted characters the given process function
- * is called on the buffer, then the buffer is cleared. It's possible to transform accepted
- * characters with the optional transform function. */
+ * characters for which the test function returns 0. After each sequence of accepted characters
+ * the given process function is called on the buffer, then the buffer is reset. It's possible
+ * to transform accepted characters with the optional transform function. */
 
 #ifndef _reader_h
 #define _reader_h
