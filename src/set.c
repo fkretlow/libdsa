@@ -22,7 +22,7 @@ error:
 void set_delete(set *S)
 {
     if (S) {
-        bt_clear(S);
+        bst_clear(S);
         free(S);
     }
 }

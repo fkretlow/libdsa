@@ -5,7 +5,7 @@
 
 #include "type_interface.h"
 
-struct btn_flags {
+struct bstn_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
 };
@@ -22,91 +22,94 @@ struct avltn_flags {
     char balance            : 3;
 };
 
-struct btn;
-typedef struct btn {
-    struct btn *parent;
-    struct btn *left;
-    struct btn *right;
+struct bstn;
+typedef struct bstn {
+    struct bstn *parent;
+    struct bstn *left;
+    struct bstn *right;
     union {
-        struct btn_flags   plain;
+        struct bstn_flags  plain;
         struct rbtn_flags  rb;
         struct avltn_flags avl;
     } flags;
-} btn;
+} bstn;
 
-#define NONE 0
-#define RED_BLACK 1
-#define AVL 2
+enum bst_flavors { NONE = 0, RB = 1, AVL = 2 };
 
-typedef struct bt {
-    btn *root;
+typedef struct bst {
+    bstn *root;
     uint32_t count;
     uint8_t flavor;
     t_intf *key_type;
     t_intf *value_type;
-} bt;
+} bst;
 
 /* Interface */
 
-int     bt_initialize           (bt *T, uint8_t flavor, t_intf *kt, t_intf *vt);
-bt *    bt_new                  (       uint8_t flavor, t_intf *kt, t_intf *vt);
-void    bt_destroy              (bt *T);
-void    bt_delete               (bt *T);
+int     bst_initialize           (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
+bst *   bst_new                  (       uint8_t flavor, t_intf *kt, t_intf *vt);
+void    bst_destroy              (bst *T);
+void    bst_delete               (bst *T);
 
-void    bt_clear                (bt *T);
-bt *    bt_copy                 (          const bt *src);
-int     bt_copy_to              (bt *dest, const bt *src);
+void    bst_clear                (bst *T);
+bst *   bst_copy                 (          const bst *src);
+int     bst_copy_to              (bst *dest, const bst *src);
 
-int     bt_insert               (      bt *T, const void *k);
-int     bt_remove               (      bt *T, const void *k);
-int     bt_set                  (      bt *T, const void *k, const void *v);
-void *  bt_get                  (      bt *T, const void *k);
-int     bt_has                  (const bt *T, const void *k);
+int     bst_insert               (      bst *T, const void *k);
+int     bst_remove               (      bst *T, const void *k);
+int     bst_set                  (      bst *T, const void *k, const void *v);
+void *  bst_get                  (      bst *T, const void *k);
+int     bst_has                  (const bst *T, const void *k);
 
-int     bt_traverse_keys        (bt *T, int (*f)(void *k, void *p), void *p);
-int     bt_traverse_keys_r      (bt *T, int (*f)(void *k, void *p), void *p);
-int     bt_traverse_values      (bt *T, int (*f)(void *v, void *p), void *p);
-int     bt_traverse_values_r    (bt *T, int (*f)(void *v, void *p), void *p);
-int     bt_traverse_nodes       (bt *T, int (*f)(btn *n, void *p), void *p);
-int     bt_traverse_nodes_r     (bt *T, int (*f)(btn *n, void *p), void *p);
+int     bst_traverse_keys        (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_keys_r      (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_values      (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_values_r    (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_nodes       (bst *T, int (*f)(bstn *n, void *p), void *p);
+int     bst_traverse_nodes_r     (bst *T, int (*f)(bstn *n, void *p), void *p);
 
-int     bt_invariant            (const bt *T);
+int     bst_invariant            (const bst *T);
 
-#define bt_count(T) (T)->count
+#define bst_count(T) (T)->count
 
 /* Node subroutines */
 
-btn *   btn_new                 (const bt *T);
-void    btn_delete              (const bt *T, btn *n);
-void    btn_delete_rec          (const bt *T, btn *n);
+bstn *  bstn_new                 (const bst *T, const void *k, const void *v);
+void    bstn_delete              (const bst *T, bstn *n);
+void    bstn_delete_rec          (const bst *T, bstn *n);
 
-btn *   btn_copy_rec            (const bt *T, const btn *n);
+bstn *  bstn_copy_rec            (const bst *T, const bstn *n);
 
-int     btn_insert              (bt *T, btn *n, const void *k, btn **n_out);
-int     btn_remove              (bt *T, btn *n, const void *k);
+bstn *  bstn_insert              (bst *T, bstn *n, const void *k, const void *v);
+bstn *  bstn_remove              (bst *T, bstn *n, const void *k);
+bstn *  bstn_remove_min          (bst *T, bstn *n);
 
-#define btn_has_key(n)   ((n)->flags.plain.has_key)
-#define btn_has_value(n) ((n)->flags.plain.has_value)
+#define bstn_data_size(T) \
+    (t_size((T)->key_type) + ((T)->value_type ? t_size((T)->value_type) : 0))
+#define bstn_size(T) (sizeof(bstn) + bstn_data_size(T))
 
-#define btn_key(T, n) (void*)(((char *)(n)) + sizeof(btn))
-#define btn_value(T, n) \
-    ((T)->value_type ? (void*)((char *)(n)) + sizeof(btn) + t_size((T)->key_type) : NULL)
+#define bstn_has_key(n)   ((n)->flags.plain.has_key)
+#define bstn_has_value(n) ((n)->flags.plain.has_value)
 
-void    btn_set_key             (const bt *T, btn *n, const void *k);
-void    btn_destroy_key         (const bt *T, btn *n);
-void    btn_set_value           (const bt *T, btn *n, const void *v);
-void    btn_destroy_value       (const bt *T, btn *n);
+#define bstn_key(T, n) (void*)(((char *)(n)) + sizeof(bstn))
+#define bstn_value(T, n) \
+    ((T)->value_type ? (void*)((char *)(n)) + sizeof(bstn) + t_size((T)->key_type) : NULL)
 
-void    btn_rotate_left         (bt *T, btn *n, btn **n_out);
-void    btn_rotate_right        (bt *T, btn *n, btn **n_out);
-void    btn_replace_child       (bt *T, btn *p, btn *c, btn *s);
+void    bstn_set_key             (const bst *T, bstn *n, const void *k);
+void    bstn_destroy_key         (const bst *T, bstn *n);
+void    bstn_set_value           (const bst *T, bstn *n, const void *v);
+void    bstn_destroy_value       (const bst *T, bstn *n);
 
-int     btn_traverse            (       btn *n, int (*f)(btn *n,  void *p), void *p);
-int     btn_traverse_r          (       btn *n, int (*f)(btn *n,  void *p), void *p);
-int     btn_traverse_keys       (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
-int     btn_traverse_keys_r     (bt *T, btn *n, int (*f)(void *k, void *p), void *p);
-int     btn_traverse_values     (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
-int     btn_traverse_values_r   (bt *T, btn *n, int (*f)(void *v, void *p), void *p);
+void    bstn_rotate_left         (bst *T, bstn *n, bstn **n_out);
+void    bstn_rotate_right        (bst *T, bstn *n, bstn **n_out);
+void    bstn_replace_child       (bst *T, bstn *p, bstn *c, bstn *s);
+
+int     bstn_traverse            (       bstn *n, int (*f)(bstn *n,  void *p), void *p);
+int     bstn_traverse_r          (       bstn *n, int (*f)(bstn *n,  void *p), void *p);
+int     bstn_traverse_keys       (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
+int     bstn_traverse_keys_r     (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
+int     bstn_traverse_values     (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
+int     bstn_traverse_values_r   (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
 
 /* Red-black tree subroutines */
 
@@ -114,8 +117,8 @@ enum rbt_colors { BLACK = 0, RED = 1 };
 #define rbtn_color(n)           ((n)->flags.rb.color)
 #define rbtn_set_color(n, c)    ((n)->flags.rb.color = c)
 
-int     rbt_invariant           (const bt *T);
-int     rbtn_insert             (bt *T, btn *n, const void *k, btn **n_out);
-int     rbtn_remove             (bt *T, btn *n, const void *k);
+int     rbt_invariant           (const bst *T);
+int     rbtn_insert             (bst *T, bstn *n, const void *k, bstn **n_out);
+int     rbtn_remove             (bst *T, bstn *n, const void *k);
 
 #endif /* _binary_tree_h */
