@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "binary_tree.h"
+#include "bst.h"
 #include "stats.h"
 #include "type_interface.h"
 #include "util.h"

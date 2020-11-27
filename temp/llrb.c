@@ -1,10 +1,9 @@
 #include <assert.h>
 
-#include "binary_tree.h"
-#include "llrb.h"
+#include "bst.h"
 
-static
-btn *rotate_left(btn *n)
+static inline
+btn *rb_node_rotate_left(btn *n)
 {
     assert(n->right);
     btn *r = n->right;
@@ -15,8 +14,8 @@ btn *rotate_left(btn *n)
     return r;
 }
 
-static
-btn *rotate_right(btn *n)
+static inline
+btn *rb_node_rotate_right(btn *n)
 {
     assert(n->left);
     btn *l = n->left;
@@ -27,7 +26,8 @@ btn *rotate_right(btn *n)
     return l;
 }
 
-static inline void color_flip(btn *n)
+static inline
+void rb_node_color_flip(btn *n)
 {
     assert(n && n->left && n->right);
     rbtn_set_color(n, !rbtn_color(n));
@@ -35,10 +35,9 @@ static inline void color_flip(btn *n)
     rbtn_set_color(n->right, !rbtn_color(n->right));
 }
 
-#define is_red(n) ((n) && (n)->flags.rb.color == RED)
+#define rb_node_is_red(n) ((n) && (n)->flags.rb.color == RED)
 
-static
-btn *insert(bt *T, btn *n, const void *k)
+bst_node *rb_node_insert(bt *T, btn *n, const void *k)
 {
     if (n == NULL) {
         btn *nnew = btn_new(T);

@@ -1,6 +1,6 @@
 #include <ctype.h>
 #include <stdio.h>
-#include "binary_tree.h"
+#include "bst.h"
 #include "check.h"
 #include "log.c"
 #include "map.h"

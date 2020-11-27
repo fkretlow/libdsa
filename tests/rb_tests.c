@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "binary_tree.h"
+#include "bst.h"
 #include "str.h"
 #include "test.h"
 #include "test_utils.h"
@@ -25,25 +25,16 @@ int test_rbt_copy(void)
     int vr  = 2;
     int vrl = 3;
 
-    bstn *n = bstn_new(T);
-    bstn_set_key(T, n, kn);
-    bstn_set_value(T, n, &vn);
-    rbtn_set_color(n, BLACK);
+    bst_node *n = bst_node_new(T, kn, &vn);
+    n->flags.rb.color = BLACK;
 
-    bstn *l = bstn_new(T);
-    bstn_set_key(T, l, kl);
-    bstn_set_value(T, l, &vl);
-    rbtn_set_color(l, BLACK);
+    bst_node *l = bst_node_new(T, kl, &vl);
+    l->flags.rb.color = BLACK;
 
-    bstn *r = bstn_new(T);
-    bstn_set_key(T, r, kr);
-    bstn_set_value(T, r, &vr);
-    rbtn_set_color(r, BLACK);
+    bst_node *r = bst_node_new(T, kr, &vr);
+    r->flags.rb.color = BLACK;
 
-    bstn *rl = bstn_new(T);
-    bstn_set_key(T, rl, krl);
-    bstn_set_value(T, rl, &vrl);
-    rbtn_set_color(rl, RED);
+    bst_node *rl = bst_node_new(T, krl, &vrl);
 
     T->root = n;
     T->count = 4;
@@ -57,32 +48,32 @@ int test_rbt_copy(void)
     test(C->key_type == T->key_type);
     test(C->value_type == T->value_type);
 
-    bstn *c = C->root;
-    bstn *cl = c->left;
-    bstn *cr = c->right;
-    bstn *crl = c->right->left;
+    bst_node *c = C->root;
+    bst_node *cl = c->left;
+    bst_node *cr = c->right;
+    bst_node *crl = c->right->left;
 
     test(c);
-    test(rbtn_color(c) == BLACK);
-    test(str_compare(bstn_key  (T, c), kn)  == 0);
-    test(int_compare(bstn_value(T, c), &vn) == 0);
+    test(c->flags.rb.color == BLACK);
+    test(str_compare(bst_node_key  (T, c), kn)  == 0);
+    test(int_compare(bst_node_value(T, c), &vn) == 0);
 
     test(cl);
-    test(rbtn_color(cl) == BLACK);
-    test(str_compare(bstn_key  (T, cl), kl)  == 0);
-    test(int_compare(bstn_value(T, cl), &vl) == 0);
+    test(cl->flags.rb.color == BLACK);
+    test(str_compare(bst_node_key  (T, cl), kl)  == 0);
+    test(int_compare(bst_node_value(T, cl), &vl) == 0);
     test(cl->left == NULL && cl->right == NULL);
 
     test(cr);
-    test(rbtn_color(cr) == BLACK);
-    test(str_compare(bstn_key  (T, cr), kr)  == 0);
-    test(int_compare(bstn_value(T, cr), &vr) == 0);
+    test(cr->flags.rb.color == BLACK);
+    test(str_compare(bst_node_key  (T, cr), kr)  == 0);
+    test(int_compare(bst_node_value(T, cr), &vr) == 0);
     test(cr->left != NULL && cr->right == NULL);
 
     test(crl);
-    test(rbtn_color(crl) == RED);
-    test(str_compare(bstn_key  (T, crl), krl)  == 0);
-    test(int_compare(bstn_value(T, crl), &vrl) == 0);
+    test(crl->flags.rb.color == RED);
+    test(str_compare(bst_node_key  (T, crl), krl)  == 0);
+    test(int_compare(bst_node_value(T, crl), &vrl) == 0);
     test(crl->left == NULL && crl->right == NULL);
 
     /* also do it once on the stack */
@@ -116,7 +107,7 @@ int test_rbt_insert(void)
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_insert(T, &i);
         ++count;
-        test(rc == 1);
+        test(rc >= 0);
         test(bst_count(T) == count);
         test(bst_has(T, &i) == 1);
     }
@@ -132,13 +123,7 @@ int test_rbt_insert(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        if (rc == 1) {
-            ++count;
-            values[i] = v;
-        } else {
-            --i;
-        }
-        test(bst_count(T) == count);
+        values[i] = v;
     }
 
     for (i = 0; i < NMEMB; ++i) {
@@ -161,13 +146,13 @@ int test_rbt_remove(void)
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_insert(T, &i);
         ++count;
-        test(rc == 1);
+        test(rc >= 0);
     }
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, &i);
         --count;
-        test(rc == 1);
+        test(rc >= 0);
         test(bst_count(T) == count);
     }
 
@@ -185,19 +170,12 @@ int test_rbt_remove(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        if (rc == 1) {
-            ++count;
-            values[i] = v;
-        } else {
-            --i;
-        }
+        values[i] = v;
     }
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, values + i);
-        --count;
-        test(rc == 1);
-        test(bst_count(T) == count);
+        test(rc >= 0);
     }
 
     test(T->root == NULL);
@@ -225,7 +203,7 @@ int test_rbt_set_get(void)
         keys[i] = s;
         values[i] = i;
         rc = bst_set(T, s, &i);
-        test(rc == 1);
+        test(rc >= 0);
     }
 
     for (i = 0; i < NMEMB; ++i) {
@@ -248,7 +226,7 @@ int test_rbt_set_get(void)
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, keys[i]);
-        test(rc == 1);
+        test(rc >= 0);
         rc = bst_has(T, keys[i]);
         test(rc == 0);
     }

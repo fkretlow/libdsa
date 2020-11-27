@@ -1,7 +1,7 @@
 #include <assert.h>
 
 #include "check.h"
-#include "binary_tree.h"
+#include "bst.h"
 
 /* Return the weight of the group that contains n. n can be any node in the group. */
 static inline unsigned short rbt_group_weight(bstn *n)

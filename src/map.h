@@ -1,7 +1,7 @@
 #ifndef _map_h
 #define _map_h
 
-#include "binary_tree.h"
+#include "bst.h"
 
 typedef bt map;
 

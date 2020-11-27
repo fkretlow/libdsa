@@ -1,7 +1,7 @@
 #ifndef _set_h
 #define _set_h
 
-#include "binary_tree.h"
+#include "bst.h"
 #include "type_interface.h"
 
 typedef bst set;
