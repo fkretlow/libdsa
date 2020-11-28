@@ -8,8 +8,19 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-#define NMEMB 256
-#define MAXV 1024
+#define NMEMB 1024
+#define MAXV 100000
+
+void print_rb_stats(struct rb_stats *s, const char *msg)
+{
+    if (msg) printf("\n%s\n", msg);
+    printf("%s\n", "--------------------");
+    printf("height         %5d\n", s->height);
+    printf("shortest path  %5d\n", s->shortest_path);
+    printf("black height   %5d\n", s->black_height);
+    printf("black nodes    %5d\n", s->black_nodes);
+    printf("red nodes      %5d\n", s->red_nodes);
+}
 
 int test_rbt_copy(void)
 {
@@ -25,16 +36,16 @@ int test_rbt_copy(void)
     int vr  = 2;
     int vrl = 3;
 
-    bst_node *n = bst_node_new(T, kn, &vn);
+    bstn *n = bstn_new(T, kn, &vn);
     n->flags.rb.color = BLACK;
 
-    bst_node *l = bst_node_new(T, kl, &vl);
+    bstn *l = bstn_new(T, kl, &vl);
     l->flags.rb.color = BLACK;
 
-    bst_node *r = bst_node_new(T, kr, &vr);
+    bstn *r = bstn_new(T, kr, &vr);
     r->flags.rb.color = BLACK;
 
-    bst_node *rl = bst_node_new(T, krl, &vrl);
+    bstn *rl = bstn_new(T, krl, &vrl);
 
     T->root = n;
     T->count = 4;
@@ -48,32 +59,32 @@ int test_rbt_copy(void)
     test(C->key_type == T->key_type);
     test(C->value_type == T->value_type);
 
-    bst_node *c = C->root;
-    bst_node *cl = c->left;
-    bst_node *cr = c->right;
-    bst_node *crl = c->right->left;
+    bstn *c = C->root;
+    bstn *cl = c->left;
+    bstn *cr = c->right;
+    bstn *crl = c->right->left;
 
     test(c);
     test(c->flags.rb.color == BLACK);
-    test(str_compare(bst_node_key  (T, c), kn)  == 0);
-    test(int_compare(bst_node_value(T, c), &vn) == 0);
+    test(str_compare(bstn_key  (T, c), kn)  == 0);
+    test(int_compare(bstn_value(T, c), &vn) == 0);
 
     test(cl);
     test(cl->flags.rb.color == BLACK);
-    test(str_compare(bst_node_key  (T, cl), kl)  == 0);
-    test(int_compare(bst_node_value(T, cl), &vl) == 0);
+    test(str_compare(bstn_key  (T, cl), kl)  == 0);
+    test(int_compare(bstn_value(T, cl), &vl) == 0);
     test(cl->left == NULL && cl->right == NULL);
 
     test(cr);
     test(cr->flags.rb.color == BLACK);
-    test(str_compare(bst_node_key  (T, cr), kr)  == 0);
-    test(int_compare(bst_node_value(T, cr), &vr) == 0);
+    test(str_compare(bstn_key  (T, cr), kr)  == 0);
+    test(int_compare(bstn_value(T, cr), &vr) == 0);
     test(cr->left != NULL && cr->right == NULL);
 
     test(crl);
     test(crl->flags.rb.color == RED);
-    test(str_compare(bst_node_key  (T, crl), krl)  == 0);
-    test(int_compare(bst_node_value(T, crl), &vrl) == 0);
+    test(str_compare(bstn_key  (T, crl), krl)  == 0);
+    test(int_compare(bstn_value(T, crl), &vrl) == 0);
     test(crl->left == NULL && crl->right == NULL);
 
     /* also do it once on the stack */
@@ -98,6 +109,7 @@ int test_rbt_copy(void)
 
 int test_rbt_insert(void)
 {
+    struct rb_stats s;
     bst *T = bst_new(RB, &int_type, NULL);
 
     int rc, i, v;
@@ -112,9 +124,26 @@ int test_rbt_insert(void)
         test(bst_has(T, &i) == 1);
     }
 
+    rc = rb_analyze(T, &s);
+    test(rc == 0);
+    /* print_rb_stats(&s, "sorted input"); */
+
     v = 0;
     rc = bst_insert(T, &v);
     test(rc == 0);
+
+    bst_clear(T);
+    count = 0;
+
+    for (i = NMEMB; i > 0; --i) {
+        rc = bst_insert(T, &i);
+        ++count;
+        test(rc >= 0);
+    }
+
+    rc = rb_analyze(T, &s);
+    test(rc == 0);
+    /* print_rb_stats(&s, "sorted reverse input"); */
 
     bst_clear(T);
     count = 0;
@@ -125,6 +154,10 @@ int test_rbt_insert(void)
         test(rc >= 0);
         values[i] = v;
     }
+
+    rc = rb_analyze(T, &s);
+    test(rc == 0);
+    /* print_rb_stats(&s, "random input"); */
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_has(T, values + i);
