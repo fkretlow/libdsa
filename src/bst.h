@@ -44,6 +44,15 @@ typedef struct bst {
     t_intf *    value_type;
 } bst;
 
+struct bst_stats {
+    int height;
+    int shortest_path;
+    int total_nodes;
+    int black_height;
+    int black_nodes;
+    int red_nodes;
+};
+
 /* Interface */
 
 int     bst_initialize           (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
@@ -68,7 +77,7 @@ int     bst_traverse_values_r    (bst *T, int (*f)(void *v,     void *p), void *
 int     bst_traversens       (bst *T, int (*f)(bstn *n, void *p), void *p);
 int     bst_traversens_r     (bst *T, int (*f)(bstn *n, void *p), void *p);
 
-int     bst_invariant            (const bst *T);
+int     bst_invariant            (const bst *T, struct bst_stats *s_out);
 
 #define bst_count(T) (T)->count
 
@@ -80,9 +89,9 @@ void    bstn_delete_rec          (const bst *T, bstn *n);
 
 bstn *  bstn_copy_rec            (const bst *T, const bstn *n);
 
-bstn *  bstn_insert              (bst *T, bstn *n, const void *k, const void *v);
-bstn *  bstn_remove              (bst *T, bstn *n, const void *k);
-bstn *  bstn_remove_min          (bst *T, bstn *n);
+int     bstn_insert              (bst *T, bstn **np, const void *k, const void *v);
+int     bstn_remove              (bst *T, bstn **np, const void *k);
+int     bstn_remove_min          (bst *T, bstn **np);
 
 #define bstn_data_size(T) \
     (t_size((T)->key_type) + ((T)->value_type ? t_size((T)->value_type) : 0))
@@ -115,17 +124,8 @@ int     bstn_traverse_values_r  (bst *T, bstn *n, int (*f)(void *v, void *p), vo
 
 enum rb_colors { BLACK = 0, RED = 1 };
 
-struct rb_stats {
-    int height;
-    int shortest_path;
-    int black_height;
-    int black_nodes;
-    int red_nodes;
-};
-
-int     rb_invariant            (const bst *T);
-int     rb_analyze              (const bst *T, struct rb_stats *s);
-bstn *  rbn_insert              (bst *T, bstn *n, const void *k, const void *v);
-bstn *  rbn_remove              (bst *T, bstn *n, const void *k);
+int rbn_invariant (const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s);
+int rbn_insert    (bst *T, bstn **np, const void *k, const void *v);
+int rbn_remove    (bst *T, bstn **np, const void *k);
 
 #endif /* _bst_h */

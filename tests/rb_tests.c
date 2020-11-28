@@ -11,7 +11,7 @@
 #define NMEMB 1024
 #define MAXV 100000
 
-void print_rb_stats(struct rb_stats *s, const char *msg)
+void print_rb_stats(struct bst_stats *s, const char *msg)
 {
     if (msg) printf("\n%s\n", msg);
     printf("%s\n", "--------------------");
@@ -109,7 +109,7 @@ int test_rbt_copy(void)
 
 int test_rbt_insert(void)
 {
-    struct rb_stats s;
+    struct bst_stats s;
     bst *T = bst_new(RB, &int_type, NULL);
 
     int rc, i, v;
@@ -124,7 +124,7 @@ int test_rbt_insert(void)
         test(bst_has(T, &i) == 1);
     }
 
-    rc = rb_analyze(T, &s);
+    rc = bst_invariant(T, &s);
     test(rc == 0);
     /* print_rb_stats(&s, "sorted input"); */
 
@@ -141,7 +141,7 @@ int test_rbt_insert(void)
         test(rc >= 0);
     }
 
-    rc = rb_analyze(T, &s);
+    rc = bst_invariant(T, &s);
     test(rc == 0);
     /* print_rb_stats(&s, "sorted reverse input"); */
 
@@ -155,7 +155,7 @@ int test_rbt_insert(void)
         values[i] = v;
     }
 
-    rc = rb_analyze(T, &s);
+    rc = bst_invariant(T, &s);
     test(rc == 0);
     /* print_rb_stats(&s, "random input"); */
 
