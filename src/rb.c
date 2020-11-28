@@ -127,18 +127,46 @@ static inline void rbn_move_red_right(bstn **np)
     *np = n;
 }
 
-int rbn_remove_min(bst *T, bstn **np)
+void rbn_remove_min(bst *T, bstn **np)
 {
+    bstn *n = *np;
+    assert(n);
+
+    int rc;
+
+    if (!n->left) {
+        bstn_delete(T, n);
+        *np = NULL;
+        return;
+    }
+
+    if (n->left && n->left->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
+        rbn_move_red_left(&n);
+    }
+    rc = rbn_remove_min(T, &n->left);
+    rbn_fix_up(&n);
+}
+
+int rbn_remove(bst *T, bstn **np, const void *k)
+{
+    assert(T && T->key_type && k);
+
     bstn *n = *np;
     if (!n) return 0;
 
-    if (n->left) {
-        if (!rbn_is_red(n->left) && n->left && !rbn_is_red(n->left->left)) {
+    int rc;
+
+    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+
+    if (cmp < 0) {
+        if (n->left && n->left->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
             rbn_move_red_left(&n);
         }
-        return rbn_remove_min(T, &n->left);
-    } else {
-        ...
+        rc = rbn_remove(T, &n->left);
+    }
+
+    else {
+        /* TODO */
     }
 }
 
