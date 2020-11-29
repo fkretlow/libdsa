@@ -46,10 +46,10 @@ bin: CFLAGS += -DNDEBUG
 bin: $(BIN)
 	./build/sort_comparisons
 
-bt: CFLAGS += -DNDEBUG
-bt: $(LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o ./build/bt_comparisons ./programs/bt_comparisons.c $(LIB)
-	./build/bt_comparisons
+bst: CFLAGS += -DNDEBUG
+bst: $(LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o ./build/bst_comparisons ./programs/bst_comparisons.c $(LIB)
+	./build/bst_comparisons
 
 doc:
 	find ./doc/ -name '*.tex' -exec xelatex -output-directory=./doc {} \;
