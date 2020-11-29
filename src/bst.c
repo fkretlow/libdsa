@@ -1,3 +1,25 @@
+/*************************************************************************************************
+ *
+ * bst.c
+ *
+ * This file provides the complete implementation for a classic binary search tree that supports
+ * different key/value types by way of type interface structs, with additional hooks for different
+ * insertion/deletion algorithms depending on whether one of the available balancing strategies
+ * is selected for the tree (RB for a left-leaning red-black (2-3) tree, or AVL for a left-leaning
+ * AVL tree).
+ *
+ * The implementation is somewhat dauntless: no data fields are defined in the node struct, but
+ * enough space is dynamically allocated for every node depending on the type interfaces stored
+ * with the tree. On access, the correct offset is computed. This works because free doesn't
+ * depend on size information stored with the type of its argument. However, I wouldn't be
+ * surprised if this turned out to be horribly insecure. At any rate, you are hereby discouraged
+ * from messing around with the nodes in your own code.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,12 +28,10 @@
 #include "bst.h"
 #include "log.h"
 
-
 /* bstn *bstn_new(const bst *T, const void *k, const void *v)
  * Create a new node with the key k and the value v (if given) on the heap and return a pointer to
  * it, or NULL on error. Enough memory is requested to store the node header, one key, and zero or
  * one value objects according to the type interfaces stored in T. */
-
 bstn *bstn_new(const bst *T, const void *k, const void *v)
 {
     assert(T && T->key_type && k);
@@ -35,13 +55,11 @@ error:
     return NULL;
 }
 
-
 /* void bstn_delete    (const bst *T, bstn *n)
  * void bstn_delete_rec(const bst *T, bstn *n)
  * Delete n, destroying stored data and freeing associated memory. No links are altered in
- * adjacent nodes. Don't call bstn_delete on a node with children lest they become unreachable in
- * the void... use bstn_delete_rec[ursively] to wipe out the whole substree. */
-
+ * adjacent nodes, so don't call bstn_delete on a node with children lest they become unreachable
+ * in the void... use bstn_delete_rec[ursively] to wipe out the whole subtree. */
 void bstn_delete(const bst *T, bstn *n)
 {
     log_call("T=%p, n=%p", T, n);
@@ -66,9 +84,10 @@ void bstn_delete_rec(const bst *T, bstn *n)
     bstn_delete(T, n);
 }
 
-
 /* int bstn_insert(const bst *T, bstn **np, const void *k, const void *v)
- * Insert a node with the key k and the value v (if given) into the substree. */
+ * Insert a node with the key k and the value v (if given) into the substree with the root n.
+ * The pointer at np may be changed. Return 1 if a node was added, 0 if k was already there, or -1
+ * on failure. */
 int bstn_insert(bst *T, bstn **np, const void *k, const void *v)
 {
     assert(T && T->key_type && k);
@@ -99,24 +118,53 @@ error:
 }
 
 /* int bstn_remove_min(const bst *T, bstn **np)
- * int bstn_remove(const bst *T, bstn **np, const void *k)
- * Remove the node with the key k from the substree roted at n, return 1 if a node was removed, 0
- * if k wasn't found, or -1 on error. */
+ * Remove the minimum from the subtree with the root n. The pointer at np may be changed. This
+ * always removes a node, but we return 1 whatsoever for consistency with bstn_remove. */
 int bstn_remove_min(bst *T, bstn **np)
 {
     bstn *n = *np;
-    if (!n) return 0;
+    assert(n);
 
-    if (n->left) {
-        return bstn_remove_min(T, &n->left);
-    } else {
+    int rc;
+
+    if (!n->left) {
         bstn *r = n->right;
         bstn_delete(T, n);
         *np = r;
-        return 1;
+        rc = 1;
+    } else {
+        rc = bstn_remove_min(T, &n->left);
+    }
+
+    return rc;
+}
+
+/* void bstn_move_data(const bst *T, bstn *dest, bstn *src)
+ * Move the payload from src to dest, destroying any previous data in dest. */
+void bstn_move_data(const bst *T, bstn *dest, bstn *src)
+{
+    assert(T && T->key_type);
+    assert(dest && src && bstn_has_key(src));
+
+    /* destroy the data in dest */
+    if (bstn_has_key(dest))     bstn_destroy_key(T, dest);
+    if (bstn_has_value(dest))   bstn_destroy_value(T, dest);
+
+    /* move over the data from src */
+    t_move(T->key_type, bstn_key(T, dest), bstn_key(T, src));
+    src->flags.plain.has_key  = 0;
+    dest->flags.plain.has_key = 1;
+
+    if (bstn_has_value(src)) {
+        t_move(T->value_type, bstn_value(T, dest), bstn_value(T, src));
+        src->flags.plain.has_value  = 0;
+        dest->flags.plain.has_value = 1;
     }
 }
 
+/* int bstn_remove(const bst *T, bstn **np, const void *k)
+ * Remove the node with the key k from the substree roted at n. The pointer at np may be changed.
+ * Return 1 if a node was removed, 0 if k wasn't found, or -1 on error. */
 int bstn_remove(
         bst *T,
         bstn **np,      /* the root of the substree to delete from */
@@ -130,35 +178,16 @@ int bstn_remove(
 
     int cmp = t_compare(T->key_type, k, bstn_key(T, n));
 
-    if (cmp < 0) {
-        return bstn_remove(T, &n->left, k);
-    } else if (cmp > 0) {
-        return bstn_remove(T, &n->right, k);
-    } else { /* cmp == 0 */
-        bstn *s;
+    if      (cmp < 0) { return bstn_remove(T, &n->left,  k); }
+    else if (cmp > 0) { return bstn_remove(T, &n->right, k); }
+    else { /* cmp == 0 */
         if (n->left && n->right) {
-            /* find the node with the next greater key and swap */
-            s = n->right;
+            /* find the node with the minimum key in the right subtree, which is guaranteed to not
+             * have a left child; move its data over here, then delete it */
+            bstn *s = n->right;
             while (s->left) s = s->left;
-
-            /* destroy the data in n */
-            bstn_destroy_key(T, n);
-            if (bstn_has_value(n)) bstn_destroy_value(T, n);
-
-            /* move over the data from s */
-            t_move(T->key_type, bstn_key(T, n), bstn_key(T, s));
-            s->flags.plain.has_key = 0;
-            n->flags.plain.has_key = 1;
-
-            if (bstn_has_value(s)) {
-                t_move(T->value_type, bstn_value(T, n), bstn_value(T, s));
-                s->flags.plain.has_value = 0;
-                n->flags.plain.has_value = 1;
-            }
-
-            /* move on, delete s */
+            bstn_move_data(T, n, s);
             return bstn_remove_min(T, &n->right);
-
 
         } else {
             if      (n->left)   *np = n->left;
@@ -175,7 +204,6 @@ int bstn_remove(
  * void bstn_set_value(const bst *T, bstn *n, const void *v)
  * Set the key/value stored in n to k/v by copying it into the node. We assume that no previous
  * key/value is present. */
-
 void bstn_set_key(const bst *T, bstn *n, const void *k)
 {
     log_call("T=%p, n=%p, k=%p", T, n, k);
@@ -193,12 +221,10 @@ void bstn_set_value(const bst *T, bstn *n, const void *v)
     n->flags.plain.has_value = 1;
 }
 
-
 /* void bstn_destroy_key  (const bst *T, bstn *n)
  * void bstn_destroy_value(const bst *T, bstn *n, const void *v)
- * Destroy the key/value stored in n, freeing any associated memory. We assume that a
- * key/value is present. */
-
+ * Destroy the key/value stored in n, freeing any associated memory. We assume that a key/value is
+ * present. */
 void bstn_destroy_key(const bst *T, bstn *n)
 {
     log_call("T=%p, n=%p", T, n);
@@ -217,11 +243,9 @@ void bstn_destroy_value(const bst *T, bstn *n)
     n->flags.plain.has_value = 0;
 }
 
-
 /* bstn *bstn_copy_rec(const bst *T, const bstn *n)
- * Recursively copy the (sub-)tree rooted at n, including all stored data. The new tree has the
+ * Recursively copy the (sub)tree rooted at n, including all stored data. The new tree has the
  * exact same layout. */
-
 bstn *bstn_copy_rec(const bst *T, const bstn *n)
 {
     log_call("T=%p, n=%p", T, n);
@@ -247,17 +271,15 @@ error:
     return NULL;
 }
 
-
 /* int bst_initialize(bst *T, uint8_t flavor, t_intf *kt, t_intf *vt)
  * bst *bst_new      (        uint8_t flavor, t_intf *kt, t_intf *vt)
  * bst_initialize initializes a bst at the address pointed to by T (assuming there's sufficient
  * space). bst_new allocates and initializes a new bst and returns a pointer to it. The type
  * interface for keys is required and must contain a at least a size and a comparison function.
  * The type interface for values can be NULL if the tree is going to store single elements. */
-
 int bst_initialize(
         bst *T,             /* address of the bst to initialize */
-        uint8_t flavor,     /* balancing strategy, one of NONE, RB,, and AVL */
+        uint8_t flavor,     /* balancing strategy, one of NONE, RB, and AVL */
         t_intf *kt,         /* type interface for keys */
         t_intf *vt)         /* type interface for values, can be NULL */
 {
@@ -298,10 +320,8 @@ error:
     return NULL;
 }
 
-
 /* void bst_clear(bst *T)
  * Delete all nodes, freeing associated memory, and reset T. */
-
 void bst_clear(bst *T)
 {
     log_call("T=%p", T);
@@ -313,11 +333,9 @@ void bst_clear(bst *T)
     }
 }
 
-
 /* void bst_destroy(bst *T)
  * void bst_delete (bst *T)
  * Destroy T, freeing any associated memory. bst_delete also calls free on T. */
-
 void bst_destroy(bst *T)
 {
     log_call("T=%p", T);
@@ -338,11 +356,10 @@ void bst_delete(bst *T)
     }
 }
 
-
-/* bst *bst_copy   (          const bst *src)
- * int bst_copy_to(bst *dest, const bst *src)
- * Copy a binary tree, duplicating all content and preserving the exact same layout.  bst_copy
- * makes the copy on the heap, bst_copy_to creates it where dest points to. */
+/* bst *bst_copy   (           const bst *src)
+ * int  bst_copy_to(bst *dest, const bst *src)
+ * Copy a BST, duplicating all content and preserving the exact same layout. bst_copy makes the
+ * copy on the heap, bst_copy_to creates it where dest points to. */
 
 bst *bst_copy(const bst *src)
 {
@@ -381,9 +398,7 @@ error:
     return -1;
 }
 
-
 /* int bst_has(const bst *T, const void *k) Check if k is in T. */
-
 int bst_has(const bst *T, const void *k)
 {
     check_ptr(T);
@@ -406,9 +421,8 @@ error:
 }
 
 /* int bst_insert(bst *T, const void *k)
- * Insert k into the tree. Return 0 or 1 depending on whether a node was added or k was
- * already there, or -1 on error. */
-
+ * Insert k into the tree, using the appropriate algorithm for the selected balancing strategy.
+ * Return 1 if a node was added, 0 if k was already there, or -1 on error. */
 int bst_insert(bst *T, const void *k)
 {
     log_call("T=%p, k=%p", T, k);
@@ -434,11 +448,9 @@ error:
     return -1;
 }
 
-
 /* int bst_remove(bst *T, const void *k)
- * Remove k from the tree. Return 0 or 1 depending on whether k was found and removed or not, or
- * -1 on error. */
-
+ * Remove k from the tree, using the appropriate algorithm for the selected balancing strategy.
+ * Return 1 if a node was deleted, 0 if k was no there, or 1 on error. */
 int bst_remove(bst *T, const void *k)
 {
     log_call("T=%p, k=%p", T, k);
@@ -464,12 +476,10 @@ error:
     return -1;
 }
 
-
 /* int bst_set(bst *T, const void *k, const void *v)
  * Set the value of the node with the key k to v, or insert a node with k and v if k doesn't
- * exist. Return 0 or 1 depending on whether a node was added or k was already there, or -1 on
- * error. */
-
+ * exist, using the appropriate algorithm for the selected balancing strategy. Return 1 if a node
+ * was added, 0 if k was already there, or -1 on error. */
 int bst_set(bst *T, const void *k, const void *v)
 {
     log_call("T=%p, k=%p, v=%p", T, k, v);
@@ -497,10 +507,8 @@ error:
     return -1;
 }
 
-
 /* void *bst_get(bst *T, const void *k)
  * Return a pointer to the value mapped to k in T or NULL if k doesn't exist. */
-
 void *bst_get(bst *T, const void *k)
 {
     check_ptr(T);
@@ -523,24 +531,22 @@ error:
     return NULL;
 }
 
-
-/* int bstn_traverse             (       bstn *n, int (*f)(bstn *n,  void *p), void *p)
- * int bstn_traverse_r           (       bstn *n, int (*f)(bstn *n,  void *p), void *p)
+/* int bstn_traverse             (        bstn *n, int (*f)(bstn *n, void *p), void *p)
+ * int bstn_traverse_r           (        bstn *n, int (*f)(bstn *n, void *p), void *p)
  * int bstn_traverse_keys        (bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
  * int bstn_traverse_keys_r      (bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
  * int bstn_traverse_values      (bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
  * int bstn_traverse_values_r    (bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
  *
- * Walk through all the nodes of the sub-tree with the root n in ascending/descending order. Call
+ * Walk through all the nodes of the subtree with the root n in ascending/descending order. Call
  * f on every node, key, or value with the additional parameter p. If f returns a non-zero
  * integer, abort and return it.
  *
  * These functions are called by their counterparts bst_traverse... to do the actual work. There
  * should be no need to call them directly from the outside. */
-
 int bstn_traverse(
-        bstn *n,                         /* the root of the substree to traverse */
-        int (*f)(bstn *n, void *p),      /* the function to call on every node */
+        bstn *n,                        /* the root of the substree to traverse */
+        int (*f)(bstn *n, void *p),     /* the function to call on every node */
         void *p)                        /* additional parameter to pass to f */
 {
     int rc = 0;
@@ -675,7 +681,6 @@ int bstn_traverse_values_r(bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
     return rc;
 }
 
-
 /* int bst_traverse_nodes    (bst *T, int (*f)(bstn *n,  void *p), void *p)
  * int bst_traverse_nodes_r  (bst *T, int (*f)(bstn *n,  void *p), void *p)
  * int bst_traverse_keys     (bst *T, int (*f)(void *k, void *p), void *p)
@@ -723,11 +728,9 @@ error:
     return -1;
 }
 
-
 /* int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
- * int bst_invariant(bst *T)
- * Check if T satisfies the inequality properties for keys in binary trees. */
-
+ * Check if the subtree with the root n satisfies the inequality properties for keys in BSTs,
+ * and collect stats of the tree while at it. */
 int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
 {
     if (!n) return 0;
@@ -757,6 +760,9 @@ int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
     return 0;
 }
 
+/* int bst_invariant(const bst *T, struct bst_stats *s_out)
+ * Check if all pertinent invariants hold for the tree. If s_out is not NULL, save stats of the
+ * tree there for further inspection. */
 int bst_invariant(const bst *T, struct bst_stats *s_out)
 {
     check_ptr(T);

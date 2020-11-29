@@ -8,19 +8,8 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-#define NMEMB 128
+#define NMEMB 256
 #define MAXV 1024
-
-void print_rb_stats(struct bst_stats *s, const char *msg)
-{
-    if (msg) printf("\n%s\n", msg);
-    printf("%s\n", "--------------------");
-    printf("height         %5d\n", s->height);
-    printf("shortest path  %5d\n", s->shortest_path);
-    printf("black height   %5d\n", s->black_height);
-    printf("black nodes    %5d\n", s->black_nodes);
-    printf("red nodes      %5d\n", s->red_nodes);
-}
 
 int test_rb_copy(void)
 {

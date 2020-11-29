@@ -1,3 +1,17 @@
+/*************************************************************************************************
+ *
+ * bst.h
+ *
+ * Interface for a binary search tree that supports different key/value types by way of type
+ * interface structs, and different balancing strategies. The BST can store key-value pairs or
+ * just keys, and it provides the basis for other abstractions in the library (set, map) that
+ * require fast search of keys with a defined ordering.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
+ *
+ ************************************************************************************************/
+
 #ifndef _bst_h
 #define _bst_h
 
@@ -96,9 +110,10 @@ void    bstn_set_key            (const bst *T, bstn *n, const void *k);
 void    bstn_destroy_key        (const bst *T, bstn *n);
 void    bstn_set_value          (const bst *T, bstn *n, const void *v);
 void    bstn_destroy_value      (const bst *T, bstn *n);
+void    bstn_move_data          (const bst *T, bstn *dest, bstn *src);
 
-int     bstn_traverse           (        bstn *n, int (*f)(bstn *n,  void *p), void *p);
-int     bstn_traverse_r         (        bstn *n, int (*f)(bstn *n,  void *p), void *p);
+int     bstn_traverse           (        bstn *n, int (*f)(bstn *n, void *p), void *p);
+int     bstn_traverse_r         (        bstn *n, int (*f)(bstn *n, void *p), void *p);
 int     bstn_traverse_keys      (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
 int     bstn_traverse_keys_r    (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
 int     bstn_traverse_values    (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);

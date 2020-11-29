@@ -15,8 +15,11 @@
  * pointers to those links (pointers) are passed instead of the links themselves: `int rc =
  * insert(tree, &node, key)`.
  *
- * The algorithms are called by the high level functions of the bst interface defined in
- * bst.h/bst.c if the balancing strategy is set to RB for the tree they are called on.
+ * The algorithms are called by the high level functions of the bst interface declared in bst.h if
+ * the balancing strategy is set to RB for the tree they are called on.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
  *
  ************************************************************************************************/
 
@@ -152,7 +155,7 @@ static inline void rbn_move_red_right(bstn **np)
 
 /* int rbn_remove_min(bst *T, bstn **np)
  * Remove the minimum of the subtree with the root n. The pointer at np may be changed.
- * This always removes a node, but we return an int whatsoever for consistency. */
+ * This always removes a node, but we return 1 whatsoever for consistency with rbn_remove. */
 int rbn_remove_min(bst *T, bstn **np)
 {
     bstn *n = *np;
@@ -161,10 +164,15 @@ int rbn_remove_min(bst *T, bstn **np)
     int rc;
 
     if (!n->left) {
+        /* The LLRB invariants imply that we can't have a right child if we don't have a left one:
+         * No right child is red, and if we had a black one, the black-height property would be
+         * violated. */
+        assert(!n->right);
         bstn_delete(T, n);
         *np = NULL;
         rc = 1;
     } else {
+        /* Ensure the left child isn't a 2-node. */
         if (n->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left))  rbn_move_red_left(&n);
         rc = rbn_remove_min(T, &n->left);
         rbn_fix_up(&n);
@@ -176,8 +184,12 @@ int rbn_remove_min(bst *T, bstn **np)
 
 /* int rbn_remove(bst *T, bstn **np, const void *k)
  * Remove the node with the key k from the subtree with the root n, preserving the LLRB
- * invariants. The pointer at np may be changed. */
-int rbn_remove(bst *T, bstn **np, const void *k)
+ * invariants. The pointer at np may be changed.
+ * Return 1 if a node was removed, 0 if k wasn't found, or -1 on error. */
+int rbn_remove(
+        bst *T,
+        bstn **np,      /* the root of the subtree to delete from */
+        const void *k)  /* the key to delete */
 {
     assert(T && T->key_type && k);
 
@@ -211,29 +223,14 @@ int rbn_remove(bst *T, bstn **np, const void *k)
 
         if (t_compare(T->key_type, k, bstn_key(T, n)) == 0) {
             bstn *s;
-            /* find the node with the next greater key and swap */
+            /* find the node with the minimum key in the right subtree, which is guaranteed to not
+             * have a left child; move its data over here, then continue down the right subtree to
+             * delete it */
             s = n->right;
-            while (s->left) {
-                s = s->left;
-            }
-
-            /* destroy the data in n */
-            bstn_destroy_key(T, n);
-            if (bstn_has_value(n)) bstn_destroy_value(T, n);
-
-            /* move over the data from s */
-            t_move(T->key_type, bstn_key(T, n), bstn_key(T, s));
-            s->flags.plain.has_key = 0;
-            n->flags.plain.has_key = 1;
-
-            if (bstn_has_value(s)) {
-                t_move(T->value_type, bstn_value(T, n), bstn_value(T, s));
-                s->flags.plain.has_value = 0;
-                n->flags.plain.has_value = 1;
-            }
-
-            /* move on, delete s */
+            while (s->left) s = s->left;
+            bstn_move_data(T, n, s);
             rc = rbn_remove_min(T, &n->right);
+
         } else {
             rc = rbn_remove(T, &n->right, k);
         }
