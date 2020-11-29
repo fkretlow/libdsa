@@ -48,95 +48,6 @@ int test_node_handlers(void)
     return 0;
 }
 
-/* int test_node_rotations(void)
-{
-    bst *T = bst_new(NONE, &int_type, NULL);
-
-    bstn *p = bstn_new(T);
-    bstn *n = bstn_new(T);
-    bstn *l = bstn_new(T);
-    bstn *ll = bstn_new(T);
-    bstn *lr = bstn_new(T);
-    bstn *r = bstn_new(T);
-    bstn *rl = bstn_new(T);
-    bstn *rr = bstn_new(T);
-
-    bstn *res;
-
-    test(p);
-    test(n);
-    test(l);
-    test(ll);
-    test(lr);
-    test(r);
-    test(rl);
-    test(rr);
-
-    [>construct the test tree<]
-    p->left = n, n->parent = p;
-    n->left = l, l->parent = n;
-    l->left = ll, ll->parent = l;
-    l->right = lr, lr->parent = l;
-    n->right = r, r->parent = n;
-    r->left = rl, rl->parent = r;
-    r->right = rr, rr->parent = r;
-
-    [>rotate right and check<]
-    bstn_rotate_right(T, n, &res);
-    test(res == l);
-    test(p->left == l);
-    test(l->parent == p);
-    test(l->left == ll);
-    test(l->right == n);
-    test(n->parent == l);
-    test(n->left == lr);
-    test(lr->parent == n);
-
-    [>reset the test tree<]
-    p->left = NULL, p->right = n, n->parent = p;
-    n->left = l, l->parent = n;
-    l->left = ll, ll->parent = l;
-    l->right = lr, lr->parent = l;
-    n->right = r, r->parent = n;
-    r->left = rl, rl->parent = r;
-    r->right = rr, rr->parent = r;
-
-    [>rotate left and check<]
-    bstn_rotate_left(T, n, &res);
-    test(res == r);
-    test(p->right == r);
-    test(r->parent == p);
-    test(r->right == rr);
-    test(r->left == n);
-    test(n->parent == r);
-    test(n->right == rl);
-    test(rl->parent == n);
-
-    bstn_delete(T, p);
-    bstn_delete(T, n);
-    bstn_delete(T, l);
-    bstn_delete(T, ll);
-    bstn_delete(T, lr);
-    bstn_delete(T, r);
-    bstn_delete(T, rl);
-    bstn_delete(T, rr);
-
-    [>check p-is-root case in bstn_replace_child<]
-    bstn *c = bstn_new(T);
-    bstn *s = bstn_new(T);
-    T->root = c;
-    bstn_replace_child(T, c->parent, c, s);
-    test(T->root == s);
-    test(s->parent == NULL);
-
-    bstn_delete(T, c);
-    bstn_delete(T, s);
-
-    T->root = NULL;
-    bst_delete(T);
-    return 0;
-}
- */
 int test_bst_copy(void)
 {
     bst *T = bst_new(NONE, &str_type, &int_type);
@@ -158,9 +69,9 @@ int test_bst_copy(void)
 
     T->root = n;
     T->count = 4;
-    n->left = l; l->parent = n;
-    n->right = r; r->parent = n;
-    r->left = rl; rl->parent = r;
+    n->left = l;
+    n->right = r;
+    r->left = rl;
 
     /* copy and verify */
     bst *C = bst_copy(T);
@@ -223,13 +134,8 @@ int test_bst_has(void)
     str *d = str_from_cstr("d");
 
     T->root = bstn_new(T, c, NULL);
-    T->root->parent = NULL;
-
     T->root->left = bstn_new(T, a, NULL);
-    T->root->left->parent = T->root;
-
     T->root->left->right = bstn_new(T, b, NULL);
-    T->root->left->right->parent = T->root->left;
 
     T->count = 3;
 
@@ -257,7 +163,7 @@ int test_bst_insert(void)
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_insert(T, &i);
         ++count;
-        test(rc >= 0);
+        test(rc == 1);
         test(bst_count(T) == count);
         test(bst_has(T, &i) == 1);
     }
@@ -273,7 +179,13 @@ int test_bst_insert(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        values[i] = v;
+        if (rc == 1) {
+            values[i] = v;
+            ++count;
+        } else {
+            --i;
+        }
+        test(bst_count(T) == count);
     }
 
     for (i = 0; i < NMEMB; ++i) {
@@ -320,12 +232,18 @@ int test_bst_remove(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        values[i] = v;
+        if (rc == 1) {
+            values[i] = v;
+            ++count;
+        } else {
+            --i;
+        }
+        test(bst_count(T) == count);
     }
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, values + i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     test(T->root == NULL);
@@ -396,7 +314,6 @@ int main(void)
     /* log_info("random seed was %u", seed); */
 
     run_test(test_node_handlers);
-    /* run_test(test_node_rotations); */
     run_test(test_bst_copy);
     run_test(test_bst_has);
     run_test(test_bst_insert);

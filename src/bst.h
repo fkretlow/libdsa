@@ -26,7 +26,6 @@ struct avln_flags {
 
 struct bstn;
 typedef struct bstn {
-    struct bstn *parent;
     struct bstn *left;
     struct bstn *right;
     union {
@@ -55,29 +54,29 @@ struct bst_stats {
 
 /* interface */
 
-int     bst_initialize           (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
-bst *   bst_new                  (        uint8_t flavor, t_intf *kt, t_intf *vt);
-void    bst_destroy              (bst *T);
-void    bst_delete               (bst *T);
+int     bst_initialize          (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
+bst *   bst_new                 (        uint8_t flavor, t_intf *kt, t_intf *vt);
+void    bst_destroy             (bst *T);
+void    bst_delete              (bst *T);
 
-void    bst_clear                (bst *T);
-bst *   bst_copy                 (           const bst *src);
-int     bst_copy_to              (bst *dest, const bst *src);
+void    bst_clear               (bst *T);
+bst *   bst_copy                (           const bst *src);
+int     bst_copy_to             (bst *dest, const bst *src);
 
-int     bst_insert               (      bst *T, const void *k);
-int     bst_remove               (      bst *T, const void *k);
-int     bst_set                  (      bst *T, const void *k, const void *v);
-void *  bst_get                  (      bst *T, const void *k);
-int     bst_has                  (const bst *T, const void *k);
+int     bst_insert              (      bst *T, const void *k);
+int     bst_remove              (      bst *T, const void *k);
+int     bst_set                 (      bst *T, const void *k, const void *v);
+void *  bst_get                 (      bst *T, const void *k);
+int     bst_has                 (const bst *T, const void *k);
 
-int     bst_traverse_keys        (bst *T, int (*f)(void *k, void *p), void *p);
-int     bst_traverse_keys_r      (bst *T, int (*f)(void *k, void *p), void *p);
-int     bst_traverse_values      (bst *T, int (*f)(void *v, void *p), void *p);
-int     bst_traverse_values_r    (bst *T, int (*f)(void *v, void *p), void *p);
-int     bst_traverse_nodes       (bst *T, int (*f)(bstn *n, void *p), void *p);
-int     bst_traverse_nodes_r     (bst *T, int (*f)(bstn *n, void *p), void *p);
+int     bst_traverse_keys       (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_keys_r     (bst *T, int (*f)(void *k, void *p), void *p);
+int     bst_traverse_values     (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_values_r   (bst *T, int (*f)(void *v, void *p), void *p);
+int     bst_traverse_nodes      (bst *T, int (*f)(bstn *n, void *p), void *p);
+int     bst_traverse_nodes_r    (bst *T, int (*f)(bstn *n, void *p), void *p);
 
-int     bst_invariant            (const bst *T, struct bst_stats *s_out);
+int     bst_invariant           (const bst *T, struct bst_stats *s_out);
 
 #define bst_count(T) (T)->count
 
@@ -97,10 +96,6 @@ void    bstn_set_key            (const bst *T, bstn *n, const void *k);
 void    bstn_destroy_key        (const bst *T, bstn *n);
 void    bstn_set_value          (const bst *T, bstn *n, const void *v);
 void    bstn_destroy_value      (const bst *T, bstn *n);
-
-void    bstn_rotate_left        (bst *T, bstn *n, bstn **n_out);
-void    bstn_rotate_right       (bst *T, bstn *n, bstn **n_out);
-void    bstn_replace_child      (bst *T, bstn *p, bstn *c, bstn *s);
 
 int     bstn_traverse           (        bstn *n, int (*f)(bstn *n,  void *p), void *p);
 int     bstn_traverse_r         (        bstn *n, int (*f)(bstn *n,  void *p), void *p);

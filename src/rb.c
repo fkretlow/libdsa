@@ -1,8 +1,24 @@
-/************************************************************************************************
+/*************************************************************************************************
+ *
  * rb.c
+ *
  * Algorithms for insertion into and deletion from a left-leaning red-black (2-3) tree (LLRB).
- * Mostly a literal C translation of the original Java implementations by Robert Sedgewick.
- ***********************************************************************************************/
+ *
+ * For the most part this is a literal C translation of the original Java implementation by R.
+ * Sedgewick (see https://www.cs.princeton.edu/~rs/talks/LLRB/LLRB.pdf).
+ *
+ * Sedgewick's code is elegant in that it can replace changed child links with returns and simple
+ * assignments: `node = insert(node, key)`. Here, in contrast, creating a new node requires a call
+ * to `malloc`. That can fail, so we need a way to signal failure up the call chain. As everywhere
+ * else in the library this is done with integer return codes and it also provides a way to inform
+ * the caller if the number of nodes has changed. In order to be able to update child links,
+ * pointers to those links (pointers) are passed instead of the links themselves: `int rc =
+ * insert(tree, &node, key)`.
+ *
+ * The algorithms are called by the high level functions of the bst interface defined in
+ * bst.h/bst.c if the balancing strategy is set to RB for the tree they are called on.
+ *
+ ************************************************************************************************/
 
 #include <assert.h>
 #include <string.h>
@@ -11,9 +27,9 @@
 
 #define rbn_is_red(n) ((n) && (n)->flags.rb.color == RED)
 
-/* static inline bstn *rbn_rotate_left  (bstn *n)
- * static inline bstn *rbn_rotate_right (bstn *n)
- * Classic tree rotations with color adjustments. */
+/* static inline bstn *rbn_rotate_left  (bstn **np)
+ * static inline bstn *rbn_rotate_right (bstn **np)
+ * Normal tree rotations with RB color adjustments. The pointer at np is changed. */
 static inline void rbn_rotate_left(bstn **np)
 {
     bstn *n = *np;
@@ -43,16 +59,15 @@ static inline void rbn_rotate_right(bstn **np)
  * into the parent node in a 2-3-4 tree. */
 static inline void rbn_color_flip(bstn *n)
 {
-    assert(n);
-    assert(n->left);
-    assert(n->right);
+    assert(n && n->left && n->right);
     n->flags.rb.color        = !n->flags.rb.color;
     n->left->flags.rb.color  = !n->left->flags.rb.color;
     n->right->flags.rb.color = !n->right->flags.rb.color;
 }
 
 /* static inline void rbn_fix_up(bstn **np)
- * Fix the red-black tree on the way up the recursive chain after insertion or deletion. */
+ * Repair the RB properties on the way up the recursive chain after insertion or deletion. The
+ * pointer at np may be updated. */
 static inline void rbn_fix_up(bstn **np)
 {
     bstn *n = *np;
@@ -66,8 +81,12 @@ static inline void rbn_fix_up(bstn **np)
 }
 
 /* int rbn_insert(bst *T, bstn **np, const void *k, const void *v)
- * Insertion into a left leaning red-black (2-3) tree. v can be NULL. */
-int rbn_insert(bst *T, bstn **np, const void *k, const void *v)
+ * Insert k and (if given) v into a left leaning red-black (2-3) tree. The pointer at np may be
+ * changed. */
+int rbn_insert(bst *T,
+               bstn **np,       /* address of the link to this node in the parent node */
+               const void *k,   /* the key to insert */
+               const void *v)   /* the value to insert, may be NULL */
 {
     assert(T && T->key_type && k);
     assert(!v || T->value_type);
@@ -100,6 +119,10 @@ error:
     return -1;
 }
 
+/* static inline void rbn_move_red_left (bstn **np)
+ * static inline void rbn_move_red_right(bstn **np)
+ * Helper functions for deletion: Ensure that the left/right child node of n is not a 2-node.
+ * The pointer at np may be changed. */
 static inline void rbn_move_red_left(bstn **np)
 {
     bstn *n = *np;
@@ -111,7 +134,6 @@ static inline void rbn_move_red_left(bstn **np)
         rbn_rotate_left(&n);
         rbn_color_flip(n);
     }
-
     *np = n;
 }
 
@@ -125,29 +147,36 @@ static inline void rbn_move_red_right(bstn **np)
         rbn_rotate_right(&n);
         rbn_color_flip(n);
     }
-
     *np = n;
 }
 
-void rbn_remove_min(bst *T, bstn **np)
+/* int rbn_remove_min(bst *T, bstn **np)
+ * Remove the minimum of the subtree with the root n. The pointer at np may be changed.
+ * This always removes a node, but we return an int whatsoever for consistency. */
+int rbn_remove_min(bst *T, bstn **np)
 {
     bstn *n = *np;
     assert(n);
 
+    int rc;
+
     if (!n->left) {
         bstn_delete(T, n);
         *np = NULL;
-        return;
+        rc = 1;
+    } else {
+        if (n->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left))  rbn_move_red_left(&n);
+        rc = rbn_remove_min(T, &n->left);
+        rbn_fix_up(&n);
+        *np = n;
     }
 
-    if (n->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
-        rbn_move_red_left(&n);
-    }
-    rbn_remove_min(T, &n->left);
-    rbn_fix_up(&n);
-    *np = n;
+    return rc;
 }
 
+/* int rbn_remove(bst *T, bstn **np, const void *k)
+ * Remove the node with the key k from the subtree with the root n, preserving the LLRB
+ * invariants. The pointer at np may be changed. */
 int rbn_remove(bst *T, bstn **np, const void *k)
 {
     assert(T && T->key_type && k);
@@ -204,8 +233,7 @@ int rbn_remove(bst *T, bstn **np, const void *k)
             }
 
             /* move on, delete s */
-            rbn_remove_min(T, &n->right);
-            rc = 1;
+            rc = rbn_remove_min(T, &n->right);
         } else {
             rc = rbn_remove(T, &n->right, k);
         }
@@ -217,7 +245,8 @@ int rbn_remove(bst *T, bstn **np, const void *k)
 }
 
 /* int rbn_invariant(const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s)
- * Check if the invariants hold. */
+ * Check if the LLRB invariants hold for the subtree with the root n and collect stats of the tree
+ * while at it. */
 int rbn_invariant(
         const bst *T,
         const bstn *n,

@@ -49,9 +49,9 @@ int test_rb_copy(void)
 
     T->root = n;
     T->count = 4;
-    n->left = l; l->parent = n;
-    n->right = r; r->parent = n;
-    r->left = rl; rl->parent = r;
+    n->left = l;
+    n->right = r;
+    r->left = rl;
 
     /* copy and verify */
     bst *C = bst_copy(T);
@@ -109,7 +109,6 @@ int test_rb_copy(void)
 
 int test_rb_insert(void)
 {
-    /* struct bst_stats s; */
     bst *T = bst_new(RB, &int_type, NULL);
 
     int rc, i, v;
@@ -124,9 +123,6 @@ int test_rb_insert(void)
         test(bst_has(T, &i) == 1);
     }
 
-    /* rc = bst_invariant(T, &s);
-    print_rb_stats(&s, "sorted input"); */
-
     v = 0;
     rc = bst_insert(T, &v);
     test(rc == 0);
@@ -139,9 +135,6 @@ int test_rb_insert(void)
         ++count;
         test(rc == 1);
     }
-
-    /* rc = bst_invariant(T, &s); */
-    /* print_rb_stats(&s, "sorted reverse input"); */
 
     bst_clear(T);
     count = 0;
@@ -158,9 +151,6 @@ int test_rb_insert(void)
         }
         test(bst_count(T) == count);
     }
-
-    /* rc = bst_invariant(T, &s); */
-    /* print_rb_stats(&s, "random input"); */
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_has(T, values + i);
