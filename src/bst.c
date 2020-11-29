@@ -517,6 +517,10 @@ int bst_remove(bst *T, const void *k)
 
     int rc;
     switch (T->flavor) {
+        case RB:
+            rc = rbn_remove(T, &T->root, k);
+            if (T->root) T->root->flags.rb.color = BLACK;
+            break;
         default:
             rc = bstn_remove(T, &T->root, k);
     }

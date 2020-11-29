@@ -26,21 +26,21 @@ int test_set_usage(void)
 {
     for (int i = 0; i < NMEMB; ++i) {
         rc = set_insert(S, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     for (int i = 0; i < NMEMB; ++i) {
         rc = set_has(S, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     int v = -1;
     rc = set_has(S, &v);
-    test(rc >= 0);
+    test(rc == 0);
 
     for (int i = 0; i < NMEMB; ++i) {
         rc = set_remove(S, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     return 0;
@@ -72,7 +72,7 @@ int test_set_union(void)
 
     for (int i = 0; i < 15; ++i) {
         rc = set_has(U, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     set_delete(S1);
@@ -99,15 +99,15 @@ int test_set_intersection(void)
 
     for (int i = 0; i < 4; ++i) {
         rc = set_has(I, &i);
-        test(rc >= 0);
+        test(rc == 0);
     }
     for (int i = 4; i < 10; ++i) {
         rc = set_has(I, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
     for (int i = 10; i < 15; ++i) {
         rc = set_has(I, &i);
-        test(rc >= 0);
+        test(rc == 0);
     }
 
     set_delete(S1);
@@ -133,11 +133,11 @@ int test_set_difference(void)
 
     for (int i = 0; i < 4; ++i) {
         rc = set_has(D, &i);
-        test(rc >= 0);
+        test(rc == 1);
     }
     for (int i = 4; i < 15; ++i) {
         rc = set_has(D, &i);
-        test(rc >= 0);
+        test(rc == 0);
     }
 
     set_delete(S1);

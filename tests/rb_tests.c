@@ -8,8 +8,8 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-#define NMEMB 1024
-#define MAXV 100000
+#define NMEMB 128
+#define MAXV 1024
 
 void print_rb_stats(struct bst_stats *s, const char *msg)
 {
@@ -22,7 +22,7 @@ void print_rb_stats(struct bst_stats *s, const char *msg)
     printf("red nodes      %5d\n", s->red_nodes);
 }
 
-int test_rbt_copy(void)
+int test_rb_copy(void)
 {
     bst *T = bst_new(RB, &str_type, &int_type);
 
@@ -107,9 +107,9 @@ int test_rbt_copy(void)
     return 0;
 }
 
-int test_rbt_insert(void)
+int test_rb_insert(void)
 {
-    struct bst_stats s;
+    /* struct bst_stats s; */
     bst *T = bst_new(RB, &int_type, NULL);
 
     int rc, i, v;
@@ -119,14 +119,13 @@ int test_rbt_insert(void)
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_insert(T, &i);
         ++count;
-        test(rc >= 0);
+        test(rc == 1);
         test(bst_count(T) == count);
         test(bst_has(T, &i) == 1);
     }
 
-    rc = bst_invariant(T, &s);
-    test(rc == 0);
-    /* print_rb_stats(&s, "sorted input"); */
+    /* rc = bst_invariant(T, &s);
+    print_rb_stats(&s, "sorted input"); */
 
     v = 0;
     rc = bst_insert(T, &v);
@@ -138,11 +137,10 @@ int test_rbt_insert(void)
     for (i = NMEMB; i > 0; --i) {
         rc = bst_insert(T, &i);
         ++count;
-        test(rc >= 0);
+        test(rc == 1);
     }
 
-    rc = bst_invariant(T, &s);
-    test(rc == 0);
+    /* rc = bst_invariant(T, &s); */
     /* print_rb_stats(&s, "sorted reverse input"); */
 
     bst_clear(T);
@@ -152,11 +150,16 @@ int test_rbt_insert(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        values[i] = v;
+        if (rc == 1) {
+            values[i] = v;
+            ++count;
+        } else {
+            --i;
+        }
+        test(bst_count(T) == count);
     }
 
-    rc = bst_invariant(T, &s);
-    test(rc == 0);
+    /* rc = bst_invariant(T, &s); */
     /* print_rb_stats(&s, "random input"); */
 
     for (i = 0; i < NMEMB; ++i) {
@@ -168,7 +171,7 @@ int test_rbt_insert(void)
     return 0;
 }
 
-int test_rbt_remove(void)
+int test_rb_remove(void)
 {
     bst *T = bst_new(RB, &int_type, NULL);
 
@@ -203,12 +206,18 @@ int test_rbt_remove(void)
         v = rand() % MAXV;
         rc = bst_insert(T, &v);
         test(rc >= 0);
-        values[i] = v;
+        if (rc == 1) {
+            values[i] = v;
+            ++count;
+        } else {
+            --i;
+        }
+        test(bst_count(T) == count);
     }
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, values + i);
-        test(rc >= 0);
+        test(rc == 1);
     }
 
     test(T->root == NULL);
@@ -217,7 +226,7 @@ int test_rbt_remove(void)
     return 0;
 }
 
-int test_rbt_set_get(void)
+int test_rb_set_get(void)
 {
     bst *T = bst_new(RB, &str_type, &int_type);
     test(T);
@@ -247,7 +256,7 @@ int test_rbt_set_get(void)
 
     for (i = 0; i < NMEMB; ++i) {
         values[i] *= 10;
-        rc = bst_set(T, keys[i], &values[i]);
+        rc = bst_set(T, keys[i], values + i);
         test(rc == 0);
     }
 
@@ -259,7 +268,7 @@ int test_rbt_set_get(void)
 
     for (i = 0; i < NMEMB; ++i) {
         rc = bst_remove(T, keys[i]);
-        test(rc >= 0);
+        test(rc == 1);
         rc = bst_has(T, keys[i]);
         test(rc == 0);
     }
@@ -278,10 +287,10 @@ int main(void)
     srand(seed);
     /* log_info("random seed was %u", seed); */
 
-    run_test(test_rbt_copy);
-    run_test(test_rbt_insert);
-    run_test(test_rbt_remove);
-    run_test(test_rbt_set_get);
+    run_test(test_rb_copy);
+    run_test(test_rb_insert);
+    run_test(test_rb_remove);
+    run_test(test_rb_set_get);
 
     test_suite_end();
 }

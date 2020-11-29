@@ -43,7 +43,9 @@ static inline void rbn_rotate_right(bstn **np)
  * into the parent node in a 2-3-4 tree. */
 static inline void rbn_color_flip(bstn *n)
 {
-    assert(n && n->left && n->right);
+    assert(n);
+    assert(n->left);
+    assert(n->right);
     n->flags.rb.color        = !n->flags.rb.color;
     n->left->flags.rb.color  = !n->left->flags.rb.color;
     n->right->flags.rb.color = !n->right->flags.rb.color;
@@ -116,7 +118,7 @@ static inline void rbn_move_red_left(bstn **np)
 static inline void rbn_move_red_right(bstn **np)
 {
     bstn *n = *np;
-    assert(!rbn_is_red(n->left) && !rbn_is_red(n->right));
+    assert(n->left && !rbn_is_red(n->left) && !rbn_is_red(n->right));
 
     rbn_color_flip(n);
     if (rbn_is_red(n->left->left)) {
@@ -132,19 +134,18 @@ void rbn_remove_min(bst *T, bstn **np)
     bstn *n = *np;
     assert(n);
 
-    int rc;
-
     if (!n->left) {
         bstn_delete(T, n);
         *np = NULL;
         return;
     }
 
-    if (n->left && n->left->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
+    if (n->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
         rbn_move_red_left(&n);
     }
-    rc = rbn_remove_min(T, &n->left);
+    rbn_remove_min(T, &n->left);
     rbn_fix_up(&n);
+    *np = n;
 }
 
 int rbn_remove(bst *T, bstn **np, const void *k)
@@ -156,18 +157,63 @@ int rbn_remove(bst *T, bstn **np, const void *k)
 
     int rc;
 
-    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
-
-    if (cmp < 0) {
-        if (n->left && n->left->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left)) {
+    if (t_compare(T->key_type, k, bstn_key(T, n)) < 0) {
+        if (!rbn_is_red(n->left) && n->left && !rbn_is_red(n->left->left)) {
             rbn_move_red_left(&n);
         }
-        rc = rbn_remove(T, &n->left);
+        rc = rbn_remove(T, &n->left, k);
     }
 
     else {
-        /* TODO */
+        if (rbn_is_red(n->left)) {
+            rbn_rotate_right(&n);
+        }
+
+        if (t_compare(T->key_type, k, bstn_key(T, n)) == 0 && !n->right) {
+            assert(!n->left);
+            bstn_delete(T, n);
+            *np = NULL;
+            return 1;
+        }
+
+        if (!rbn_is_red(n->right) && n->right && !rbn_is_red(n->right->left)) {
+            rbn_move_red_right(&n);
+        }
+
+        if (t_compare(T->key_type, k, bstn_key(T, n)) == 0) {
+            bstn *s;
+            /* find the node with the next greater key and swap */
+            s = n->right;
+            while (s->left) {
+                s = s->left;
+            }
+
+            /* destroy the data in n */
+            bstn_destroy_key(T, n);
+            if (bstn_has_value(n)) bstn_destroy_value(T, n);
+
+            /* move over the data from s */
+            t_move(T->key_type, bstn_key(T, n), bstn_key(T, s));
+            s->flags.plain.has_key = 0;
+            n->flags.plain.has_key = 1;
+
+            if (bstn_has_value(s)) {
+                t_move(T->value_type, bstn_value(T, n), bstn_value(T, s));
+                s->flags.plain.has_value = 0;
+                n->flags.plain.has_value = 1;
+            }
+
+            /* move on, delete s */
+            rbn_remove_min(T, &n->right);
+            rc = 1;
+        } else {
+            rc = rbn_remove(T, &n->right, k);
+        }
     }
+
+    rbn_fix_up(&n);
+    *np = n;
+    return rc;
 }
 
 /* int rbn_invariant(const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s)
