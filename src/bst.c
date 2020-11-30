@@ -5,8 +5,7 @@
  * This file provides the complete implementation for a classic binary search tree that supports
  * different key/value types by way of type interface structs, with additional hooks for different
  * insertion/deletion algorithms depending on whether one of the available balancing strategies
- * is selected for the tree (RB for a left-leaning red-black (2-3) tree, or AVL for a left-leaning
- * AVL tree).
+ * is selected for the tree (left-leaning red-black (2-3) tree, or AVL tree).
  *
  * The implementation is somewhat dauntless: no data fields are defined in the node struct, but
  * enough space is dynamically allocated for every node depending on the type interfaces stored

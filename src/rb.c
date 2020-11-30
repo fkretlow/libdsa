@@ -68,10 +68,10 @@ static inline void rbn_color_flip(bstn *n)
     n->right->flags.rb.color = !n->right->flags.rb.color;
 }
 
-/* static inline void rbn_fix_up(bstn **np)
+/* static inline void rbn_repair(bstn **np)
  * Repair the RB properties on the way up the recursive chain after insertion or deletion. The
  * pointer at np may be updated. */
-static inline void rbn_fix_up(bstn **np)
+static inline void rbn_repair(bstn **np)
 {
     bstn *n = *np;
     /* rotate right-leaning 3-nodes */
@@ -115,7 +115,7 @@ int rbn_insert(bst *T,
         rc = 0;
     }
 
-    rbn_fix_up(&n);
+    rbn_repair(&n);
     *np = n;
     return rc;
 error:
@@ -175,7 +175,7 @@ int rbn_remove_min(bst *T, bstn **np)
         /* Ensure the left child isn't a 2-node. */
         if (n->left && !rbn_is_red(n->left) && !rbn_is_red(n->left->left))  rbn_move_red_left(&n);
         rc = rbn_remove_min(T, &n->left);
-        rbn_fix_up(&n);
+        rbn_repair(&n);
         *np = n;
     }
 
@@ -236,7 +236,7 @@ int rbn_remove(
         }
     }
 
-    rbn_fix_up(&n);
+    rbn_repair(&n);
     *np = n;
     return rc;
 }
