@@ -133,12 +133,94 @@ error:
     return -1;
 }
 
-static inline size_t bstn_height(const bstn *n)
+/* int avln_remove_min(const bst *T, bstn **np, short *dhp)
+ * Remove the minimum from the subtree with the root n, preserving the AVL invariants. The pointer
+ * at np may be changed. This always removes a node, but we return 1 whatsoever for consistency
+ * with bstn_remove. */
+int avln_remove_min(bst *T, bstn **np, short *dhp)
 {
+    bstn *n = *np;
+    assert(n);
+
+    if (!n->left) {
+        bstn *r = n->right;
+        bstn_delete(T, n);
+        if (dhp) *dhp = -1;
+        *np = r;
+        return 1;
+
+    } else {
+        short dh  = 0;          /* change of height here */
+        short dhr = 0;          /* change of height through repair */
+        short dhc = 0;          /* change of height in the child */
+
+        int rc = avln_remove_min(T, &n->left, &dhc);
+        if (avln_balance(n) < 0) dh += dhc;
+        n->flags.avl.balance -= dhc;
+
+        if (dhc) avln_repair(&n, &dhr);
+        if (dhp) *dhp = dh + dhr;
+        *np = n;
+        return rc;
+    }
+}
+
+/* int avln_remove(const bst *T, bstn **np, const void *k, short *dhp)
+ * Remove the node with the key k from the substree roted at n, preserving the AVL invariant. The
+ * pointer at np may be changed. Return 1 if a node was removed, 0 if k wasn't found, or -1 on
+ * error. */
+int avln_remove(bst *T, bstn **np, const void *k, short *dhp)
+{
+    assert(T && T->key_type && k);
+
+    bstn *n = *np;
     if (!n) return 0;
-    size_t hl = bstn_height(n->left);
-    size_t hr = bstn_height(n->right);
-    return hl > hr ? hl + 1 : hr + 1;
+
+    short dh  = 0;          /* change of height here */
+    short dhr = 0;          /* change of height through repair */
+    short dhc = 0;          /* change of height in the child */
+    int rc;
+
+    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+
+    if (cmp < 0) {
+        rc = avln_remove(T, &n->left, k, &dhc);
+        if (avln_balance(n) < 0) dh += dhc;
+        n->flags.avl.balance -= dhc;
+
+    } else if (cmp > 0) {
+        rc = avln_remove(T, &n->right, k, &dhc);
+        if (avln_balance(n) > 0) dh += dhc;
+        n->flags.avl.balance += dhc;
+
+    } else { /* cmp == 0 */
+        if (n->left && n->right) {
+            /* Find the node with the minimum key in the right subtree, which is guaranteed to not
+             * have a left child; move its data over here, then delete it. */
+            bstn *s = n->right;
+            while (s->left) s = s->left;
+            bstn_move_data(T, n, s);
+            rc = avln_remove_min(T, &n->right, &dhc);
+            if (avln_balance(n) > 0) dh += dhc;
+            n->flags.avl.balance += dhc;
+
+        } else {
+            /* use np to temporarily store the successor */
+            if      (n->left)   *np = n->left;
+            else if (n->right)  *np = n->right;
+            else                *np = NULL;
+
+            bstn_delete(T, n);
+            n = *np;
+            dh = -1;
+            rc = 1;
+        }
+    }
+
+    if (dhc) avln_repair(&n, &dhr);
+    if (dhp) *dhp = dh + dhr;
+    *np = n;
+    return rc;
 }
 
 /* int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
@@ -185,4 +267,3 @@ int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
 
     return 0;
 }
-

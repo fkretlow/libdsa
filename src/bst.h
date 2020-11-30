@@ -119,6 +119,8 @@ int     bstn_traverse_keys_r    (bst *T, bstn *n, int (*f)(void *k, void *p), vo
 int     bstn_traverse_values    (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
 int     bstn_traverse_values_r  (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
 
+size_t  bstn_height             (const bstn *n);
+
 #define bstn_data_size(T) \
     (t_size((T)->key_type) + ((T)->value_type ? t_size((T)->value_type) : 0))
 #define bstn_size(T) (sizeof(bstn) + bstn_data_size(T))
@@ -132,7 +134,7 @@ int     bstn_traverse_values_r  (bst *T, bstn *n, int (*f)(void *v, void *p), vo
 
 /* RB node subroutines */
 
-enum rb_colors { BLACK = 0, RED = 1 };
+enum rb_colors { RED = 0, BLACK = 1 };
 
 int rbn_invariant   (const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s);
 int rbn_insert      (bst *T, bstn **np, const void *k, const void *v);

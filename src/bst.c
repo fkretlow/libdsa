@@ -9,7 +9,7 @@
  *
  * The implementation is somewhat dauntless: no data fields are defined in the node struct, but
  * enough space is dynamically allocated for every node depending on the type interfaces stored
- * with the tree. On access, the correct offset is computed. This works because free doesn't
+ * with the tree. On access, the correct offset is computed. This works because `free` doesn't
  * depend on size information stored with the type of its argument. However, I wouldn't be
  * surprised if this turned out to be horribly insecure. At any rate, you are hereby discouraged
  * from messing around with the nodes in your own code.
@@ -30,7 +30,9 @@
 /* bstn *bstn_new(const bst *T, const void *k, const void *v)
  * Create a new node with the key k and the value v (if given) on the heap and return a pointer to
  * it, or NULL on error. Enough memory is requested to store the node header, one key, and zero or
- * one value objects according to the type interfaces stored in T. */
+ * one value objects according to the type interfaces stored in T.
+ * Note that new RB nodes are always red and RED = 0, so as long as we're using `calloc` to
+ * allocate the node, there's no need to explicitly set the color. */
 bstn *bstn_new(const bst *T, const void *k, const void *v)
 {
     assert(T && T->key_type && k);
@@ -46,8 +48,6 @@ bstn *bstn_new(const bst *T, const void *k, const void *v)
         t_copy(T->value_type, bstn_value(T, n), v);
         n->flags.plain.has_value = 1;
     }
-
-    if (T->flavor == RB) n->flags.rb.color = RED;
 
     return n;
 error:
@@ -181,8 +181,8 @@ int bstn_remove(
     else if (cmp > 0) { return bstn_remove(T, &n->right, k); }
     else { /* cmp == 0 */
         if (n->left && n->right) {
-            /* find the node with the minimum key in the right subtree, which is guaranteed to not
-             * have a left child; move its data over here, then delete it */
+            /* Find the node with the minimum key in the right subtree, which is guaranteed to not
+             * have a left child; move its data over here, then delete it. */
             bstn *s = n->right;
             while (s->left) s = s->left;
             bstn_move_data(T, n, s);
@@ -467,6 +467,9 @@ int bst_remove(bst *T, const void *k)
             rc = rbn_remove(T, &T->root, k);
             if (T->root) T->root->flags.rb.color = BLACK;
             break;
+        case AVL:
+            rc = avln_remove(T, &T->root, k, NULL);
+            break;
         default:
             rc = bstn_remove(T, &T->root, k);
     }
@@ -731,6 +734,16 @@ int bst_traverse_values_r(bst *T, int (*f)(void *v, void *p), void *p) {
     return 0;
 error:
     return -1;
+}
+
+/* size_t bstn_height(const bstn *n)
+ * Get the height of the subtree with the root n, O(n)! */
+size_t bstn_height(const bstn *n)
+{
+    if (!n) return 0;
+    size_t hl = bstn_height(n->left);
+    size_t hr = bstn_height(n->right);
+    return (hl > hr ? hl : hr) + 1;
 }
 
 /* int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
