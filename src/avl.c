@@ -17,7 +17,7 @@ void avln_rotate_right(bstn **np, short *dhp)
     bstn *p = n->left;
     short bn = avln_balance(n);
     short bp = avln_balance(p);
-    assert(bn < 0 && bp >= -1 && bp <= 1);
+    assert(bn < 0 && bp >= -2 && bp <= 1);
 
     n->left = p->right;
     p->right = n;
@@ -37,7 +37,7 @@ void avln_rotate_left(bstn **np, short *dhp)
     bstn *p = n->right;
     short bn = avln_balance(n);
     short bp = avln_balance(p);
-    assert(bn > 0 && bp >= -1 && bp <= 1);
+    assert(bn > 0 && bp >= -1 && bp <= 2);
 
     n->right = p->left;
     p->left = n;
@@ -90,41 +90,99 @@ int avln_insert(
         bstn **np,
         const void *k,
         const void *v,
-        short *dhp)        /* where to report a change of height */
+        short *dhp)         /* where to report a change of height */
 {
     assert(T && T->key_type && k);
     assert(!v || T->value_type);
 
     bstn *n = *np;
-    short dhc;          /* change of height in the child */
-    short dh;           /* change of height here */
+    short dh  = 0;          /* change of height here */
+    short dhr = 0;          /* change of height through repair */
+    short dhc = 0;          /* change of height in the child */
     int rc;
 
     if (!n) {
         n = bstn_new(T, k, v);
         check(n, "failed to create new node");
-        *np = n;
-        *dhp = 1;
-        return 1;
+        dh = 1;
+        rc = 1;
+
+    } else {
+        int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+
+        if (cmp < 0) {
+            rc = avln_insert(T, &n->left, k, v, &dhc);
+            if (avln_balance(n) < 0 || (avln_balance(n) == 0 && dhc > 0)) dh += dhc;
+            n->flags.avl.balance -= dhc;
+        } else if (cmp > 0) {
+            rc = avln_insert(T, &n->right, k, v, &dhc);
+            if (avln_balance(n) > 0 || (avln_balance(n) == 0 && dhc > 0)) dh += dhc;
+            n->flags.avl.balance += dhc;
+        } else { /* cmp == 0 */
+            if (v) bstn_set_value(T, n, v);
+            rc = 0;
+        }
+
+        if (dhc) avln_repair(&n, &dhr);
     }
 
-    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
-
-    if (cmp < 0) {
-        rc = avln_insert(T, &n->left, k, v, &dhc);
-        n->flags.avl.balance -= dhc;
-    } else if (cmp > 0) {
-        rc = avln_insert(T, &n->right, k, v, &dhc);
-        n->flags.avl.balance += dhc;
-    } else { /* cmp == 0 */
-        if (v) bstn_set_value(T, n, v);
-        rc = 0;
-    }
-
-    avln_repair(&n, &dh);
-    *dhp = dh;
+    if (dhp) *dhp = dh + dhr;
     *np = n;
     return rc;
 error:
     return -1;
 }
+
+static inline size_t bstn_height(const bstn *n)
+{
+    if (!n) return 0;
+    size_t hl = bstn_height(n->left);
+    size_t hr = bstn_height(n->right);
+    return hl > hr ? hl + 1 : hr + 1;
+}
+
+/* int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
+ * Check if the subtree with the root n satisfies the inequality properties for keys in BSTs and
+ * the AVL properties, and collect stats of the tree while at it. */
+int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
+{
+    if (!n) return 0;
+
+    ++depth;
+    ++s->total_nodes;
+
+    if (!n->left && !n->right) {
+        if (!s->shortest_path || depth < s->shortest_path) s->shortest_path = depth;
+        if (!s->height        || depth > s->height)        s->height = depth;
+    }
+
+    /* check key inequalities */
+    if (n->left && t_compare(T->key_type, bstn_key(T, n->left), bstn_key(T, n)) >= 0) {
+        log_error("BST invariant violated: left child > parent");
+        return -1;
+    }
+    if (n->right && t_compare(T->key_type, bstn_key(T, n->right), bstn_key(T, n)) <= 0) {
+        log_error("BST invariant violated: right child < parent");
+        return -1;
+    }
+
+    /* check balance */
+    size_t hl = bstn_height(n->left);
+    size_t hr = bstn_height(n->right);
+    if (avln_balance(n) != (int)hr - (int)hl) {
+        log_error("AVL balance factor is wrong: b = %d != %lu - %lu", avln_balance(n), hr, hl);
+        return -2;
+    }
+
+    if (avln_balance(n) < -1 || avln_balance(n) > 1) {
+        log_error("AVL invariant violated: out of balance");
+        return -3;
+    }
+
+    /* process children */
+    if (n->left  && avln_invariant(T, n->left,  depth, s) != 0)   return -1;
+    if (n->right && avln_invariant(T, n->right, depth, s) != 0)   return -1;
+
+    return 0;
+}
+

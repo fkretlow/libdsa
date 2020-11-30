@@ -436,6 +436,9 @@ int bst_insert(bst *T, const void *k)
             rc = rbn_insert(T, &T->root, k, NULL);
             T->root->flags.rb.color = BLACK;
             break;
+        case AVL:
+            rc = avln_insert(T, &T->root, k, NULL, NULL);
+            break;
         default:
             rc = bstn_insert(T, &T->root, k, NULL);
     }
@@ -494,6 +497,9 @@ int bst_set(bst *T, const void *k, const void *v)
         case RB:
             rc = rbn_insert(T, &T->root, k, v);
             T->root->flags.rb.color = BLACK;
+            break;
+        case AVL:
+            rc = avln_insert(T, &T->root, k, v, NULL);
             break;
         default:
             rc = bstn_insert(T, &T->root, k, v);
@@ -773,6 +779,9 @@ int bst_invariant(const bst *T, struct bst_stats *s_out)
     switch (T->flavor) {
         case RB:
             rc = rbn_invariant(T, T->root, 0, 0, &s);
+            break;
+        case AVL:
+            rc = avln_invariant(T, T->root, 0, &s);
             break;
         default:
             rc = bstn_invariant(T, T->root, 0, &s);

@@ -134,8 +134,13 @@ int     bstn_traverse_values_r  (bst *T, bstn *n, int (*f)(void *v, void *p), vo
 
 enum rb_colors { BLACK = 0, RED = 1 };
 
-int rbn_invariant (const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s);
-int rbn_insert    (bst *T, bstn **np, const void *k, const void *v);
-int rbn_remove    (bst *T, bstn **np, const void *k);
+int rbn_invariant   (const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s);
+int rbn_insert      (bst *T, bstn **np, const void *k, const void *v);
+int rbn_remove      (bst *T, bstn **np, const void *k);
 
+/* AVL node subroutines */
+
+int avln_invariant  (const bst *T, const bstn *n, int depth, struct bst_stats *s);
+int avln_insert     (bst *T, bstn **np, const void *k, const void *v, short *dhp);
+int avln_remove     (bst *T, bstn **np, const void *k, short *dhp);
 #endif /* _bst_h */
