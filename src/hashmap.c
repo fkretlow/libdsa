@@ -4,16 +4,16 @@
 #include "check.h"
 #include "hashmap.h"
 
-static inline HashmapNode *HashmapNode_new(void)
+static inline hashmapn *hashmapn_new(void)
 {
-    HashmapNode *n = calloc(1, sizeof(*n));
+    hashmapn *n = calloc(1, sizeof(*n));
     check_alloc(n);
     return n;
 error:
     return NULL;
 }
 
-static inline void HashmapNode_delete(const Hashmap *M, HashmapNode *n)
+static inline void hashmapn_delete(const hashmap *M, hashmapn *n)
 {
     if (n) {
         if (n->key && M) t_destroy(M->key_type, n->key);
@@ -24,7 +24,7 @@ static inline void HashmapNode_delete(const Hashmap *M, HashmapNode *n)
     }
 }
 
-static int HashmapNode_set_key(const Hashmap *M, HashmapNode *n, const void *key)
+static int hashmapn_set_key(const hashmap *M, hashmapn *n, const void *key)
 {
     check_ptr(M);
     check_ptr(n);
@@ -42,7 +42,7 @@ error:
     return -1;
 }
 
-static int HashmapNode_set_value(const Hashmap *M, HashmapNode *n, const void *value)
+static int hashmapn_set_value(const hashmap *M, hashmapn *n, const void *value)
 {
     check_ptr(M);
     check_ptr(n);
@@ -65,7 +65,7 @@ error:
     return -1;
 }
 
-static int HashmapNode_get_value(const Hashmap *M, HashmapNode *n, void *out)
+static int hashmapn_get_value(const hashmap *M, hashmapn *n, void *out)
 {
     check_ptr(M);
     check_ptr(n);
@@ -80,14 +80,14 @@ error:
     return -1;
 }
 
-int Hashmap_initialize(Hashmap *M, t_intf *key_type, t_intf *value_type)
+int hashmap_initialize(hashmap *M, t_intf *kt, t_intf *vt)
 {
-    check_ptr(key_type);
-    check_ptr(value_type);
-    check(key_type->compare != NULL, "No comparison function provided for key type.");
+    check_ptr(kt);
+    check_ptr(vt);
+    check(kt->compare != NULL, "No comparison function provided for key type.");
 
-    M->key_type = key_type;
-    M->value_type = value_type;
+    M->key_type = kt;
+    M->value_type = vt;
 
     M->n_buckets = MAP_N_BUCKETS;
     M->buckets = calloc(M->n_buckets, sizeof(*M->buckets));
@@ -99,13 +99,13 @@ error:
     return -1;
 }
 
-Hashmap *Hashmap_new(t_intf *key_type, t_intf *value_type)
+hashmap *hashmap_new(t_intf *kt, t_intf *vt)
 {
-    Hashmap *M = calloc(1, sizeof(*M));
+    hashmap *M = calloc(1, sizeof(*M));
     check_alloc(M);
 
-    int rc = Hashmap_initialize(M, key_type, value_type);
-    check(rc == 0, "Failed to initialize Hashmap.");
+    int rc = hashmap_initialize(M, kt, vt);
+    check(rc == 0, "Failed to initialize hashmap.");
 
     return M;
 error:
@@ -113,27 +113,37 @@ error:
     return NULL;
 }
 
-void Hashmap_delete(Hashmap *M)
+void hashmap_destroy(hashmap *M)
+{
+    if (M && M->buckets) {
+        hashmap_clear(M);
+        free(M->buckets);
+        M->key_type = M->value_type = NULL;
+        M->n_buckets = 0;
+    }
+}
+
+void hashmap_delete(hashmap *M)
 {
     if (M) {
         if (M->buckets) {
-            Hashmap_clear(M);
+            hashmap_clear(M);
             free(M->buckets);
         }
         free(M);
     }
 }
 
-void Hashmap_clear(Hashmap *M)
+void hashmap_clear(hashmap *M)
 {
     if (M && M->buckets) {
-        HashmapNode *cur;
-        HashmapNode *next;
+        hashmapn *cur;
+        hashmapn *next;
         for (size_t i = 0; i < M->n_buckets; ++i) {
             cur = M->buckets[i];
             while (cur != NULL) {
                 next = cur->next;
-                HashmapNode_delete(M, cur);
+                hashmapn_delete(M, cur);
                 cur = next;
             }
             M->buckets[i] = NULL;
@@ -141,12 +151,12 @@ void Hashmap_clear(Hashmap *M)
     }
 }
 
-HashmapNode *Hashmap_find_node(const Hashmap *M, const void *key, size_t bucket_index)
+hashmapn *hashmap_find_node(const hashmap *M, const void *key, size_t bucket_index)
 {
     check_ptr(M);
     check_ptr(key);
 
-    HashmapNode *n = M->buckets[bucket_index];
+    hashmapn *n = M->buckets[bucket_index];
     if (!n) {
         return NULL;
     } else {
@@ -165,21 +175,21 @@ error:
 // Return values: 1 if the key already exists
 //                0 if a new entry was created
 //               -1 on error
-int Hashmap_set(Hashmap *M, const void *key, const void *value)
+int hashmap_set(hashmap *M, const void *key, const void *value)
 {
     check_ptr(M);
 
     size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
-    HashmapNode *node = Hashmap_find_node(M, key, bucket_index);
+    hashmapn *node = hashmap_find_node(M, key, bucket_index);
 
     if (node) {
-        check(!HashmapNode_set_value(M, node, value), "Failed to set value.");
+        check(!hashmapn_set_value(M, node, value), "Failed to set value.");
         return 1;
     } else {
-        node = HashmapNode_new();
+        node = hashmapn_new();
         check(node != NULL, "Failed to create new node.");
-        check(!HashmapNode_set_key(M, node, key), "Failed to set key.");
-        check(!HashmapNode_set_value(M, node, value), "Failed to set value.");
+        check(!hashmapn_set_key(M, node, key), "Failed to set key.");
+        check(!hashmapn_set_value(M, node, value), "Failed to set value.");
         node->next = M->buckets[bucket_index];
         M->buckets[bucket_index] = node;
         return 0;
@@ -192,13 +202,13 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Hashmap_has(const Hashmap *M, const void *key)
+int hashmap_has(const hashmap *M, const void *key)
 {
     check_ptr(M);
     check_ptr(key);
 
     size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
-    HashmapNode *n = Hashmap_find_node(M, key, bucket_index);
+    hashmapn *n = hashmap_find_node(M, key, bucket_index);
 
     return n ? 1 : 0;
 error:
@@ -208,17 +218,17 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Hashmap_get(const Hashmap *M, const void *key, void *value_out)
+int hashmap_get(const hashmap *M, const void *key, void *value_out)
 {
     check_ptr(M);
     check_ptr(key);
     check_ptr(value_out);
 
     size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
-    HashmapNode *n = Hashmap_find_node(M, key, bucket_index);
+    hashmapn *n = hashmap_find_node(M, key, bucket_index);
 
     if (n) {
-        check(!HashmapNode_get_value(M, n, value_out), "Failed to hand out value.");
+        check(!hashmapn_get_value(M, n, value_out), "Failed to hand out value.");
         return 1;
     } else {
         return 0;
@@ -231,15 +241,15 @@ error:
 // Return values: 1 if found
 //                0 if not found
 //               -1 on error
-int Hashmap_remove(Hashmap *M, const void *key)
+int hashmap_remove(hashmap *M, const void *key)
 {
     check_ptr(M);
     check_ptr(key);
 
     size_t bucket_index = t_hash(M->key_type, key) % MAP_N_BUCKETS;
 
-    HashmapNode *node = M->buckets[bucket_index];
-    HashmapNode *prev = NULL;
+    hashmapn *node = M->buckets[bucket_index];
+    hashmapn *prev = NULL;
 
     while (node && t_compare(M->key_type, node->key, key) != 0) {
         prev = node;
@@ -252,7 +262,7 @@ int Hashmap_remove(Hashmap *M, const void *key)
         } else {
             M->buckets[bucket_index] = node->next;
         }
-        HashmapNode_delete(M, node);
+        hashmapn_delete(M, node);
         return 1;
     } else {
         return 0;

@@ -11,13 +11,6 @@
 #define NMEMB 256
 #define MAXV 1024
 
-int print_balance(bstn *n, void *p)
-{
-    p = (void*)p;
-    printf("k=%d, b=%d\n", *(int*)((char*)n + sizeof(bstn)), n->flags.avl.balance);
-    return 0;
-}
-
 int test_avl_insert(void)
 {
     bst *T = bst_new(AVL, &int_type, NULL);

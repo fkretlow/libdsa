@@ -6,12 +6,12 @@
 #include "test_utils.h"
 #include "type_interface.h"
 
-static Hashmap *M;
+static hashmap *M;
 static int rc, key, value;
 
 int test_hashmap_new(void)
 {
-    M = Hashmap_new(&int_type, &int_type);
+    M = hashmap_new(&int_type, &int_type);
     test(M != NULL);
     test(M->key_type == &int_type);
     test(M->value_type == &int_type);
@@ -23,12 +23,12 @@ int test_hashmap_new(void)
 int test_hashmap_usage(void)
 {
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
-        rc = Hashmap_set(M, &i, &j);
+        rc = hashmap_set(M, &i, &j);
         test(rc == 0);
     }
 
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
-        rc = Hashmap_get(M, &i, &value);
+        rc = hashmap_get(M, &i, &value);
         test(rc == 1);
         test(value == j);
     }
@@ -36,29 +36,29 @@ int test_hashmap_usage(void)
     key = 10;
     value = 0;
 
-    rc = Hashmap_has(M, &key);
+    rc = hashmap_has(M, &key);
     test(rc == 0);
 
-    rc = Hashmap_get(M, &key, &value);
+    rc = hashmap_get(M, &key, &value);
     test(rc == 0);
     test(value == 0);
 
-    rc = Hashmap_remove(M, &key);
+    rc = hashmap_remove(M, &key);
     test(rc == 0);
 
     key = 1;
 
-    rc = Hashmap_has(M, &key);
+    rc = hashmap_has(M, &key);
     test(rc == 1);
 
-    rc = Hashmap_get(M, &key, &value);
+    rc = hashmap_get(M, &key, &value);
     test(rc == 1);
     test(value == 10);
 
-    rc = Hashmap_remove(M, &key);
+    rc = hashmap_remove(M, &key);
     test(rc == 1);
 
-    rc = Hashmap_has(M, &key);
+    rc = hashmap_has(M, &key);
     test(rc == 0);
 
     return 0;
@@ -66,28 +66,28 @@ int test_hashmap_usage(void)
 
 int test_hashmap_teardown(void)
 {
-    Hashmap_delete(M);
+    hashmap_delete(M);
     return 0;
 }
 
 int test_hashmap_with_strings(void)
 {
-    M = Hashmap_new(&str_type, &str_type);
+    M = hashmap_new(&str_type, &str_type);
     test(M != NULL);
 
     str *k = str_from_cstr("name");
     str *v = str_from_cstr("Johann");
     str v_out;
-    rc = Hashmap_set(M, k, v);
+    rc = hashmap_set(M, k, v);
     test(rc == 0);
-    rc = Hashmap_get(M, k, &v_out);
+    rc = hashmap_get(M, k, &v_out);
     test(rc == 1);
     test(str_compare(v, &v_out) == 0);
 
     str_delete(k);
     str_delete(v);
     str_destroy(&v_out);
-    Hashmap_delete(M);
+    hashmap_delete(M);
     return 0;
 }
 

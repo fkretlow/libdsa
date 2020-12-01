@@ -9,29 +9,30 @@
 
 #define MAP_N_BUCKETS 512
 
-struct HashmapNode;
-typedef struct HashmapNode {
-    struct HashmapNode *next;
-    char *key;
-    char *value;
-} HashmapNode;
+struct hashmapn;
+typedef struct hashmapn {
+    struct hashmapn *   next;
+    char *              key;
+    char *              value;
+} hashmapn;
 
-typedef struct Hashmap {
-    HashmapNode **buckets;
-    size_t n_buckets;
-    t_intf *key_type;
-    t_intf *value_type;
-} Hashmap;
+typedef struct hashmap {
+    hashmapn **     buckets;
+    size_t          n_buckets;
+    t_intf *        key_type;
+    t_intf *        value_type;
+} hashmap;
 
-int Hashmap_initialize(Hashmap *M, t_intf *key_type, t_intf *value_type);
-Hashmap *Hashmap_new(t_intf *key_type, t_intf *value_type);
-void Hashmap_delete(Hashmap *M);
-void Hashmap_clear(Hashmap *M);
+int         hashmap_initialize (hashmap *M, t_intf *kt, t_intf *vt);
+hashmap *   hashmap_new        (            t_intf *kt, t_intf *vt);
+void        hashmap_destroy    (hashmap *M);
+void        hashmap_delete     (hashmap *M);
 
-// These functions return 1 if found, 0 if not found, -1 on error.
-int Hashmap_set(Hashmap *M, const void *key, const void *value);
-int Hashmap_remove(Hashmap *M, const void *key);
-int Hashmap_has(const Hashmap *M, const void *key);
-int Hashmap_get(const Hashmap *M, const void *key, void *value_out);
+void        hashmap_clear      (hashmap *M);
+
+int         hashmap_set        (      hashmap *M, const void *k, const void *v);
+int         hashmap_remove     (      hashmap *M, const void *k);
+int         hashmap_has        (const hashmap *M, const void *k);
+void *      hashmap_get        (      hashmap *M, const void *k);
 
 #endif // _map_h
