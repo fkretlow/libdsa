@@ -794,7 +794,7 @@ int bst_invariant(const bst *T, struct bst_stats *s_out)
             rc = rbn_invariant(T, T->root, 0, 0, &s);
             break;
         case AVL:
-            rc = avln_invariant(T, T->root, 0, &s);
+            rc = avln_invariant(T, T->root, 0, NULL, &s);
             break;
         default:
             rc = bstn_invariant(T, T->root, 0, &s);

@@ -1,3 +1,16 @@
+/*************************************************************************************************
+ *
+ * avl.c
+ *
+ * Algorithms for insertion into and deletion from an AVL tree. The algorithms are called by the
+ * high level functions of the bst interface declared in bst.h if the balancing strategy is set to
+ * AVL for the tree they are called on.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 #include "bst.h"
 #include "check.h"
@@ -226,7 +239,7 @@ int avln_remove(bst *T, bstn **np, const void *k, short *dhp)
 /* int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
  * Check if the subtree with the root n satisfies the inequality properties for keys in BSTs and
  * the AVL properties, and collect stats of the tree while at it. */
-int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
+int avln_invariant(const bst *T, const bstn *n, int depth, int *h_out, struct bst_stats *s)
 {
     if (!n) return 0;
 
@@ -248,10 +261,22 @@ int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
         return -1;
     }
 
+    /* process children first to get the height of the subtrees */
+    int rc;
+    int hl = 0;
+    int hr = 0;
+    if (n->left) {
+        rc = avln_invariant(T, n->left, depth, &hl, s);
+        if (rc != 0) return rc;
+    }
+    if (n->right) {
+        rc = avln_invariant(T, n->right, depth, &hr, s);
+        if (rc != 0) return rc;
+    }
+    if (h_out) *h_out = (hl > hr ? hl : hr) + 1;
+
     /* check balance */
-    size_t hl = bstn_height(n->left);
-    size_t hr = bstn_height(n->right);
-    if (avln_balance(n) != (int)hr - (int)hl) {
+    if (avln_balance(n) != hr - hl) {
         log_error("AVL balance factor is wrong: b = %d != %lu - %lu", avln_balance(n), hr, hl);
         return -2;
     }
@@ -260,10 +285,6 @@ int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
         log_error("AVL invariant violated: out of balance");
         return -3;
     }
-
-    /* process children */
-    if (n->left  && avln_invariant(T, n->left,  depth, s) != 0)   return -1;
-    if (n->right && avln_invariant(T, n->right, depth, s) != 0)   return -1;
 
     return 0;
 }

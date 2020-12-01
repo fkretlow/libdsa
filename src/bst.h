@@ -142,7 +142,7 @@ int rbn_remove      (bst *T, bstn **np, const void *k);
 
 /* AVL node subroutines */
 
-int avln_invariant  (const bst *T, const bstn *n, int depth, struct bst_stats *s);
+int avln_invariant  (const bst *T, const bstn *n, int depth, int *height_out, struct bst_stats *s);
 int avln_insert     (bst *T, bstn **np, const void *k, const void *v, short *dhp);
 int avln_remove     (bst *T, bstn **np, const void *k, short *dhp);
 #endif /* _bst_h */
