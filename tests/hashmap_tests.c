@@ -7,7 +7,7 @@
 #include "type_interface.h"
 
 static hashmap *M;
-static int rc, key, value;
+static int rc, k, v;
 
 int test_hashmap_new(void)
 {
@@ -22,43 +22,44 @@ int test_hashmap_new(void)
 
 int test_hashmap_usage(void)
 {
+    int *vp;
+
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
         rc = hashmap_set(M, &i, &j);
-        test(rc == 0);
+        test(rc == 1);
     }
 
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
-        rc = hashmap_get(M, &i, &value);
-        test(rc == 1);
-        test(value == j);
+        vp = hashmap_get(M, &i);
+        test(vp);
+        test(*vp == j);
     }
 
-    key = 10;
-    value = 0;
+    k = 10;
+    v = 0;
 
-    rc = hashmap_has(M, &key);
+    rc = hashmap_has(M, &k);
     test(rc == 0);
 
-    rc = hashmap_get(M, &key, &value);
+    vp = hashmap_get(M, &k);
+    test(!vp);
+
+    rc = hashmap_remove(M, &k);
     test(rc == 0);
-    test(value == 0);
 
-    rc = hashmap_remove(M, &key);
-    test(rc == 0);
+    k = 1;
 
-    key = 1;
-
-    rc = hashmap_has(M, &key);
+    rc = hashmap_has(M, &k);
     test(rc == 1);
 
-    rc = hashmap_get(M, &key, &value);
-    test(rc == 1);
-    test(value == 10);
+    vp = hashmap_get(M, &k);
+    test(vp);
+    test(*vp == 10);
 
-    rc = hashmap_remove(M, &key);
+    rc = hashmap_remove(M, &k);
     test(rc == 1);
 
-    rc = hashmap_has(M, &key);
+    rc = hashmap_has(M, &k);
     test(rc == 0);
 
     return 0;
@@ -73,20 +74,19 @@ int test_hashmap_teardown(void)
 int test_hashmap_with_strings(void)
 {
     M = hashmap_new(&str_type, &str_type);
-    test(M != NULL);
+    test(M);
 
     str *k = str_from_cstr("name");
     str *v = str_from_cstr("Johann");
-    str v_out;
+    str *r;
     rc = hashmap_set(M, k, v);
-    test(rc == 0);
-    rc = hashmap_get(M, k, &v_out);
     test(rc == 1);
-    test(str_compare(v, &v_out) == 0);
+    r = hashmap_get(M, k);
+    test(r);
+    test(str_compare(v, r) == 0);
 
     str_delete(k);
     str_delete(v);
-    str_destroy(&v_out);
     hashmap_delete(M);
     return 0;
 }

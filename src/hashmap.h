@@ -1,10 +1,7 @@
 #ifndef _map_h
 #define _map_h
 
-#include <stdlib.h>
-
 #include "hash.h"
-#include "sort_tools.h"
 #include "type_interface.h"
 
 #define MAP_N_BUCKETS 512
@@ -12,13 +9,11 @@
 struct hashmapn;
 typedef struct hashmapn {
     struct hashmapn *   next;
-    char *              key;
-    char *              value;
 } hashmapn;
 
 typedef struct hashmap {
     hashmapn **     buckets;
-    size_t          n_buckets;
+    unsigned short  n_buckets;
     t_intf *        key_type;
     t_intf *        value_type;
 } hashmap;
