@@ -268,8 +268,8 @@ error:
     return NULL;
 }
 
-/* int bst_initialize(bst *T, uint8_t flavor, t_intf *kt, t_intf *vt)
- * bst *bst_new      (        uint8_t flavor, t_intf *kt, t_intf *vt)
+/* int  bst_initialize(bst *T, uint8_t flavor, t_intf *kt, t_intf *vt)
+ * bst *bst_new       (        uint8_t flavor, t_intf *kt, t_intf *vt)
  * bst_initialize initializes a bst at the address pointed to by T (assuming there's sufficient
  * space). bst_new allocates and initializes a new bst and returns a pointer to it. The type
  * interface for keys is required and must contain a at least a size and a comparison function.
@@ -395,7 +395,8 @@ error:
     return -1;
 }
 
-/* int bst_has(const bst *T, const void *k) Check if k is in T. */
+/* int bst_has(const bst *T, const void *k)
+ * Check if k is in T. */
 int bst_has(const bst *T, const void *k)
 {
     check_ptr(T);
@@ -450,7 +451,7 @@ error:
 
 /* int bst_remove(bst *T, const void *k)
  * Remove k from the tree, using the appropriate algorithm for the selected balancing strategy.
- * Return 1 if a node was deleted, 0 if k was no there, or 1 on error. */
+ * Return 1 if a node was deleted, 0 if k was not there, or -1 on error. */
 int bst_remove(bst *T, const void *k)
 {
     log_call("T=%p, k=%p", T, k);

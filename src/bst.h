@@ -51,7 +51,7 @@ typedef struct bstn {
 
 typedef struct bst {
     bstn *      root;
-    uint32_t    count;
+    size_t      count;
     uint8_t     flavor;
     t_intf *    key_type;
     t_intf *    value_type;

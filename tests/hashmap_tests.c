@@ -27,6 +27,7 @@ int test_hashmap_usage(void)
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
         rc = hashmap_set(M, &i, &j);
         test(rc == 1);
+        test(hashmap_count(M) == (size_t)i + 1);
     }
 
     for (int i = 0, j = 0; i < 10; ++i, j = 10 * i) {
@@ -58,6 +59,7 @@ int test_hashmap_usage(void)
 
     rc = hashmap_remove(M, &k);
     test(rc == 1);
+    test(hashmap_count(M) == 9);
 
     rc = hashmap_has(M, &k);
     test(rc == 0);

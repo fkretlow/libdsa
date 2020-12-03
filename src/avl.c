@@ -238,7 +238,8 @@ int avln_remove(bst *T, bstn **np, const void *k, short *dhp)
 
 /* int avln_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
  * Check if the subtree with the root n satisfies the inequality properties for keys in BSTs and
- * the AVL properties, and collect stats of the tree while at it. */
+ * the AVL properties, and collect stats of the tree while at it. The height of the subtree with
+ * the root n is reported at h_out so the balance factors of the ancestors can be checked. */
 int avln_invariant(const bst *T, const bstn *n, int depth, int *h_out, struct bst_stats *s)
 {
     if (!n) return 0;

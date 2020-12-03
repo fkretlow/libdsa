@@ -12,6 +12,8 @@ int str_initialize(str *s)
     return 0;
 }
 
+str *str_new(void) { return calloc(1, sizeof(str)); }
+
 void str_destroy(void *sp)
 {
     str *s = sp;
@@ -22,8 +24,6 @@ void str_destroy(void *sp)
         }
     }
 }
-
-str *str_new(void) { return calloc(1, sizeof(str)); }
 
 void str_delete(str *s)
 {
@@ -120,10 +120,10 @@ str *str_copy(const str *src)
     check_ptr(src);
 
     s = str_new();
-    check(s != NULL, "Failed to allocate new str.");
+    check(s != NULL, "failed to allocate new string");
 
     int rc = str_assign(s, src);
-    check(rc == 0, "Failed to assign to str copy.");
+    check_rc(rc, "str_assign");
 
     return s;
 error:
@@ -143,10 +143,10 @@ int str_assign(str *dest, const str *src)
     check_ptr(src);
 
     int rc = str_reserve(dest, src->length + 1);
-    check(rc == 0, "Failed to allocate internal storage.");
+    check_rc(rc, "str_reserve");
 
-    const char *src_data = str_data(src);
-    char *dest_data = str_data(dest);
+    const char *src_data  = str_data(src);
+    char *      dest_data = str_data(dest);
     memmove(dest_data, src_data, src->length + 1);
     dest->length = src->length;
 
@@ -162,7 +162,7 @@ int str_assign_cstr(str *dest, const char *cstr)
 
     size_t cstrlen = strnlen(cstr, STR_MAX_CAPACITY);
     int rc = str_reserve(dest, cstrlen + 1);
-    check(rc == 0, "Failed to allocate internal storage.");
+    check_rc(rc, "str_reserve");
 
     char *dest_data = str_data(dest);
     memmove(dest_data, cstr, cstrlen);
@@ -180,10 +180,10 @@ str *str_from_cstr(const char *cstr)
     check_ptr(cstr);
 
     s = str_new();
-    check(s != NULL, "Failed to make new str.");
+    check(s != NULL, "failed to make new str");
 
     int rc = str_assign_cstr(s, cstr);
-    check(rc == 0, "Failed to assign to new string.");
+    check_rc(rc, "str_assign_cstr");
 
     return s;
 error:
@@ -209,7 +209,7 @@ int str_append(str *s1, const str *s2)
     size_t capacity = str_capacity(s1);
     while (capacity < size + 1) capacity <<= 1;
     int rc = str_reserve(s1, capacity);
-    check(rc == 0, "Failed to ensure there's enough internal storage.");
+    check_rc(rc, "str_reserve");
 
     char *s1_data = str_data(s1);
     const char *s2_data = str_data(s2);
@@ -232,7 +232,7 @@ int str_append_cstr(str *s, const char *cstr)
     size_t capacity = str_capacity(s);
     while (capacity < size + 1) capacity <<= 1;
     int rc = str_reserve(s, capacity);
-    check(rc == 0, "Failed to allocate internal storage.");
+    check_rc(rc, "str_reserve");
 
     char *s_data = str_data(s);
     memmove(s_data + s->length, cstr, cstrlen);
@@ -250,7 +250,7 @@ int str_push_back(str *s, const char c)
 
     if (str_capacity(s) <= s->length + 1) {
         int rc = str_reserve(s, s->length + 2);
-        check(rc == 0, "Failed to allocate internal storage.");
+        check_rc(rc, "str_reserve");
     }
 
     char *data = str_data(s);
@@ -266,7 +266,7 @@ error:
 int str_pop_back(str *s, char *out)
 {
     check_ptr(s);
-    check(s->length > 0, "Attempt to pop_back from empty string.");
+    check(s->length > 0, "attempt to pop_back from empty string");
 
     char *data = str_data(s);
     --s->length;
@@ -286,9 +286,9 @@ str *str_concat(const str *s1, const str *s2)
     check_ptr(s2);
 
     s = str_copy(s1);
-    check(s != NULL, "Failed to copy the first str.");
+    check(s != NULL, "failed to copy the first str");
     int rc = str_append(s, s2);
-    check(rc == 0, "Failed to append the second str.");
+    check_rc(rc, "str_append");
 
     return s;
 error:
