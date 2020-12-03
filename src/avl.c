@@ -21,7 +21,7 @@
 /* void avln_rotate_right(bstn **np, short *dhp)
  * void avln_rotate_left (bstn **np, short *dhp)
  * Normal tree rotations with updates to AVL balance factors. A change of height is reported at
- * dhp. */
+ * dhp. The pointer at np is updated to hold the new root of the rotated subtree. */
 void avln_rotate_right(bstn **np, short *dhp)
 {
     bstn *n = *np;
@@ -64,7 +64,7 @@ void avln_rotate_left(bstn **np, short *dhp)
 
 /* void avln_repair(bstn **np, short *dhp)
  * Repair the AVL invariant after insertion/deletion on the way up the call chain. A change of
- * height is reported at dhp. */
+ * height is reported at dhp and the pointer at np is updated. */
 void avln_repair(bstn **np, short *dhp)
 {
     bstn *n = *np;
@@ -96,8 +96,8 @@ void avln_repair(bstn **np, short *dhp)
 
 /* int avln_insert(const bst *T, bstn **np, const void *k, const void *v, int *dh)
  * Insert a node with the key k and the value v (if given) into the substree with the root n,
- * preserving the AVL invariants.  The pointer at np may be changed. Return 1 if a node was added,
- * 0 if k was already there, or -1 on failure. */
+ * preserving the AVL invariants. A change of height is written to dhp and the pointer at np is
+ * updated. Return 1 if a node was added, 0 if k was already there, or -1 on failure. */
 int avln_insert(
         bst *T,
         bstn **np,
@@ -147,9 +147,9 @@ error:
 }
 
 /* int avln_remove_min(const bst *T, bstn **np, short *dhp)
- * Remove the minimum from the subtree with the root n, preserving the AVL invariants. The pointer
- * at np may be changed. This always removes a node, but we return 1 whatsoever for consistency
- * with bstn_remove. */
+ * Remove the minimum from the subtree with the root n, preserving the AVL invariants. A change of
+ * height is reported at dhp, and the pointer at np may be changed. This always removes a node,
+ * but we return 1 whatsoever for consistency with bstn_remove. */
 int avln_remove_min(bst *T, bstn **np, short *dhp)
 {
     bstn *n = *np;
@@ -179,9 +179,9 @@ int avln_remove_min(bst *T, bstn **np, short *dhp)
 }
 
 /* int avln_remove(const bst *T, bstn **np, const void *k, short *dhp)
- * Remove the node with the key k from the substree roted at n, preserving the AVL invariant. The
- * pointer at np may be changed. Return 1 if a node was removed, 0 if k wasn't found, or -1 on
- * error. */
+ * Remove the node with the key k from the substree roted at n, preserving the AVL invariant. A
+ * change of height is written to dhp, and the pointer at np may be changed. Return 1 if a node
+ * was removed, 0 if k wasn't found, or -1 on error. */
 int avln_remove(bst *T, bstn **np, const void *k, short *dhp)
 {
     assert(T && T->key_type && k);
