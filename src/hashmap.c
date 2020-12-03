@@ -190,7 +190,7 @@ int hashmap_remove(hashmap *M, const void *k)
     }
 
     if (node) {
-        if (prev)   prev->next = node->next;
+        if (prev)   prev->next    = node->next;
         else        M->buckets[i] = node->next;
         hashmapn_delete(M, node);
         return 1;

@@ -227,9 +227,7 @@ void bstn_set_value(const bst *T, bstn *n, const void *v)
 void bstn_destroy_key(const bst *T, bstn *n)
 {
     log_call("T=%p, n=%p", T, n);
-    assert(T && T->key_type);
-    assert(n);
-    assert(bstn_has_key(n));
+    assert(T && n && T->key_type && bstn_has_key(n));
     t_destroy(T->key_type, bstn_key(T, n));
     n->flags.plain.has_key = 0;
 }
@@ -527,15 +525,14 @@ void *bst_get(bst *T, const void *k)
 
     bstn *n = T->root;
     int cmp;
-    for ( ;; ) {
-        if (!n) return NULL;
+    while (n) {
         cmp = t_compare(T->key_type, k, bstn_key(T, n));
         if      (cmp < 0) n = n->left;
         else if (cmp > 0) n = n->right;
         else return bstn_value(T, n); /* cmp == 0 */
     }
 
-error:
+error: /* fallthrough */
     return NULL;
 }
 
