@@ -1,44 +1,40 @@
 # libdsa – Common Data Structures and Algorithms in C
 
-This is a collection of common data structures and algorithms, implemented in
-the C programming language for learning purposes. The implementations are kept
-simple so everybody with basic knowledge of the C language can read and
-understand the code.
-
-The implementations are influenced by the examples in Zed A. Shaw's *Learn C
-the Hard Way*, but each of them was rewritten from scratch. The same goes for
-the testing and debugging macros in `check.h` and `test.h`.
-
-Suggestions are welcome and appreciated. Keep in mind that this is a study
-project.
-
+This is a collection of common data structures and algorithms, implemented in the C programming
+language. The implementations of the data structures follow best practices that are derived from
+the examples in Zed A. Shaw's *Learn C the Hard Way*, but the library goes beyond the scope of
+Shaw's course.
 
 ## Data structures
 
-The library provides a number of data containers for common applications. They are designed following these principles:
+The library provides a selection of implementatios of commonly used data structures. The notion of
+a *type interface* allows to handle arbitrary data types somewhat generically. (A type interface
+is just a struct that contains function pointers for construction, destruction and move operations
+on a specific user-defined "type". For production it would be easy enough to modify the code to
+make it work with specific types in a less hazardous, type-safe manner.)
 
-#### Abstraction
-Provide a simple to use and consistent interface and hide as much of the necessary low level work behind the scenes. In other words, favor code aesthetics and ease of use over utmost efficiency. For example, the container structs are always allocated on the heap and accessed via pointers, but the fact that a `List` is actually a `_list*` is considered a private implementation detail. The resulting user code looks clean but probably not much like C anymore.
-
-#### Consistency
-The interface consists of as small a number of methods as possible for each container. They are named consistently like so:
 ```C
-List List_new(size_t element_size, copy_f copy_element, delete_f delete_element);
-void List_delete(List L);
-void List_clear(List L);
-size_t List_size(const List L);
-bool List_empty(const List L);
-int List_push_back(List L, void *element);
-int List_pop_back(List L, void *element_out);
+#include "vector.h"
+#include "type_interface.h"
+
+vector *v = vector_new(&int_type); /* v is a vector that stores integers */
 ```
-Returned `int`s are success or failure codes, typically `0` on success and a negative value on error. Returned container types are pointers behind the scenes, they're `NULL` on error.
 
-#### Arbitrary element types
-Every element is copied into the container when it is added and deleted when it is removed. If provided, the implementation uses user-defined copy constructors, destructors and comparison functions with the following signatures that can be passed to the containers during initialization. Otherwise it falls back to `memcpy` and `free`. The comparison function is always needed for the associative containers.
+All data objects that are inserted into one of the containers are copied into the container.
+Whether it's a deep copy depends on the copy constructor given with the type interface.
 ```C
-typedef void (*copy_f)(void *dest, const void *src);
-typedef void (*delete_f)(void *element);
-typedef int (*compare_f)(const void *a, const void *b);
+int i = 1;
+vector_push_back(V, &i); /* i is copied into the vector */
+```
+Normal get operations return pointers to the objects inside the container.
+```C
+int *ip = vector_get(V, 0); /* ip points into the vector */
+```
+
+Operations that remove objects from a container take an optional memory address as argument. If that is given, the removed
+object is moved there instead of being destroyed.
+```C
+vector_pop_back(V, &i); /* the last element in v is moved to the address of i */
 ```
 
 ### Available containers

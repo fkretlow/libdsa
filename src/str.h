@@ -20,7 +20,7 @@ typedef struct str {
         } internal;
         struct {
             uint32_t capacity;
-            char *data;
+            char *   data;
         } external;
     } data;
 } str;

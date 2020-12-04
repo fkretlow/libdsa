@@ -31,14 +31,38 @@ int test_vector_usage(void)
     rc = vector_pop_back(V, &out);
     test(rc == 1);
     test(out == in);
-    test(V->count == 0);
+    test(vector_count(V) == 0);
 
     for (int i = 0; i < 17; ++i) {
         rc = vector_push_back(V, &i);
         test(rc == 0);
-        test(V->count == (size_t)i + 1);
+        test(vector_count(V) == (size_t)i + 1);
     }
     test(V->capacity == 32);
+
+    int *v = vector_get(V, 0);
+    test(*v == 0);
+    v = vector_get(V, 16);
+    test(*v == 16);
+
+    in = -1;
+    rc = vector_insert(V, 0, &in);
+    test(rc == 0);
+    v = vector_get(V, 16);
+    test(*v == 15);
+
+    rc = vector_remove(V, 1);
+    test(rc == 0);
+    v = vector_get(V, 0);
+    test(*v == -1);
+    v = vector_get(V, 1);
+    test(*v == 1);
+
+    in = 0;
+    rc = vector_set(V, 0, &in);
+    test(rc == 0);
+    v = vector_get(V, 0);
+    test(*v == 0);
 
     for (int i = 16; i >= 0; --i) {
         rc = vector_pop_back(V, &out);
@@ -70,6 +94,7 @@ int test_vector_of_strings(void)
 
     str out;
     str *s = str_new();
+    str *sp;
 
     str_assign_cstr(s, "Haydn");
     vector_push_back(V, s);
@@ -85,6 +110,16 @@ int test_vector_of_strings(void)
 
     vector_pop_back(V, &out);
     test(str_compare(s, &out) == 0);
+
+    str_assign_cstr(s, "Bach");
+    vector_insert(V, 1, s);
+
+    sp = vector_get(V, 1);
+    test(str_compare(sp, s) == 0);
+
+    vector_remove(V, 1);
+    sp = vector_get(V, 1);
+    test(strncmp(str_data(sp), "Mozart", 16) == 0);
 
     vector_delete(V);
     str_delete(s);

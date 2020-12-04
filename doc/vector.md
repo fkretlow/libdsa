@@ -2,27 +2,26 @@
 
 [`vector.h`](./../src/vector.h), [`vector.c`](./../src/vector.c)
 
-The term vector is borrowed from the STL. It’s a dynamic array that expands and contracts automatically if needed when elements are added or removed.
-
-- Fast adding of elements at the end in O(1).
-- Fast random access in O(1).
+The basic dynamic array type. Expands and contracts automatically if needed when elements are
+added or removed. Adding of elements at the end and random access in O(1).
 
 ```C
-// Pass the element size and, optionally, a copy constructor and a destructor for initialization.
-Vector V = Vector_new(sizeof(int), NULL, NULL);
+#include "str.h"
+#include "type_interface.h"
+#include "vector.h"
 
-// Pass pointers to values you want to add.
-for (int i = 0; i < max; ++i) {
-    Vector_push_back(V, &i);
-}
+vector *V = vector_new(&str_type);      /* v holds objects of type str (provided with the library) */
 
-// Pass an address if you want to store popped values.
-int out;
-while (!Vector_empty(V)) {
-    Vector_pop_back(V, &out);
-    do_stuff_with(out);
-}
+str *s = str_from_cstr("Isaac Newton");
+int rc = vector_push_back(V, s);        /* pass pointers to objects you want to copy into the vector */
+                                        /* rc < 0 on error */
 
-// Return the memory when you're done.
-Vector_delete(V);
+str *sp = vector_get(V, 0);             /* sp != s, sp points to the duplicate of s in the vector */
+
+str out;
+rc = vector_pop_back(V, &out);          /* now out holds the duplicate, rc == 0 if V was empty */
+
+str_delete(s);
+str_destroy(out);
+vector_delete(V);
 ```
