@@ -1,17 +1,12 @@
-# libdsa – Common Data Structures and Algorithms in C
-
-This is a collection of common data structures and algorithms, implemented in the C programming
-language. The implementations of the data structures follow best practices that are derived from
-the examples in Zed A. Shaw's *Learn C the Hard Way*, but the library goes beyond the scope of
-Shaw's course.
+# libdsa
 
 ## Data structures
 
-The library provides a selection of implementatios of commonly used data structures. The notion of
-a *type interface* allows to handle arbitrary data types somewhat generically. (A type interface
-is just a struct that contains function pointers for construction, destruction and move operations
-on a specific user-defined "type". For production it would be easy enough to modify the code to
-make it work with specific types in a less hazardous, type-safe manner.)
+The library provides a selection of commonly used data structures. The notion of a *type
+interface* allows to handle arbitrary data types somewhat generically. (A type interface is just a
+struct that contains function pointers for construction, destruction, swap, and move operations on
+a specific user-defined "type". For production it would be easy enough to modify the code to make
+it work with specific types in a less hazardous, type-safe manner.)
 
 ```C
 #include "vector.h"
@@ -31,8 +26,8 @@ Normal get operations return pointers to the objects inside the container.
 int *ip = vector_get(V, 0); /* ip points into the vector */
 ```
 
-Operations that remove objects from a container take an optional memory address as argument. If that is given, the removed
-object is moved there instead of being destroyed.
+Operations that remove objects from a container take an optional memory address as argument. If
+that is given, the object is moved there instead of being destroyed.
 ```C
 vector_pop_back(V, &i); /* the last element in v is moved to the address of i */
 ```
