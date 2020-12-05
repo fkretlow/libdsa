@@ -80,11 +80,13 @@ int vector_reserve(vector *V, const size_t n)
 
     if (c == V->capacity) return 0;
 
+    size_t s = t_size(V->data_type);
+
     /* If we have an element destructor, we need to make sure that all elements that we are going
      * to cut off are properly destroyed. */
     if (c < V->count) {
         for (size_t i = c; i < V->count; ++i) {
-            t_destroy(V->data_type, V->data + i * t_size(V->data_type));
+            t_destroy(V->data_type, V->data + i * s);
         }
         V->count = c;
     }
@@ -92,12 +94,10 @@ int vector_reserve(vector *V, const size_t n)
     /* We can't assume that all types of objects remain intact when only the top level data is
      * moved, so we can't use realloc. Allocate the new storage, move all elements there, destroy
      * the old storage. */
-    char *new_data = malloc(c * t_size(V->data_type));
+    char *new_data = malloc(c * s);
     check_alloc(new_data);
     for (size_t i = 0; i < V->count; ++i) {
-        t_move(V->data_type,
-               new_data + i * t_size(V->data_type),
-               V->data + i * t_size(V->data_type));
+        t_move(V->data_type, new_data + i * s, V->data + i * s);
     }
 
     free(V->data);
@@ -123,10 +123,11 @@ int vector_shrink_to_fit(vector *V)
     size_t c = V->capacity;
     while (c > V->count << 1) c >>= 1;
 
-    char *new_data = malloc(c * t_size(V->data_type));
+    size_t s = t_size(V->data_type);
+
+    char *new_data = malloc(c * s);
     check_alloc(new_data);
 
-    size_t s = t_size(V->data_type);
     for (size_t i = 0; i < V->count; ++i) {
         t_move(V->data_type, new_data + i * s, V->data + i * s);
     }
