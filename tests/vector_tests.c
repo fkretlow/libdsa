@@ -23,7 +23,7 @@ int test_vector_usage(void)
     in = 1;
 
     rc = vector_push_back(V, &in);
-    test(rc == 0);
+    test(rc == 1);
     test(V->count == 1);
 
     test(*(int*)vector_get(V, 0) == in);
@@ -35,7 +35,7 @@ int test_vector_usage(void)
 
     for (int i = 0; i < 17; ++i) {
         rc = vector_push_back(V, &i);
-        test(rc == 0);
+        test(rc == 1);
         test(vector_count(V) == (size_t)i + 1);
     }
     test(V->capacity == 32);
@@ -47,12 +47,12 @@ int test_vector_usage(void)
 
     in = -1;
     rc = vector_insert(V, 0, &in);
-    test(rc == 0);
+    test(rc == 1);
     v = vector_get(V, 16);
     test(*v == 15);
 
     rc = vector_remove(V, 1);
-    test(rc == 0);
+    test(rc == 1);
     v = vector_get(V, 0);
     test(*v == -1);
     v = vector_get(V, 1);

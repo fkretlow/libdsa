@@ -65,7 +65,8 @@ set *set_union(set *S1, set *S2)
 
 static inline int push_pointer_into_vector(void *e, void *V)
 {
-    return vector_push_back(V, &e);
+    int rc = vector_push_back(V, &e);
+    return rc >= 0 ? 0 : -1;
 }
 
 set *set_intersection(set *S1, set *S2)

@@ -29,13 +29,13 @@ vector *    vector_new              (           t_intf *dt);
 void        vector_destroy          (vector *V);
 void        vector_delete           (vector *V);
 
-int         vector_reserve          (vector *V, const size_t capacity);
+int         vector_reserve          (vector *V, const size_t n);
 int         vector_shrink_to_fit    (vector *V);
 void        vector_clear            (vector *V);
-int         vector_set              (vector *V, const size_t i, const void *in);
-int         vector_insert           (vector *V, const size_t i, const void *in);
+int         vector_set              (vector *V, const size_t i, const void *e);
+int         vector_insert           (vector *V, const size_t i, const void *e);
 int         vector_remove           (vector *V, const size_t i);
-int         vector_push_back        (vector *V, const void *in);
+int         vector_push_back        (vector *V, const void *e);
 int         vector_pop_back         (vector *V, void *out);
 
 #endif // _vector_h
