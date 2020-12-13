@@ -23,7 +23,7 @@ int test_queue_usage(void)
 
     for (int i = 0; i < 8; ++i) {
         rc = queue_enqueue(Q, &i);
-        test(rc == 0);
+        test(rc == 1);
     }
     test(Q->count == 8);
 

@@ -1,3 +1,15 @@
+/*************************************************************************************************
+ *
+ * list.h
+ *
+ * A totally normal doubly-linked list that supports arbitrary data types by way of type interface
+ * structs.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
+ *
+ ************************************************************************************************/
+
 #ifndef _list_h
 #define _list_h
 
@@ -10,7 +22,7 @@ struct listn;
 typedef struct listn {
     struct listn *prev;
     struct listn *next;
-    unsigned int has_data : 1;
+    unsigned char has_data : 1;
 } listn;
 
 typedef struct list {
@@ -29,15 +41,16 @@ typedef struct list {
 
 int     list_initialize     (list *L, t_intf *t);
 list *  list_new            (t_intf *data_type);
+void    list_destroy        (list *L);
 void    list_delete         (list *L);
 void    list_clear          (list *L);
 
 void *  list_get            (list *L, const size_t i);
-int     list_set            (list *L, const size_t i, const void *in);
-int     list_insert         (list *L, const size_t i, const void *in);
+int     list_set            (list *L, const size_t i, const void *v);
+int     list_insert         (list *L, const size_t i, const void *v);
 int     list_remove         (list *L, const size_t i);
-#define list_push_front(l, in) list_insert((l), 0, (in))
-int     list_push_back      (list *L, const void *in);
+#define list_push_front(l, v) list_insert((l), 0, (v))
+int     list_push_back      (list *L, const void *v);
 int     list_pop_front      (list *L, void *out);
 int     list_pop_back       (list *L, void *out);
 
@@ -47,4 +60,4 @@ listn* __N;
     for (__N = (L)->first, D = listn_data(__N); \
             __N != NULL; __N = __N->next, D = __N ? listn_data(__N) : NULL)
 
-#endif // _list_ha
+#endif /* _list_h */

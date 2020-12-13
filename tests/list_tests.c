@@ -25,7 +25,7 @@ int test_list_usage(void)
     int *ip;
 
     rc = list_push_back(L, &val);
-    test(rc == 0);
+    test(rc == 1);
     test(L->first && L->last && L->first == L->last);
     test(L->first->next == NULL && L->first->prev == NULL);
     test(L->count == 1);
@@ -42,7 +42,7 @@ int test_list_usage(void)
 
     for (int i = 0; i < 8; ++i) {
         rc = list_push_back(L, &i);
-        test(rc == 0);
+        test(rc == 1);
     }
     test(L->count == 8);
 
@@ -55,7 +55,7 @@ int test_list_usage(void)
 
     for (int i = 0; i < 8; ++i) {
         rc = list_push_front(L, &i);
-        test(rc == 0);
+        test(rc == 1);
     }
     test(L->count == 8);
 
@@ -67,7 +67,7 @@ int test_list_usage(void)
 
     val = -1;
     rc = list_insert(L, 3, &val);
-    test(rc == 0);
+    test(rc == 1);
     test(L->count == 9);
 
     ip = list_get(L, 3);
@@ -75,7 +75,7 @@ int test_list_usage(void)
     test(*ip == -1);
 
     rc = list_remove(L, 3);
-    test(rc == 0); /* TODO: Shouldn't this return 1 for a successful deletion? */
+    test(rc == 1); /* TODO: Shouldn't this return 1 for a successful deletion? */
     test(L->count == 8);
 
     for (int i = 7; i >= 0; --i) {

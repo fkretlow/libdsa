@@ -10,7 +10,7 @@ added or removed. Adding of elements at the end and random access in O(1).
 #include "type_interface.h"
 #include "vector.h"
 
-vector *V = vector_new(&str_type);      /* v holds objects of type str (provided with the library) */
+vector *V = vector_new(&str_type);      /* V holds objects of type str (provided with the library) */
 
 str *s = str_from_cstr("Isaac Newton");
 int rc = vector_push_back(V, s);        /* pass pointers to objects you want to copy into the vector */
