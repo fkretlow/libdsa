@@ -4,7 +4,7 @@
  *
  * Algorithms for insertion into and deletion from an AVL tree. The algorithms are called by the
  * high level functions of the bst interface declared in bst.h if the balancing strategy is set to
- * AVL for the tree they are called on.
+ * AVL for the tree they are called on. See the docstring in bst.c for additional information.
  *
  * Author: Florian Kretlow, 2020
  * Use, modify, and distribute as you wish.

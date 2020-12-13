@@ -16,7 +16,6 @@
 #define _bst_h
 
 #include <stdint.h>
-
 #include "type_interface.h"
 
 enum bst_flavors { NONE = 0, RB = 1, AVL = 2 };
@@ -66,7 +65,7 @@ struct bst_stats {
     int red_nodes;
 };
 
-/* interface */
+/* public interface */
 
 int     bst_initialize          (bst *T, uint8_t flavor, t_intf *kt, t_intf *vt);
 bst *   bst_new                 (        uint8_t flavor, t_intf *kt, t_intf *vt);
@@ -94,7 +93,14 @@ int     bst_invariant           (const bst *T, struct bst_stats *s_out);
 
 #define bst_count(T) (T)->count
 
-/* node subroutines */
+/*************************************************************************************************
+ *
+ * Everything below this point is considered a private implementation detail and should not be
+ * used by other code. The declarations are included here for testing purposes only.
+ *
+ ************************************************************************************************/
+
+/* subroutines on normal BST nodes */
 
 bstn *  bstn_new                (const bst *T, const void *k, const void *v);
 void    bstn_delete             (const bst *T, bstn *n);
@@ -145,4 +151,5 @@ int rbn_remove      (bst *T, bstn **np, const void *k);
 int avln_invariant  (const bst *T, const bstn *n, int depth, int *height_out, struct bst_stats *s);
 int avln_insert     (bst *T, bstn **np, const void *k, const void *v, short *dhp);
 int avln_remove     (bst *T, bstn **np, const void *k, short *dhp);
+
 #endif /* _bst_h */

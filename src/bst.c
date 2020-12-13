@@ -4,15 +4,27 @@
  *
  * This file provides the complete implementation for a classic binary search tree that supports
  * different key/value types by way of type interface structs, with additional hooks for different
- * insertion/deletion algorithms depending on whether one of the available balancing strategies
- * is selected for the tree (left-leaning red-black (2-3) tree, or AVL tree).
+ * insertion/deletion algorithms depending on whether one of the available balancing strategies is
+ * selected for the tree (left-leaning red-black (2-3) tree, implementation in rb.c; or AVL tree,
+ * in avl.c).
  *
  * The implementation is somewhat dauntless: no data fields are defined in the node struct, but
  * enough space is dynamically allocated for every node depending on the type interfaces stored
  * with the tree. On access, the correct offset is computed. This works because `free` doesn't
  * depend on size information stored with the type of its argument. However, I wouldn't be
  * surprised if this turned out to be horribly insecure. At any rate, you are hereby discouraged
- * from messing around with the nodes in your own code.
+ * from messing around with `bstn`s in your own code... ;)
+ *
+ * We follow a model where recursive calls would look like this in more abstract languages:
+ * `node.left = insert(node.left, key)`, where `insert` would return the new root of the subtree
+ * after the insertion (which might be unchanged). Creating a new node in C requires a call to
+ * `malloc` at the end of the call chain, which can fail. So we need a way to signal failure up
+ * the chain without breaking previous links. This is done with integer return codes. As a nice
+ * benefit, this provides a way to inform the caller if the number of nodes in the tree has
+ * actually changed. In order to be able to update child pointers, we make use of pointer to
+ * pointer semantics. The equivalent to the above snippet would be something like this: `int rc =
+ * insert(&node->left, key)`, where `insert` saves the address of the new root of the subtree at
+ * the address of node->left.
  *
  * Author: Florian Kretlow, 2020
  * Use, modify, and distribute as you wish.

@@ -7,16 +7,9 @@
  * For the most part this is a literal C translation of the original Java implementation by R.
  * Sedgewick (see https://www.cs.princeton.edu/~rs/talks/LLRB/LLRB.pdf).
  *
- * Sedgewick's code is elegant in that it can replace changed child links with returns and simple
- * assignments: `node = insert(node, key)`. Here, in contrast, creating a new node requires a call
- * to `malloc`. That can fail, so we need a way to signal failure up the call chain. As everywhere
- * else in the library this is done with integer return codes and it also provides a way to inform
- * the caller if the number of nodes has changed. In order to be able to update child links,
- * pointers to those links (pointers) are passed instead of the links themselves: `int rc =
- * insert(tree, &node, key)`.
- *
  * The algorithms are called by the high level functions of the bst interface declared in bst.h if
- * the balancing strategy is set to RB for the tree they are called on.
+ * the balancing strategy is set to RB for the tree they are called on. See the docstring in bst.c
+ * for additional information.
  *
  * Author: Florian Kretlow, 2020
  * Use, modify, and distribute as you wish.
@@ -223,9 +216,9 @@ int rbn_remove(
 
         if (t_compare(T->key_type, k, bstn_key(T, n)) == 0) {
             bstn *s;
-            /* find the node with the minimum key in the right subtree, which is guaranteed to not
+            /* Find the node with the minimum key in the right subtree, which is guaranteed to not
              * have a left child; move its data over here, then continue down the right subtree to
-             * delete it */
+             * delete it. */
             s = n->right;
             while (s->left) s = s->left;
             bstn_move_data(T, n, s);

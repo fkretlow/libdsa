@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * vector.c
+ *
+ * Implementation of the vector interface defined in vector.h.
+ *
+ * Author: Florian Kretlow, 2020
+ * Use, modify, and distribute as you wish.
+ *
+ ************************************************************************************************/
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -254,7 +265,7 @@ error:
 }
 
 /* int vector_push_back(vector *V, const void *e)
- * Add e to V at the end. Shorthand for vector_set(V, vector_count(v), e). Returns 1 if an element
+ * Add e to V at the end. Shorthand for vector_set(V, vector_count(V), e). Returns 1 if an element
  * was added, or -1 on error. */
 int vector_push_back(vector *V, const void *e)
 {
