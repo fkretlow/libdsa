@@ -165,7 +165,6 @@ void *list_get(list *L, const size_t i)
     if (i >= L->count) return NULL;
 
     listn *n = list_get_node(L, i);
-    check(n != NULL, "failed to get node at index %lu", i);
     return listn_data(n);
 error:
     return NULL;
@@ -181,7 +180,6 @@ int list_set(list *L, const size_t i, const void *v)
     check_ptr(v);
 
     listn *n = list_get_node(L, i);
-    check(n != NULL, "failed to get node at index %lu", i);
     listn_set(L, n, v);
 
     return 0;
@@ -209,7 +207,6 @@ int list_insert(list *L, const size_t i, const void *v)
         if (L->count == 0) L->last = n;
     } else {
         listn *next = list_get_node(L, i);
-        check(next != NULL, "failed to get node at index %lu", i);
         listn *prev = next->prev;
 
         prev->next = n;
@@ -235,10 +232,9 @@ int list_remove(list *L, const size_t i)
     check(i < list_count(L), "index error");
 
     listn *n = list_get_node(L, i);
-    check(n != NULL, "failed to get node at index %lu", i);
 
     if (i == 0) {
-        assert(n->prev == NULL && "n->prev != NULL at index 0");
+        assert(n->prev == NULL);
         if (n->next) {
             L->first = n->next;
             L->first->prev = NULL;
@@ -246,7 +242,7 @@ int list_remove(list *L, const size_t i)
             L->first = L->last = NULL;
         }
     } else if (i == L->count - 1) {
-        assert(n->next == NULL && "n->next != NULL at index L->count - 1");
+        assert(n->next == NULL);
         L->last = n->prev;
         L->last->next = NULL;
     } else {
