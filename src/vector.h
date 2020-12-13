@@ -5,7 +5,7 @@
  * A classic dynamic array. Supports arbitrary data types by way of type interface structs.
  *
  * Author: Florian Kretlow, 2020
- * Use, modify, and distribute as you wish.
+ * Licensed under the MIT License.
  *
  ************************************************************************************************/
 
