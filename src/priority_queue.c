@@ -23,7 +23,7 @@ int pqueue_enqueue(pqueue *Q, const void *in)
     if (pqueue_count(Q) > 1) {
         temp = malloc(t_size(Q->data_type));
         check_alloc(temp);
-        Heap_bubble_up(Q->data, t_size(Q->data_type),
+        heap_bubble_up(Q->data, t_size(Q->data_type),
                        Q->count - 1, Q->data_type->compare, temp);
         assert(is_heap(Q->data, Q->count,
                        t_size(Q->data_type),
@@ -65,7 +65,7 @@ int pqueue_dequeue(pqueue *Q, void *out)
     if (Q->count > 1) {
         temp = malloc(t_size(Q->data_type));
         check_alloc(temp);
-        Heap_sift_down(Q->data, Q->count,
+        heap_sift_down(Q->data, Q->count,
                        t_size(Q->data_type), 0,
                        Q->data_type->compare, temp);
         assert(is_heap(Q->data, Q->count,

@@ -9,12 +9,12 @@ void make_heap(char *base, const size_t n, const size_t size,
                compare_f compare,
                char *temp);
 
-void Heap_bubble_up(char *base, const size_t size,
+void heap_bubble_up(char *base, const size_t size,
                     size_t i,
                     compare_f compare,
                     char *temp);
 
-void Heap_sift_down(char *base, const size_t n, const size_t size,
+void heap_sift_down(char *base, const size_t n, const size_t size,
                     size_t i,
                     compare_f compare,
                     char *temp);

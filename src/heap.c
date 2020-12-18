@@ -25,12 +25,12 @@ void make_heap(char *base, const size_t n, const size_t size,
                char *temp)
 {
     for (int i = _parent((int)n - 1); i >= 0; --i) {
-        Heap_sift_down(base, n, size, (size_t)i, compare, temp);
+        heap_sift_down(base, n, size, (size_t)i, compare, temp);
     }
     assert(is_heap(base, n, size, compare));
 }
 
-void Heap_bubble_up(char *base, const size_t size,
+void heap_bubble_up(char *base, const size_t size,
                     size_t i,
                     compare_f compare,
                     char *temp)
@@ -43,7 +43,7 @@ void Heap_bubble_up(char *base, const size_t size,
     }
 }
 
-void Heap_sift_down(char *base, const size_t n, const size_t size,
+void heap_sift_down(char *base, const size_t n, const size_t size,
                     size_t i,
                     compare_f compare,
                     char *temp)

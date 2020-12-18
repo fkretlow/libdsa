@@ -14,7 +14,7 @@ void heapsort(char *base, size_t n, size_t size, compare_f compare)
     for (size_t i = n - 1; i > 0; --i) {
         _swap(base, base + i * size, size, temp);
         --n;
-        Heap_sift_down(base, n, size, 0, compare, temp);
+        heap_sift_down(base, n, size, 0, compare, temp);
         assert(is_heap(base, n, size, compare) && "heapsort >> no longer a heap.");
     }
 

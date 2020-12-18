@@ -1,14 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-
 #include "sort_tools.h"
-
-void _swap(char *a, char *b, size_t size, char *temp)
-{
-    memcpy(temp, a, size);
-    memcpy(a, b, size);
-    memcpy(b, temp, size);
-}
 
 void _insertionsort(char *base,
                      size_t start, size_t end,
