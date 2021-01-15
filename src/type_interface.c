@@ -86,7 +86,8 @@ t_intf str_type = {
 
 int int_compare(const void *a, const void *b)
 {
-    return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0;
+    return *(int*)a - *(int*)b;
+    /* return *(int*)a < *(int*)b ? -1 : *(int*)a > *(int*)b ? 1 : 0; */
 }
 
 uint32_t int_hash(const void *i)

@@ -13,6 +13,6 @@ int process_words(FILE *stream,
                   int (*test) (int c),
                   char (*transform) (char c),
                   int (*process) (char *buf, size_t n, void *p),
-                  void *p);
+                  void *p); /* external parameter, is passed to the process callback */
 
-#endif // _reader_h
+#endif /* _reader_h */

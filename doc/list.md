@@ -2,7 +2,7 @@
 
 [`list.h`](./../src/list.h), [`list.c`](./../src/list.c)
 
-"You ain't a programmer before you've made your own linked list in C." – Well, here's mine and there's nothing special about it. Fast adding of elements and acces at both ends in O(1), but O(n) in the middle.
+"You ain't a programmer before you've made your own linked list in C." – Well, here's mine and there's nothing special about it. Fast access at both ends in O(1), but O(n) in the middle. Once a position is given, insertion and deletion are O(1).
 
 ```C
 #include "list.h"

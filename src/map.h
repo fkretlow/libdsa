@@ -1,3 +1,15 @@
+/*************************************************************************************************
+ *
+ * map.h
+ *
+ * Associative data structure that maps values to keys. Supports arbitrary data types by way of
+ * type interface structs. Implemented in terms of a red-black tree, see bst.h for details.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #ifndef _map_h
 #define _map_h
 
@@ -17,6 +29,7 @@ typedef bst map;
 #define map_set(M, k, v)                bst_set(M, k, v)
 #define map_get(M, k)                   bst_get(M, k)
 #define map_has(M, k)                   bst_has(M, k)
+int map_remove(map *M, const void *k, void *out);
 
 #define map_count(M)                    bst_count(M)
 

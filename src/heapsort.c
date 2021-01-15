@@ -1,12 +1,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "check.h"
 #include "heap.h"
 #include "sort_tools.h"
 
 void heapsort(char *base, size_t n, size_t size, compare_f compare)
 {
     char *temp = malloc(size);
+    check_alloc(temp);
 
     make_heap(base, n, size, compare, temp);
     assert(is_heap(base, n, size, compare) && "heapsort >> initial _heapify failed.");
@@ -19,4 +21,6 @@ void heapsort(char *base, size_t n, size_t size, compare_f compare)
     }
 
     free(temp);
+error:
+    return; /* TODO: error handling?? */
 }

@@ -2,20 +2,27 @@
 
 [`map.h`](./../src/map.h), [`map.c`](./../src/map.c)
 
-Associative data structure that maps values to keys. Implemented in terms of a hash table with chaining. If the provided hash function generates evenly distributed hashes, this allows for addition and removal of key:value pairs in almost constant time.
+Associative data structure that maps values to keys. Implemented in terms of a red-black tree, so
+search, insertion and removal are all O(log n).
 
 ```C
-// Initialize with object sizes for keys and values,
-// a hash and a comparison function for keys,
-// and optional destructors for keys and values.
-Map M;
-Map_init(&M, sizeof(int), sizeof(int), jenkins_hash, compint, NULL, NULL);
+#include "str.h"
+#include "type_interface.h"
+#include "map.h"
 
-// Pass pointers to elements you want to add or get.
-Map_set(&M, &key, &value);
-int found = Map_has(&M, &key);
-Map_get(&M, &key, &value_out);
+map *M = map_new(&str_type, &int_type);     /* M maps integers to strings */
 
-// Destroy the map to return the memory.
-Map_destroy(&M);
+str *k = str_from_cstr("Galileo Galilei");
+int v = 1564;
+int rc = map_set(M, k, &v);                 /* pass pointers to keys/values */
+                                            /* rc < 0 on error */
+
+rc = map_has(M, k);                         /* membership test */
+int *vp = map_get(M, k);                    /* vp points into the map */
+
+rc = map_remove(M, k, &v);                  /* now v holds the value previously mapped to k */
+                                            /* rc < 0 on error, rc == 0 if k wasn't found */
+
+str_delete(k);
+map_delete(M);
 ```

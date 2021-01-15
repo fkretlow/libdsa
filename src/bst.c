@@ -95,6 +95,23 @@ void bstn_delete_rec(const bst *T, bstn *n)
     bstn_delete(T, n);
 }
 
+/* bstn *bstn_find(const bst *T, const bstn *n, const void *k)
+ * Return the descendant node of n with the key k if present or NULL. */
+bstn *bstn_find(const bst *T, bstn *n, const void *k)
+{
+    assert(T && T->key_type && k);
+    if (!n) return NULL;
+
+    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+    if (cmp < 0) {
+        return bstn_find(T, n->left, k);
+    } else if (cmp > 0) {
+        return bstn_find(T, n->right, k);
+    } else { /* cmp == 0 */
+        return n;
+    }
+}
+
 /* int bstn_insert(const bst *T, bstn **np, const void *k, const void *v)
  * Insert a node with the key k and the value v (if given) into the substree with the root n.
  * The pointer at np may be changed. Return 1 if a node was added, 0 if k was already there, or -1

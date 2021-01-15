@@ -49,4 +49,4 @@ int         vector_remove           (vector *V, const size_t i);
 int         vector_push_back        (vector *V, const void *e);
 int         vector_pop_back         (vector *V, void *out);
 
-#endif // _vector_h
+#endif /* _vector_h */

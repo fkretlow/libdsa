@@ -1,13 +1,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "check.h"
 #include "sort_tools.h"
 
 static size_t _partition(char *base,
-                          size_t start, size_t end,
-                          size_t size,
-                          compare_f compare,
-                          char *temp)
+                         size_t start, size_t end,
+                         size_t size,
+                         compare_f compare,
+                         char *temp)
 {
     // Lomuto partitioning scheme
     /* size_t first_high, pivot;
@@ -29,13 +30,13 @@ static size_t _partition(char *base,
     size_t i = start - 1;
     size_t j = end;
 
-    /* It's important to get the pivot position right to guarantee it's not at
-     * the last index in the range. Otherwise the upper partition could end up
-     * empty, which would lead to infinite recursion. */
+    /* It's important to get the pivot position right to guarantee it's not at the last index in
+     * the range. Otherwise the upper partition could end up empty, which would lead to infinite
+     * recursion. */
     size_t p = (end - 1 + start) / 2;
 
-    /* Copy the pivot value to the allocated workspace because it may be moved
-     * and it's ugly (and less efficient?) to keep track of it. */
+    /* Copy the pivot value to the allocated workspace because it may be moved and it's ugly (and
+     * less efficient?) to keep track of it. */
     char *pivot = temp + size;
     memcpy(pivot, base + p * size, size);
 
@@ -51,9 +52,8 @@ static size_t _partition(char *base,
          * 1. A[k] <= pivot if k < i and A[k] >= pivot if k > j.
          * 2. j >= i - 1. If j = i then A[j] = pivot. If j = i - 1 then A[j] <= pivot.
          * 3. start <= j < end - 1.
-         * Assuming end - start > 1, these guarantee that we partition the
-         * range in two non-empty partitions [start, j] (elements <= pivot) and
-         * ]j, end[ (elements >= pivot). */
+         * Assuming end - start > 1, these guarantee that we partition the range in two non-empty
+         * partitions [start, j] (elements <= pivot) and ]j, end[ (elements >= pivot). */
         if (i >= j) {
             return j;
         } else {
@@ -71,8 +71,8 @@ static void _quicksort(char *base,
     if (end - start <= 1) {
         return;
     } else if (end - start <= 16) {
-        /* Using insertion sort for short ranges gives a significant speed boost of
-         * about 10-15%. */
+        /* Using insertion sort for short ranges seems to give a significant speed boost of about
+         * 10-15%. */
         _insertionsort(base, start, end, size, compare, temp);
     } else {
         size_t p = _partition(base, start, end, size, compare, temp);
@@ -89,8 +89,11 @@ static void _quicksort(char *base,
 void quicksort(void *base, size_t nmemb, size_t size, compare_f compare) {
     // Allocate workspace for swaps and the pivot value.
     char *temp = malloc(2 * size);
+    check_alloc(temp);
     _quicksort((char*)base, 0, nmemb, size, compare, temp);
     free(temp);
+error:
+    return; /* TODO: error handling?? */
 }
 
 int is_sorted(void *base, size_t nmemb, size_t size, compare_f compare)

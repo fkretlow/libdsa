@@ -73,6 +73,15 @@ int test_bst_copy(void)
     n->right = r;
     r->left = rl;
 
+    /* test bstn_find here for lack of a better place */
+    bstn *x = bstn_find(T, T->root, krl);
+    test(x == rl);
+
+    str *kbad = str_from_cstr("buuuh");
+    x = bstn_find(T, T->root, kbad);
+    test(x == NULL);
+    str_delete(kbad);
+
     /* copy and verify */
     bst *C = bst_copy(T);
     test(C->count == T->count);

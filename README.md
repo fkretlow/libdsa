@@ -5,8 +5,8 @@
 The library provides a selection of commonly used data structures. The notion of a *type
 interface* allows to handle arbitrary data types somewhat generically. (A type interface is just a
 struct that contains function pointers for construction, destruction, swap, and move operations on
-a specific user-defined "type". For production it would be easy enough to modify the code to make
-it work with specific types in a less hazardous, type-safe manner.)
+a specific user-defined "type". For production it would be easy enough to modify this "academic"
+code to make it work with specific types in a less hazardous, type-safe manner.)
 
 ```C
 #include "vector.h"

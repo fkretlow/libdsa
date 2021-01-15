@@ -108,6 +108,8 @@ void    bstn_delete_rec         (const bst *T, bstn *n);
 
 bstn *  bstn_copy_rec           (const bst *T, const bstn *n);
 
+bstn *  bstn_find               (const bst *T, bstn *n, const void *k);
+
 int     bstn_insert             (bst *T, bstn **np, const void *k, const void *v);
 int     bstn_remove             (bst *T, bstn **np, const void *k);
 int     bstn_remove_min         (bst *T, bstn **np);
