@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * priority_queue.h
+ *
+ * Declaration of the priority queue abstraction. See also vector.h and heap.h.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #ifndef _priority_queue_h
 #define _priority_queue_h
 
@@ -17,4 +28,4 @@ typedef vector pqueue;
 int pqueue_enqueue(pqueue *Q, const void *in);
 int pqueue_dequeue(pqueue *Q, void *out);
 
-#endif // _priority_queue_h
+#endif /* _priority_queue_h */

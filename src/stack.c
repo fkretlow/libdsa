@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * stack.c
+ *
+ * A stack (LIFO queue), implemented in terms of a singly-linked list.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 
 #include "check.h"

@@ -1,3 +1,11 @@
+/*************************************************************************************************
+ *
+ * json.c
+ *
+ * Implementation of the grand framework of json functionality. As of now we can serialize lists.
+ *
+ ************************************************************************************************/
+
 #include "check.h"
 #include "json.h"
 

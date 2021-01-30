@@ -1,8 +1,25 @@
+/*************************************************************************************************
+ *
+ * log.h
+ *
+ * Pretty logging framework. I mean, the output is pretty, the intestines are currently
+ * somewhat... unsightly. Supports ANSI escape codes for nice colors and formatting. Looks
+ * do matter.
+ *
+ * Author: Florian Kretlow, 2020
+ * License: MIT License
+ *
+ ************************************************************************************************/
+
 #ifndef _log_h
 #define _log_h
 
 #include <stdio.h>
 
+/* A log file is a single destination where various kinds of log messages can be printed. There's
+ * currently a single global called log_files where all registered file streams are stored.
+ * Registering a log file is not abstracted away. Also, opening/closing the streams is currently
+ * the client's responsibility. (See ./tests/test.h) */
 #define MAX_LOG_FILES 4
 
 struct log_file {
@@ -12,6 +29,7 @@ struct log_file {
     unsigned int suppress_call_logs         : 1;
     unsigned int suppress_errors            : 1;
 };
+
 struct log_file log_files[MAX_LOG_FILES];
 
 #define ANSI_BOLD       "\x1b[1m"
@@ -51,4 +69,4 @@ void _log(const char *src_file, const int line, const char *function,
 #define log_fail(fmt, ...)  _log(__FILE__, __LINE__, __func__, FAIL,  fmt, ##__VA_ARGS__)
 #define log_pass(fmt, ...)  _log(__FILE__, __LINE__, __func__, PASS,  fmt, ##__VA_ARGS__)
 
-#endif // _log_h
+#endif /* _log_h */

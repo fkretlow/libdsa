@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * check.h
+ *
+ * Various error checking macros.
+ *
+ * Author: Florian Kretlow, 2020, using patterns desribed by Zed A. Shaw.
+ * License: MIT License
+ *
+ ************************************************************************************************/
+
 #ifndef _check_h
 #define _check_h
 

@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * heap.c
+ *
+ * Implementation of the heap functions defined in heap.h.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 #include <stdlib.h>
 

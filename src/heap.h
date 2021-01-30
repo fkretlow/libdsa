@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * heap.h
+ *
+ * Functions for creating and maintaining a heap on an array.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #ifndef _heap_h
 #define _heap_h
 

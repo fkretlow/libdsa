@@ -1,12 +1,19 @@
-/* unittest.h
- * Macros for building simple tests.
+/*************************************************************************************************
  *
- * run_test(test_name) run the test function
- * test_suite_start() initiate test suite
- * test_suite_end() finish test suite */
+ * test.h
+ *
+ * Minimal testing framework. Makes use of the logging framework defined in ./src/log.h.
+ * Initialize tests in main by test_suite_start(), run single tests (signature must be int
+ * f(void), returning 0) with run_test(f), inside the tests use test(predicate) to assert
+ * conditions. Wrap everything up with test_suite_end().
+ *
+ * Author: Florian Kretlow, 2020
+ * License: MIT License
+ *
+ ************************************************************************************************/
 
-#ifndef _unittest_h
-#define _unittest_h
+#ifndef _test_h
+#define _test_h
 
 #include <stdio.h>
 #include <string.h>
@@ -61,4 +68,4 @@ extern struct log_file log_files[MAX_LOG_FILES];
     } \
     log_files[0].suppress_errors = 0;
 
-#endif // _unittest_h
+#endif /* _test_h */

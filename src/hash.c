@@ -1,3 +1,10 @@
+/*************************************************************************************************
+ *
+ * hash.c
+ * Implementation of the Jenkins hashing algorithm.
+ *
+ ************************************************************************************************/
+
 #include "hash.h"
 
 uint32_t jenkins_hash(const void *obj, const size_t size)

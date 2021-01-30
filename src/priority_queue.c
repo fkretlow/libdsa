@@ -1,3 +1,15 @@
+/*************************************************************************************************
+ *
+ * priority_queue.c
+ *
+ * Implementation of the priority queue abstraction in terms of a heap on a vector. See also
+ * vector.h and heap.h.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
@@ -6,10 +18,8 @@
 #include "heap.h"
 #include "priority_queue.h"
 
-/*************************************************************************************************
- * int pqueue_enqueue(pqueue *Q, const void *in);
+/* int pqueue_enqueue(pqueue *Q, const void *in)
  * Add the item at in to the queue. Return 1 if it was successfully added, or -1 on error. */
-
 int pqueue_enqueue(pqueue *Q, const void *in)
 {
     char *temp = NULL;
@@ -37,11 +47,9 @@ error:
     return -1;
 }
 
-/*************************************************************************************************
- * int pqueue_dequeue(pqueue *Q, void *out);
+/* int pqueue_dequeue(pqueue *Q, void *out);
  * Remove the next item in the queue, store it at out (assuming sufficient memory) unless out is
  * NULL. Return 1 if an item was removed, 0 if the queue was empty, or -1 on error. */
-
 int pqueue_dequeue(pqueue *Q, void *out)
 {
     char *temp = NULL;

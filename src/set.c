@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * set.c
+ *
+ * Implementation of the set methods that are not covered by generic BST methods.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #include <stdlib.h>
 
 #include "check.h"
@@ -19,23 +30,12 @@ error:
     return NULL;
 }
 
-void set_delete(set *S)
-{
-    if (S) {
-        bst_clear(S);
-        free(S);
-    }
-}
-
-
 /* set *set_union(set *S1, set *S2)
  * Return a new set that contains all elements that are in either of S1 and S2 or both, or NULL on
  * error.
- *
  * Create an exact copy of the larger set in linear time and traverse the smaller set, inserting
  * each of its elements into the copy. If m, n are the sizes of the larger and the smaller set
  * respectively, this gives an upper bound of m + n * log (m + n) steps. */
-
 static inline int insert_into_set(void *e, void *S)
 {
     int rc = set_insert(S, e);
@@ -54,7 +54,6 @@ set *set_union(set *S1, set *S2)
 
 /* set *set_intersection(set *S1, set *S2)
  * Return a new set that contains all elements that are in both S1 and S2 or NULL on error.
- *
  * The naive approach would be to create a new set, then traverse both sets and insert every
  * element into the new set. If m is the size of the larger set, and n of the other one, that
  * would require m + n insertions with a logarithmic number of steps each, resulting in an upper
@@ -121,10 +120,8 @@ error:
 
 /* set *set_difference(set *S1, set *S2)
  * Return a new set that contains all elements that are in the first but not in the second set.
- *
  * Create an exact copy of the larger set and traverse the smaller set, removing each of its
  * elements from the copy. */
-
 static int remove_from_set(void *e, void *S)
 {
     int rc = set_remove(S, e);

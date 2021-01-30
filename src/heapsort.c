@@ -1,3 +1,11 @@
+/*************************************************************************************************
+ *
+ * heapsort.c
+ * Implementation of the heapsort algorithm. Basically "push everything into a priority queue and
+ * then pop one by one". See heap.h/c for details. Sources: Skiena, Wikipedia.
+ *
+ ************************************************************************************************/
+
 #include <stdlib.h>
 
 #include "check.h"

@@ -1,3 +1,15 @@
+/*************************************************************************************************
+ *
+ * log.c
+ *
+ * Implementation of the logging framework defined in log.h. A single function _log that walks
+ * through all the registered log streams and feeds them with output according to there settings.
+ *
+ * Author: Florian Kretlow, 2020
+ * License: MIT License
+ *
+ ************************************************************************************************/
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
