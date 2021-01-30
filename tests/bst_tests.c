@@ -16,32 +16,32 @@ int test_node_handlers(void)
     bst *T = bst_new(NONE, &str_type, &int_type);
     test(T);
 
-    bstn *n = calloc(1, bstn_size(T));
+    bst_n *n = calloc(1, bst_n_size(T));
     test(n);
 
     str *k1 = str_from_cstr("key");
     str *k2 = str_from_cstr("this is a very long key");
 
-    bstn_set_key(T, n, k1);
-    test(bstn_has_key(n) == 1);
-    test(str_compare(bstn_key(T, n), k1) == 0);
+    bst_n_set_key(T, n, k1);
+    test(bst_n_has_key(n) == 1);
+    test(str_compare(bst_n_key(T, n), k1) == 0);
 
-    bstn_destroy_key(T, n);
-    test(bstn_has_key(n) == 0);
+    bst_n_destroy_key(T, n);
+    test(bst_n_has_key(n) == 0);
 
-    bstn_set_key(T, n, k2);
-    test(bstn_has_key(n) == 1);
-    test(str_compare(bstn_key(T, n), k2) == 0);
+    bst_n_set_key(T, n, k2);
+    test(bst_n_has_key(n) == 1);
+    test(str_compare(bst_n_key(T, n), k2) == 0);
 
     int v = 10;
-    bstn_set_value(T, n, &v);
-    test(bstn_has_value(n) == 1);
-    test(*(int*)bstn_value(T, n) == v);
+    bst_n_set_value(T, n, &v);
+    test(bst_n_has_value(n) == 1);
+    test(*(int*)bst_n_value(T, n) == v);
 
-    bstn_destroy_value(T, n);
-    test(bstn_has_value(n) == 0);
+    bst_n_destroy_value(T, n);
+    test(bst_n_has_value(n) == 0);
 
-    bstn_delete(T, n);
+    bst_n_delete(T, n);
     bst_delete(T);
     str_delete(k1);
     str_delete(k2);
@@ -62,10 +62,10 @@ int test_bst_copy(void)
     int vr  = 2;
     int vrl = 3;
 
-    bstn *n = bstn_new(T, kn, &vn);
-    bstn *l = bstn_new(T, kl, &vl);
-    bstn *r = bstn_new(T, kr, &vr);
-    bstn *rl = bstn_new(T, krl, &vrl);
+    bst_n *n = bst_n_new(T, kn, &vn);
+    bst_n *l = bst_n_new(T, kl, &vl);
+    bst_n *r = bst_n_new(T, kr, &vr);
+    bst_n *rl = bst_n_new(T, krl, &vrl);
 
     T->root = n;
     T->count = 4;
@@ -73,12 +73,12 @@ int test_bst_copy(void)
     n->right = r;
     r->left = rl;
 
-    /* test bstn_find here for lack of a better place */
-    bstn *x = bstn_find(T, T->root, krl);
+    /* test bst_n_find here for lack of a better place */
+    bst_n *x = bst_n_find(T, T->root, krl);
     test(x == rl);
 
     str *kbad = str_from_cstr("buuuh");
-    x = bstn_find(T, T->root, kbad);
+    x = bst_n_find(T, T->root, kbad);
     test(x == NULL);
     str_delete(kbad);
 
@@ -88,28 +88,28 @@ int test_bst_copy(void)
     test(C->key_type == T->key_type);
     test(C->value_type == T->value_type);
 
-    bstn *c = C->root;
-    bstn *cl = c->left;
-    bstn *cr = c->right;
-    bstn *crl = c->right->left;
+    bst_n *c = C->root;
+    bst_n *cl = c->left;
+    bst_n *cr = c->right;
+    bst_n *crl = c->right->left;
 
     test(c);
-    test(str_compare(bstn_key  (T, c), kn)  == 0);
-    test(int_compare(bstn_value(T, c), &vn) == 0);
+    test(str_compare(bst_n_key  (T, c), kn)  == 0);
+    test(int_compare(bst_n_value(T, c), &vn) == 0);
 
     test(cl);
-    test(str_compare(bstn_key  (T, cl), kl)  == 0);
-    test(int_compare(bstn_value(T, cl), &vl) == 0);
+    test(str_compare(bst_n_key  (T, cl), kl)  == 0);
+    test(int_compare(bst_n_value(T, cl), &vl) == 0);
     test(cl->left == NULL && cl->right == NULL);
 
     test(cr);
-    test(str_compare(bstn_key  (T, cr), kr)  == 0);
-    test(int_compare(bstn_value(T, cr), &vr) == 0);
+    test(str_compare(bst_n_key  (T, cr), kr)  == 0);
+    test(int_compare(bst_n_value(T, cr), &vr) == 0);
     test(cr->left != NULL && cr->right == NULL);
 
     test(crl);
-    test(str_compare(bstn_key  (T, crl), krl)  == 0);
-    test(int_compare(bstn_value(T, crl), &vrl) == 0);
+    test(str_compare(bst_n_key  (T, crl), krl)  == 0);
+    test(int_compare(bst_n_value(T, crl), &vrl) == 0);
     test(crl->left == NULL && crl->right == NULL);
 
     /* also do it once on the stack */
@@ -142,9 +142,9 @@ int test_bst_has(void)
     str *b = str_from_cstr("b");
     str *d = str_from_cstr("d");
 
-    T->root = bstn_new(T, c, NULL);
-    T->root->left = bstn_new(T, a, NULL);
-    T->root->left->right = bstn_new(T, b, NULL);
+    T->root = bst_n_new(T, c, NULL);
+    T->root->left = bst_n_new(T, a, NULL);
+    T->root->left->right = bst_n_new(T, b, NULL);
 
     T->count = 3;
 

@@ -25,16 +25,16 @@ int test_rb_copy(void)
     int vr  = 2;
     int vrl = 3;
 
-    bstn *n = bstn_new(T, kn, &vn);
+    bst_n *n = bst_n_new(T, kn, &vn);
     n->flags.rb.color = BLACK;
 
-    bstn *l = bstn_new(T, kl, &vl);
+    bst_n *l = bst_n_new(T, kl, &vl);
     l->flags.rb.color = BLACK;
 
-    bstn *r = bstn_new(T, kr, &vr);
+    bst_n *r = bst_n_new(T, kr, &vr);
     r->flags.rb.color = BLACK;
 
-    bstn *rl = bstn_new(T, krl, &vrl);
+    bst_n *rl = bst_n_new(T, krl, &vrl);
 
     T->root = n;
     T->count = 4;
@@ -48,32 +48,32 @@ int test_rb_copy(void)
     test(C->key_type == T->key_type);
     test(C->value_type == T->value_type);
 
-    bstn *c = C->root;
-    bstn *cl = c->left;
-    bstn *cr = c->right;
-    bstn *crl = c->right->left;
+    bst_n *c = C->root;
+    bst_n *cl = c->left;
+    bst_n *cr = c->right;
+    bst_n *crl = c->right->left;
 
     test(c);
     test(c->flags.rb.color == BLACK);
-    test(str_compare(bstn_key  (T, c), kn)  == 0);
-    test(int_compare(bstn_value(T, c), &vn) == 0);
+    test(str_compare(bst_n_key  (T, c), kn)  == 0);
+    test(int_compare(bst_n_value(T, c), &vn) == 0);
 
     test(cl);
     test(cl->flags.rb.color == BLACK);
-    test(str_compare(bstn_key  (T, cl), kl)  == 0);
-    test(int_compare(bstn_value(T, cl), &vl) == 0);
+    test(str_compare(bst_n_key  (T, cl), kl)  == 0);
+    test(int_compare(bst_n_value(T, cl), &vl) == 0);
     test(cl->left == NULL && cl->right == NULL);
 
     test(cr);
     test(cr->flags.rb.color == BLACK);
-    test(str_compare(bstn_key  (T, cr), kr)  == 0);
-    test(int_compare(bstn_value(T, cr), &vr) == 0);
+    test(str_compare(bst_n_key  (T, cr), kr)  == 0);
+    test(int_compare(bst_n_value(T, cr), &vr) == 0);
     test(cr->left != NULL && cr->right == NULL);
 
     test(crl);
     test(crl->flags.rb.color == RED);
-    test(str_compare(bstn_key  (T, crl), krl)  == 0);
-    test(int_compare(bstn_value(T, crl), &vrl) == 0);
+    test(str_compare(bst_n_key  (T, crl), krl)  == 0);
+    test(int_compare(bst_n_value(T, crl), &vrl) == 0);
     test(crl->left == NULL && crl->right == NULL);
 
     /* also do it once on the stack */

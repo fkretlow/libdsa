@@ -17,50 +17,50 @@
 #include "check.h"
 #include "hashmap.h"
 
-#define hashmapn_data_size(M)   (t_size((M)->key_type) + t_size((M)->value_type))
-#define hashmapn_size(M)        (sizeof(hashmapn) + hashmapn_data_size(M))
-#define hashmapn_key(M, n)      ((void*)(((char *)(n)) + sizeof(hashmapn)))
-#define hashmapn_value(M, n)    ((void*)((char *)(n)) + sizeof(hashmapn) + t_size((M)->key_type))
+#define hashmap_n_data_size(M)   (t_size((M)->key_type) + t_size((M)->value_type))
+#define hashmap_n_size(M)        (sizeof(hashmap_n) + hashmap_n_data_size(M))
+#define hashmap_n_key(M, n)      ((void*)(((char *)(n)) + sizeof(hashmap_n)))
+#define hashmap_n_value(M, n)    ((void*)((char *)(n)) + sizeof(hashmap_n) + t_size((M)->key_type))
 
 
-/* static inline hashmapn *hashmapn_new(const hashmap *M, const void *k, const void *v)
+/* static inline hashmap_n *hashmap_n_new(const hashmap *M, const void *k, const void *v)
  * Create a new node on the heap, copy k and v into it, and return a pointer to it or NULL on
  * error. Both k and v must be given, because a hashmap entry without either doesn't make sense.
  * */
-static inline hashmapn *hashmapn_new(const hashmap *M, const void *k, const void *v)
+static inline hashmap_n *hashmap_n_new(const hashmap *M, const void *k, const void *v)
 {
     assert(M && M->key_type && k && M->value_type && v);
-    size_t size = hashmapn_size(M);
-    hashmapn *n = calloc(1, size);
+    size_t size = hashmap_n_size(M);
+    hashmap_n *n = calloc(1, size);
     check_alloc(n);
 
-    t_copy(M->key_type,   hashmapn_key(M, n),   k);
-    t_copy(M->value_type, hashmapn_value(M, n), v);
+    t_copy(M->key_type,   hashmap_n_key(M, n),   k);
+    t_copy(M->value_type, hashmap_n_value(M, n), v);
 
     return n;
 error:
     return NULL;
 }
 
-/* static inline void hashmapn_delete(const hashmap *M, hashmapn *n)
+/* static inline void hashmap_n_delete(const hashmap *M, hashmap_n *n)
  * Delete n, destroying stored data and freeing all associated memory. */
-static inline void hashmapn_delete(const hashmap *M, hashmapn *n)
+static inline void hashmap_n_delete(const hashmap *M, hashmap_n *n)
 {
     if (n) {
-        t_destroy(M->key_type,   hashmapn_key(M, n));
-        t_destroy(M->value_type, hashmapn_value(M, n));
+        t_destroy(M->key_type,   hashmap_n_key(M, n));
+        t_destroy(M->value_type, hashmap_n_value(M, n));
         free(n);
     }
 }
 
-/* static inline void hashmapn_set_value(const hashmap *M, hashmapn *n, const void *v)
+/* static inline void hashmap_n_set_value(const hashmap *M, hashmap_n *n, const void *v)
  * Set the value of the node n to v. We assume that no node is ever created without a value, so
  * there is a previous value that we need to destroy. */
-static inline void hashmapn_set_value(const hashmap *M, hashmapn *n, const void *v)
+static inline void hashmap_n_set_value(const hashmap *M, hashmap_n *n, const void *v)
 {
     assert(M && n && v);
-    t_destroy(M->value_type, hashmapn_value(M, n));
-    t_copy(M->value_type, hashmapn_value(M, n), v);
+    t_destroy(M->value_type, hashmap_n_value(M, n));
+    t_copy(M->value_type, hashmap_n_value(M, n), v);
 }
 
 /* int      hashmap_initialize(hashmap *M, t_intf *kt, t_intf *vt)
@@ -109,13 +109,13 @@ error:
 void hashmap_clear(hashmap *M)
 {
     if (M && M->buckets) {
-        hashmapn *cur;
-        hashmapn *next;
+        hashmap_n *cur;
+        hashmap_n *next;
         for (unsigned short i = 0; i < M->n_buckets; ++i) {
             cur = M->buckets[i];
             while (cur != NULL) {
                 next = cur->next;
-                hashmapn_delete(M, cur);
+                hashmap_n_delete(M, cur);
                 cur = next;
             }
             M->buckets[i] = NULL;
@@ -148,15 +148,15 @@ void hashmap_delete(hashmap *M)
     }
 }
 
-/* static inline hashmapn *hashmap_find_node(const hashmap *M, const void *k, unsigned short i)
+/* static inline hashmap_n *hashmap_find_node(const hashmap *M, const void *k, unsigned short i)
  * Find the node with the key k in the bucket at index i. Return NULL if it's not there. */
-static inline hashmapn *hashmap_find_node(const hashmap *M, const void *k, unsigned short i)
+static inline hashmap_n *hashmap_find_node(const hashmap *M, const void *k, unsigned short i)
 {
     assert(M && M->key_type && k && i < M->n_buckets);
 
-    hashmapn *n = M->buckets[i];
+    hashmap_n *n = M->buckets[i];
     while (n) {
-        if (t_compare(M->key_type, k, hashmapn_key(M, n)) == 0) return n;
+        if (t_compare(M->key_type, k, hashmap_n_key(M, n)) == 0) return n;
         n = n->next;
     }
     return NULL;
@@ -170,13 +170,13 @@ int hashmap_set(hashmap *M, const void *k, const void *v)
     check_ptr(M);
 
     unsigned short i = t_hash(M->key_type, k) % MAP_N_BUCKETS;
-    hashmapn *n = hashmap_find_node(M, k, i);
+    hashmap_n *n = hashmap_find_node(M, k, i);
 
     if (n) {
-        hashmapn_set_value(M, n, v);
+        hashmap_n_set_value(M, n, v);
         return 0;
     } else {
-        n = hashmapn_new(M, k, v);
+        n = hashmap_n_new(M, k, v);
         check(n != NULL, "failed to create new node");
         n->next = M->buckets[i];
         M->buckets[i] = n;
@@ -196,7 +196,7 @@ int hashmap_has(const hashmap *M, const void *k)
     check_ptr(k);
 
     unsigned short i = t_hash(M->key_type, k) % MAP_N_BUCKETS;
-    hashmapn *n = hashmap_find_node(M, k, i);
+    hashmap_n *n = hashmap_find_node(M, k, i);
     return n ? 1 : 0;
 
 error:
@@ -211,8 +211,8 @@ void *hashmap_get(hashmap *M, const void *k)
     check_ptr(k);
 
     unsigned short i = t_hash(M->key_type, k) % MAP_N_BUCKETS;
-    hashmapn *n = hashmap_find_node(M, k, i);
-    if (n)  return hashmapn_value(M, n);
+    hashmap_n *n = hashmap_find_node(M, k, i);
+    if (n)  return hashmap_n_value(M, n);
 
 error: /* fallthrough */
     return NULL;
@@ -226,10 +226,10 @@ int hashmap_remove(hashmap *M, const void *k)
     check_ptr(k);
 
     unsigned short i = t_hash(M->key_type, k) % MAP_N_BUCKETS;
-    hashmapn *node = M->buckets[i];
-    hashmapn *prev = NULL;
+    hashmap_n *node = M->buckets[i];
+    hashmap_n *prev = NULL;
 
-    while (node && t_compare(M->key_type, k, hashmapn_key(M, node)) != 0) {
+    while (node && t_compare(M->key_type, k, hashmap_n_key(M, node)) != 0) {
         prev = node;
         node = node->next;
     }
@@ -237,7 +237,7 @@ int hashmap_remove(hashmap *M, const void *k)
     if (node) {
         if (prev)   prev->next    = node->next;
         else        M->buckets[i] = node->next;
-        hashmapn_delete(M, node);
+        hashmap_n_delete(M, node);
         --M->count;
         return 1;
     } else {

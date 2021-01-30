@@ -13,7 +13,7 @@
  * with the tree. On access, the correct offset is computed. This works because `free` doesn't
  * depend on size information stored with the type of its argument. However, I wouldn't be
  * surprised if this turned out to be horribly insecure. At any rate, you are hereby discouraged
- * from messing around with `bstn`s in your own code... ;)
+ * from messing around with `bst_n`s in your own code... ;)
  *
  * We follow a model where recursive calls would look like this in more abstract languages:
  * `node.left = insert(node.left, key)`, where `insert` would return the new root of the subtree
@@ -39,25 +39,25 @@
 #include "bst.h"
 #include "log.h"
 
-/* bstn *bstn_new(const bst *T, const void *k, const void *v)
+/* bst_n *bst_n_new(const bst *T, const void *k, const void *v)
  * Create a new node with the key k and the value v (if given) on the heap and return a pointer to
  * it, or NULL on error. Enough memory is requested to store the node header, one key, and zero or
  * one value objects according to the type interfaces stored in T.
  * Note that new RB nodes are always red and RED = 0, so as long as we're using `calloc` to
  * allocate the node, there's no need to explicitly set the color. */
-bstn *bstn_new(const bst *T, const void *k, const void *v)
+bst_n *bst_n_new(const bst *T, const void *k, const void *v)
 {
     assert(T && T->key_type && k);
     assert(!v || T->value_type);
 
-    size_t size = bstn_size(T);
-    bstn *n = calloc(1, size);
+    size_t size = bst_n_size(T);
+    bst_n *n = calloc(1, size);
     check_alloc(n);
 
-    t_copy(T->key_type, bstn_key(T, n), k);
+    t_copy(T->key_type, bst_n_key(T, n), k);
     n->flags.plain.has_key = 1;
     if (v) {
-        t_copy(T->value_type, bstn_value(T, n), v);
+        t_copy(T->value_type, bst_n_value(T, n), v);
         n->flags.plain.has_value = 1;
     }
 
@@ -66,78 +66,78 @@ error:
     return NULL;
 }
 
-/* void bstn_delete    (const bst *T, bstn *n)
- * void bstn_delete_rec(const bst *T, bstn *n)
+/* void bst_n_delete    (const bst *T, bst_n *n)
+ * void bst_n_delete_rec(const bst *T, bst_n *n)
  * Delete n, destroying stored data and freeing associated memory. No links are altered in
- * adjacent nodes, so don't call bstn_delete on a node with children lest they become unreachable
- * in the void... use bstn_delete_rec[ursively] to wipe out the whole subtree. */
-void bstn_delete(const bst *T, bstn *n)
+ * adjacent nodes, so don't call bst_n_delete on a node with children lest they become unreachable
+ * in the void... use bst_n_delete_rec[ursively] to wipe out the whole subtree. */
+void bst_n_delete(const bst *T, bst_n *n)
 {
     log_call("T=%p, n=%p", T, n);
     assert(T && T->key_type && n);
 
-    if (bstn_has_key(n)) {
-        t_destroy(T->key_type, bstn_key(T, n));
+    if (bst_n_has_key(n)) {
+        t_destroy(T->key_type, bst_n_key(T, n));
     }
-    if (bstn_has_value(n)) {
+    if (bst_n_has_value(n)) {
         assert(T->value_type);
-        t_destroy(T->value_type, bstn_value(T, n));
+        t_destroy(T->value_type, bst_n_value(T, n));
     }
     free(n);
 }
 
-void bstn_delete_rec(const bst *T, bstn *n)
+void bst_n_delete_rec(const bst *T, bst_n *n)
 {
     log_call("T=%p, n=%p", T, n);
     assert(T && n);
-    if (n->left) bstn_delete_rec(T, n->left);
-    if (n->right) bstn_delete_rec(T, n->right);
-    bstn_delete(T, n);
+    if (n->left) bst_n_delete_rec(T, n->left);
+    if (n->right) bst_n_delete_rec(T, n->right);
+    bst_n_delete(T, n);
 }
 
-/* bstn *bstn_find(const bst *T, const bstn *n, const void *k)
+/* bst_n *bst_n_find(const bst *T, const bst_n *n, const void *k)
  * Return the descendant node of n with the key k if present or NULL. */
-bstn *bstn_find(const bst *T, bstn *n, const void *k)
+bst_n *bst_n_find(const bst *T, bst_n *n, const void *k)
 {
     assert(T && T->key_type && k);
     if (!n) return NULL;
 
-    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+    int cmp = t_compare(T->key_type, k, bst_n_key(T, n));
     if (cmp < 0) {
-        return bstn_find(T, n->left, k);
+        return bst_n_find(T, n->left, k);
     } else if (cmp > 0) {
-        return bstn_find(T, n->right, k);
+        return bst_n_find(T, n->right, k);
     } else { /* cmp == 0 */
         return n;
     }
 }
 
-/* int bstn_insert(const bst *T, bstn **np, const void *k, const void *v)
+/* int bst_n_insert(const bst *T, bst_n **np, const void *k, const void *v)
  * Insert a node with the key k and the value v (if given) into the substree with the root n.
  * The pointer at np may be changed. Return 1 if a node was added, 0 if k was already there, or -1
  * on failure. */
-int bstn_insert(bst *T, bstn **np, const void *k, const void *v)
+int bst_n_insert(bst *T, bst_n **np, const void *k, const void *v)
 {
     assert(T && T->key_type && k);
     assert(!v || T->value_type);
 
-    bstn *n = *np;
+    bst_n *n = *np;
 
     if (!n) {
-        n = bstn_new(T, k, v);
+        n = bst_n_new(T, k, v);
         check(n, "failed to create new node");
         *np = n;
         return 1;
     }
 
-    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+    int cmp = t_compare(T->key_type, k, bst_n_key(T, n));
 
     if (cmp < 0) {
-        return bstn_insert(T, &n->left, k, v);
+        return bst_n_insert(T, &n->left, k, v);
     } else if (cmp > 0) {
-        return bstn_insert(T, &n->right, k, v);
+        return bst_n_insert(T, &n->right, k, v);
     } else { /* cmp == 0 */
-        if (v) bstn_set_value(T, n, v);
+        if (v) bst_n_set_value(T, n, v);
         return 0;
     }
 
@@ -145,155 +145,155 @@ error:
     return -1;
 }
 
-/* int bstn_remove_min(const bst *T, bstn **np)
+/* int bst_n_remove_min(const bst *T, bst_n **np)
  * Remove the minimum from the subtree with the root n. The pointer at np may be changed. This
- * always removes a node, but we return 1 whatsoever for consistency with bstn_remove. */
-int bstn_remove_min(bst *T, bstn **np)
+ * always removes a node, but we return 1 whatsoever for consistency with bst_n_remove. */
+int bst_n_remove_min(bst *T, bst_n **np)
 {
-    bstn *n = *np;
+    bst_n *n = *np;
     assert(n);
 
     int rc;
 
     if (!n->left) {
-        bstn *r = n->right;
-        bstn_delete(T, n);
+        bst_n *r = n->right;
+        bst_n_delete(T, n);
         *np = r;
         rc = 1;
     } else {
-        rc = bstn_remove_min(T, &n->left);
+        rc = bst_n_remove_min(T, &n->left);
     }
 
     return rc;
 }
 
-/* void bstn_move_data(const bst *T, bstn *dest, bstn *src)
+/* void bst_n_move_data(const bst *T, bst_n *dest, bst_n *src)
  * Move the payload from src to dest, destroying any previous data in dest. */
-void bstn_move_data(const bst *T, bstn *dest, bstn *src)
+void bst_n_move_data(const bst *T, bst_n *dest, bst_n *src)
 {
     assert(T && T->key_type);
-    assert(dest && src && bstn_has_key(src));
+    assert(dest && src && bst_n_has_key(src));
 
     /* destroy the data in dest */
-    if (bstn_has_key(dest))     bstn_destroy_key(T, dest);
-    if (bstn_has_value(dest))   bstn_destroy_value(T, dest);
+    if (bst_n_has_key(dest))     bst_n_destroy_key(T, dest);
+    if (bst_n_has_value(dest))   bst_n_destroy_value(T, dest);
 
     /* move over the data from src */
-    t_move(T->key_type, bstn_key(T, dest), bstn_key(T, src));
+    t_move(T->key_type, bst_n_key(T, dest), bst_n_key(T, src));
     src->flags.plain.has_key  = 0;
     dest->flags.plain.has_key = 1;
 
-    if (bstn_has_value(src)) {
-        t_move(T->value_type, bstn_value(T, dest), bstn_value(T, src));
+    if (bst_n_has_value(src)) {
+        t_move(T->value_type, bst_n_value(T, dest), bst_n_value(T, src));
         src->flags.plain.has_value  = 0;
         dest->flags.plain.has_value = 1;
     }
 }
 
-/* int bstn_remove(const bst *T, bstn **np, const void *k)
+/* int bst_n_remove(const bst *T, bst_n **np, const void *k)
  * Remove the node with the key k from the substree roted at n. The pointer at np may be changed.
  * Return 1 if a node was removed, 0 if k wasn't found, or -1 on error. */
-int bstn_remove(
+int bst_n_remove(
         bst *T,
-        bstn **np,      /* the root of the substree to delete from */
+        bst_n **np,      /* the root of the substree to delete from */
         const void *k)  /* the key to delete */
 {
     log_call("T=%p, np=%p, k=%p", T, np, k);
     assert(T && T->key_type && k);
 
-    bstn *n = *np;
+    bst_n *n = *np;
     if (!n) return 0;
 
-    int cmp = t_compare(T->key_type, k, bstn_key(T, n));
+    int cmp = t_compare(T->key_type, k, bst_n_key(T, n));
 
-    if      (cmp < 0) { return bstn_remove(T, &n->left,  k); }
-    else if (cmp > 0) { return bstn_remove(T, &n->right, k); }
+    if      (cmp < 0) { return bst_n_remove(T, &n->left,  k); }
+    else if (cmp > 0) { return bst_n_remove(T, &n->right, k); }
     else { /* cmp == 0 */
         if (n->left && n->right) {
             /* Find the node with the minimum key in the right subtree, which is guaranteed to not
              * have a left child; move its data over here, then delete it. */
-            bstn *s = n->right;
+            bst_n *s = n->right;
             while (s->left) s = s->left;
-            bstn_move_data(T, n, s);
-            return bstn_remove_min(T, &n->right);
+            bst_n_move_data(T, n, s);
+            return bst_n_remove_min(T, &n->right);
 
         } else {
             if      (n->left)   *np = n->left;
             else if (n->right)  *np = n->right;
             else                *np = NULL;
 
-            bstn_delete(T, n);
+            bst_n_delete(T, n);
             return 1;
         }
     }
 }
 
-/* void bstn_set_key  (const bst *T, bstn *n, const void *k)
- * void bstn_set_value(const bst *T, bstn *n, const void *v)
+/* void bst_n_set_key  (const bst *T, bst_n *n, const void *k)
+ * void bst_n_set_value(const bst *T, bst_n *n, const void *v)
  * Set the key/value stored in n to k/v by copying it into the node. We assume that no previous
  * key/value is present. */
-void bstn_set_key(const bst *T, bstn *n, const void *k)
+void bst_n_set_key(const bst *T, bst_n *n, const void *k)
 {
     log_call("T=%p, n=%p, k=%p", T, n, k);
-    assert(T && n && k && T->key_type && !bstn_has_key(n));
-    t_copy(T->key_type, bstn_key(T, n), k);
+    assert(T && n && k && T->key_type && !bst_n_has_key(n));
+    t_copy(T->key_type, bst_n_key(T, n), k);
     n->flags.plain.has_key = 1;
 }
 
-void bstn_set_value(const bst *T, bstn *n, const void *v)
+void bst_n_set_value(const bst *T, bst_n *n, const void *v)
 {
     log_call("T=%p, n=%p, v=%p", T, n, v);
     assert(T && n && v && T->value_type);
-    if (bstn_has_value(n)) bstn_destroy_value(T, n);
-    t_copy(T->value_type, bstn_value(T, n), v);
+    if (bst_n_has_value(n)) bst_n_destroy_value(T, n);
+    t_copy(T->value_type, bst_n_value(T, n), v);
     n->flags.plain.has_value = 1;
 }
 
-/* void bstn_destroy_key  (const bst *T, bstn *n)
- * void bstn_destroy_value(const bst *T, bstn *n, const void *v)
+/* void bst_n_destroy_key  (const bst *T, bst_n *n)
+ * void bst_n_destroy_value(const bst *T, bst_n *n, const void *v)
  * Destroy the key/value stored in n, freeing any associated memory. We assume that a key/value is
  * present. */
-void bstn_destroy_key(const bst *T, bstn *n)
+void bst_n_destroy_key(const bst *T, bst_n *n)
 {
     log_call("T=%p, n=%p", T, n);
-    assert(T && n && T->key_type && bstn_has_key(n));
-    t_destroy(T->key_type, bstn_key(T, n));
+    assert(T && n && T->key_type && bst_n_has_key(n));
+    t_destroy(T->key_type, bst_n_key(T, n));
     n->flags.plain.has_key = 0;
 }
 
-void bstn_destroy_value(const bst *T, bstn *n)
+void bst_n_destroy_value(const bst *T, bst_n *n)
 {
     log_call("T=%p, n=%p", T, n);
-    assert(T && n && T->value_type && bstn_has_value(n));
-    t_destroy(T->value_type, bstn_value(T, n));
+    assert(T && n && T->value_type && bst_n_has_value(n));
+    t_destroy(T->value_type, bst_n_value(T, n));
     n->flags.plain.has_value = 0;
 }
 
-/* bstn *bstn_copy_rec(const bst *T, const bstn *n)
+/* bst_n *bst_n_copy_rec(const bst *T, const bst_n *n)
  * Recursively copy the (sub)tree rooted at n, including all stored data. The new tree has the
  * exact same layout. */
-bstn *bstn_copy_rec(const bst *T, const bstn *n)
+bst_n *bst_n_copy_rec(const bst *T, const bst_n *n)
 {
     log_call("T=%p, n=%p", T, n);
-    assert(T && T->key_type && n && (!bstn_has_value(n) || T->value_type));
+    assert(T && T->key_type && n && (!bst_n_has_value(n) || T->value_type));
 
-    bstn *c = bstn_new(T, bstn_key(T, n), bstn_value(T, n));
+    bst_n *c = bst_n_new(T, bst_n_key(T, n), bst_n_value(T, n));
     check(c != NULL, "failed to create new node");
 
     /* recursively copy the substrees */
     if (n->left) {
-        c->left = bstn_copy_rec(T, n->left);
+        c->left = bst_n_copy_rec(T, n->left);
     }
     if (n->right) {
-        c->right = bstn_copy_rec(T, n->right);
+        c->right = bst_n_copy_rec(T, n->right);
     }
 
     /* copy the complete flags byte */
-    memcpy(&c->flags, &n->flags, sizeof(struct bstn_flags));
+    memcpy(&c->flags, &n->flags, sizeof(struct bst_n_flags));
 
     return c;
 error:
-    if (c) bstn_delete_rec(T, c);
+    if (c) bst_n_delete_rec(T, c);
     return NULL;
 }
 
@@ -353,7 +353,7 @@ void bst_clear(bst *T)
     log_call("T=%p", T);
     if (T) {
         assert(bst_invariant(T, NULL) == 0);
-        if (T->root) bstn_delete_rec(T, T->root);
+        if (T->root) bst_n_delete_rec(T, T->root);
         T->root = NULL;
         T->count = 0;
     }
@@ -367,7 +367,7 @@ void bst_destroy(bst *T)
     log_call("T=%p", T);
     if (T) {
         assert(bst_invariant(T, NULL) == 0);
-        if (T->root) bstn_delete_rec(T, T->root);
+        if (T->root) bst_n_delete_rec(T, T->root);
         memset(T, 0, sizeof(*T));
     }
 }
@@ -377,7 +377,7 @@ void bst_delete(bst *T)
     log_call("T=%p", T);
     if (T) {
         assert(bst_invariant(T, NULL) == 0);
-        if (T->root) bstn_delete_rec(T, T->root);
+        if (T->root) bst_n_delete_rec(T, T->root);
         free(T);
     }
 }
@@ -397,7 +397,7 @@ bst *bst_copy(const bst *src)
     dest = bst_new(src->flavor, src->key_type, src->value_type);
     check(dest != NULL, "failed to create new tree");
 
-    if (src->root) dest->root = bstn_copy_rec(dest, src->root);
+    if (src->root) dest->root = bst_n_copy_rec(dest, src->root);
     dest->count = src->count;
 
     return dest;
@@ -416,7 +416,7 @@ int bst_copy_to(bst *dest, const bst *src)
     int rc = bst_initialize(dest, src->flavor, src->key_type, src->value_type);
     check_rc(rc, "bst_initialize");
 
-    if (src->root) dest->root = bstn_copy_rec(dest, src->root);
+    if (src->root) dest->root = bst_n_copy_rec(dest, src->root);
     dest->count = src->count;
 
     return 0;
@@ -433,11 +433,11 @@ int bst_has(const bst *T, const void *k)
     check(T->key_type, "no key type defined");
     assert(bst_invariant(T, NULL) == 0);
 
-    bstn *n = T->root;
+    bst_n *n = T->root;
     int cmp;
     for ( ;; ) {
         if (!n) return 0;
-        cmp = t_compare(T->key_type, k, bstn_key(T, n));
+        cmp = t_compare(T->key_type, k, bst_n_key(T, n));
         if      (cmp < 0) n = n->left;
         else if (cmp > 0) n = n->right;
         else return 1; /* cmp == 0 */
@@ -461,14 +461,14 @@ int bst_insert(bst *T, const void *k)
     int rc;
     switch (T->flavor) {
         case RB:
-            rc = rbn_insert(T, &T->root, k, NULL);
+            rc = rb_n_insert(T, &T->root, k, NULL);
             T->root->flags.rb.color = BLACK;
             break;
         case AVL:
-            rc = avln_insert(T, &T->root, k, NULL, NULL);
+            rc = avl_n_insert(T, &T->root, k, NULL, NULL);
             break;
         default:
-            rc = bstn_insert(T, &T->root, k, NULL);
+            rc = bst_n_insert(T, &T->root, k, NULL);
     }
 
     if (rc == 1) ++T->count;
@@ -492,14 +492,14 @@ int bst_remove(bst *T, const void *k)
     int rc;
     switch (T->flavor) {
         case RB:
-            rc = rbn_remove(T, &T->root, k);
+            rc = rb_n_remove(T, &T->root, k);
             if (T->root) T->root->flags.rb.color = BLACK;
             break;
         case AVL:
-            rc = avln_remove(T, &T->root, k, NULL);
+            rc = avl_n_remove(T, &T->root, k, NULL);
             break;
         default:
-            rc = bstn_remove(T, &T->root, k);
+            rc = bst_n_remove(T, &T->root, k);
     }
 
     if (rc == 1) --T->count;
@@ -526,14 +526,14 @@ int bst_set(bst *T, const void *k, const void *v)
     int rc;
     switch(T->flavor) {
         case RB:
-            rc = rbn_insert(T, &T->root, k, v);
+            rc = rb_n_insert(T, &T->root, k, v);
             T->root->flags.rb.color = BLACK;
             break;
         case AVL:
-            rc = avln_insert(T, &T->root, k, v, NULL);
+            rc = avl_n_insert(T, &T->root, k, v, NULL);
             break;
         default:
-            rc = bstn_insert(T, &T->root, k, v);
+            rc = bst_n_insert(T, &T->root, k, v);
     }
 
     if (rc == 1) ++T->count;
@@ -553,25 +553,25 @@ void *bst_get(bst *T, const void *k)
     check(T->value_type, "no value type defined");
     assert(bst_invariant(T, NULL) == 0);
 
-    bstn *n = T->root;
+    bst_n *n = T->root;
     int cmp;
     while (n) {
-        cmp = t_compare(T->key_type, k, bstn_key(T, n));
+        cmp = t_compare(T->key_type, k, bst_n_key(T, n));
         if      (cmp < 0) n = n->left;
         else if (cmp > 0) n = n->right;
-        else return bstn_value(T, n); /* cmp == 0 */
+        else return bst_n_value(T, n); /* cmp == 0 */
     }
 
 error: /* fallthrough */
     return NULL;
 }
 
-/* int bstn_traverse             (        bstn *n, int (*f)(bstn *n, void *p), void *p)
- * int bstn_traverse_r           (        bstn *n, int (*f)(bstn *n, void *p), void *p)
- * int bstn_traverse_keys        (bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
- * int bstn_traverse_keys_r      (bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
- * int bstn_traverse_values      (bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
- * int bstn_traverse_values_r    (bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
+/* int bst_n_traverse             (        bst_n *n, int (*f)(bst_n *n, void *p), void *p)
+ * int bst_n_traverse_r           (        bst_n *n, int (*f)(bst_n *n, void *p), void *p)
+ * int bst_n_traverse_keys        (bst *T, bst_n *n, int (*f)(void *k, void *p), void *p)
+ * int bst_n_traverse_keys_r      (bst *T, bst_n *n, int (*f)(void *k, void *p), void *p)
+ * int bst_n_traverse_values      (bst *T, bst_n *n, int (*f)(void *v, void *p), void *p)
+ * int bst_n_traverse_values_r    (bst *T, bst_n *n, int (*f)(void *v, void *p), void *p)
  *
  * Walk through all the nodes of the subtree with the root n in ascending/descending order. Call
  * f on every node, key, or value with the additional parameter p. If f returns a non-zero
@@ -579,16 +579,16 @@ error: /* fallthrough */
  *
  * These functions are called by their counterparts bst_traverse... to do the actual work. There
  * should be no need to call them directly from the outside. */
-int bstn_traverse(
-        bstn *n,                        /* the root of the substree to traverse */
-        int (*f)(bstn *n, void *p),     /* the function to call on every node */
+int bst_n_traverse(
+        bst_n *n,                        /* the root of the substree to traverse */
+        int (*f)(bst_n *n, void *p),     /* the function to call on every node */
         void *p)                        /* additional parameter to pass to f */
 {
     int rc = 0;
 
     if (n) {
         if (n->left) {
-            rc = bstn_traverse(n->left, f, p);
+            rc = bst_n_traverse(n->left, f, p);
             if (rc != 0) return rc;
         }
 
@@ -596,7 +596,7 @@ int bstn_traverse(
         if (rc != 0) return rc;
 
         if (n->right) {
-            rc = bstn_traverse(n->right, f, p);
+            rc = bst_n_traverse(n->right, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -604,13 +604,13 @@ int bstn_traverse(
     return rc;
 }
 
-int bstn_traverse_r(bstn *n, int (*f)(bstn *n, void *p), void *p)
+int bst_n_traverse_r(bst_n *n, int (*f)(bst_n *n, void *p), void *p)
 {
     int rc = 0;
 
     if (n) {
         if (n->right) {
-            rc = bstn_traverse_r(n->right, f, p);
+            rc = bst_n_traverse_r(n->right, f, p);
             if (rc != 0) return rc;
         }
 
@@ -618,7 +618,7 @@ int bstn_traverse_r(bstn *n, int (*f)(bstn *n, void *p), void *p)
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = bstn_traverse_r(n->left, f, p);
+            rc = bst_n_traverse_r(n->left, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -626,21 +626,21 @@ int bstn_traverse_r(bstn *n, int (*f)(bstn *n, void *p), void *p)
     return rc;
 }
 
-int bstn_traverse_keys(bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
+int bst_n_traverse_keys(bst *T, bst_n *n, int (*f)(void *k, void *p), void *p)
 {
     int rc = 0;
 
     if (n) {
         if (n->left) {
-            rc = bstn_traverse_keys(T, n->left, f, p);
+            rc = bst_n_traverse_keys(T, n->left, f, p);
             if (rc != 0) return rc;
         }
 
-        rc = f(bstn_key(T, n), p);
+        rc = f(bst_n_key(T, n), p);
         if (rc != 0) return rc;
 
         if (n->right) {
-            rc = bstn_traverse_keys(T, n->right, f, p);
+            rc = bst_n_traverse_keys(T, n->right, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -648,21 +648,21 @@ int bstn_traverse_keys(bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
     return rc;
 }
 
-int bstn_traverse_keys_r(bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
+int bst_n_traverse_keys_r(bst *T, bst_n *n, int (*f)(void *k, void *p), void *p)
 {
     int rc = 0;
 
     if (n) {
         if (n->right) {
-            rc = bstn_traverse_keys_r(T, n->right, f, p);
+            rc = bst_n_traverse_keys_r(T, n->right, f, p);
             if (rc != 0) return rc;
         }
 
-        rc = f(bstn_key(T, n), p);
+        rc = f(bst_n_key(T, n), p);
         if (rc != 0) return rc;
 
         if (n->left) {
-            rc = bstn_traverse_keys_r(T, n->left, f, p);
+            rc = bst_n_traverse_keys_r(T, n->left, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -670,45 +670,22 @@ int bstn_traverse_keys_r(bst *T, bstn *n, int (*f)(void *k, void *p), void *p)
     return rc;
 }
 
-int bstn_traverse_values(bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
-{
-    assert(T->value_type);
-    int rc = 0;
-
-    if (n) {
-        if (n->left) {
-            rc = bstn_traverse_values(T, n->left, f, p);
-            if (rc != 0) return rc;
-        }
-
-        rc = f(bstn_value(T, n), p);
-        if (rc != 0) return rc;
-
-        if (n->right) {
-            rc = bstn_traverse_values(T, n->right, f, p);
-            if (rc != 0) return rc;
-        }
-    }
-
-    return rc;
-}
-
-int bstn_traverse_values_r(bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
+int bst_n_traverse_values(bst *T, bst_n *n, int (*f)(void *v, void *p), void *p)
 {
     assert(T->value_type);
     int rc = 0;
 
     if (n) {
-        if (n->right) {
-            rc = bstn_traverse_values_r(T, n->right, f, p);
+        if (n->left) {
+            rc = bst_n_traverse_values(T, n->left, f, p);
             if (rc != 0) return rc;
         }
 
-        rc = f(bstn_value(T, n), p);
+        rc = f(bst_n_value(T, n), p);
         if (rc != 0) return rc;
 
-        if (n->left) {
-            rc = bstn_traverse_values_r(T, n->left, f, p);
+        if (n->right) {
+            rc = bst_n_traverse_values(T, n->right, f, p);
             if (rc != 0) return rc;
         }
     }
@@ -716,8 +693,31 @@ int bstn_traverse_values_r(bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
     return rc;
 }
 
-/* int bst_traverse_nodes    (bst *T, int (*f)(bstn *n,  void *p), void *p)
- * int bst_traverse_nodes_r  (bst *T, int (*f)(bstn *n,  void *p), void *p)
+int bst_n_traverse_values_r(bst *T, bst_n *n, int (*f)(void *v, void *p), void *p)
+{
+    assert(T->value_type);
+    int rc = 0;
+
+    if (n) {
+        if (n->right) {
+            rc = bst_n_traverse_values_r(T, n->right, f, p);
+            if (rc != 0) return rc;
+        }
+
+        rc = f(bst_n_value(T, n), p);
+        if (rc != 0) return rc;
+
+        if (n->left) {
+            rc = bst_n_traverse_values_r(T, n->left, f, p);
+            if (rc != 0) return rc;
+        }
+    }
+
+    return rc;
+}
+
+/* int bst_traverse_nodes    (bst *T, int (*f)(bst_n *n,  void *p), void *p)
+ * int bst_traverse_nodes_r  (bst *T, int (*f)(bst_n *n,  void *p), void *p)
  * int bst_traverse_keys     (bst *T, int (*f)(void *k, void *p), void *p)
  * int bst_traverse_keys_r   (bst *T, int (*f)(void *k, void *p), void *p)
  * int bst_traverse_values   (bst *T, int (*f)(void *v, void *p), void *p)
@@ -727,29 +727,29 @@ int bstn_traverse_values_r(bst *T, bstn *n, int (*f)(void *v, void *p), void *p)
  * key, or value with the additional parameter p. If f returns a non-zero integer, abort and
  * return it. */
 
-int bst_traverse_nodes(bst *T, int (*f)(bstn *n, void *p), void *p) {
-    if (T && T->root) return bstn_traverse(T->root, f, p);
+int bst_traverse_nodes(bst *T, int (*f)(bst_n *n, void *p), void *p) {
+    if (T && T->root) return bst_n_traverse(T->root, f, p);
     return 0;
 }
 
-int bst_traverse_nodes_r(bst *T, int (*f)(bstn *n, void *p), void *p) {
-    if (T && T->root) return bstn_traverse_r(T->root, f, p);
+int bst_traverse_nodes_r(bst *T, int (*f)(bst_n *n, void *p), void *p) {
+    if (T && T->root) return bst_n_traverse_r(T->root, f, p);
     return 0;
 }
 
 int bst_traverse_keys(bst *T, int (*f)(void *k, void *p), void *p) {
-    if (T && T->root) return bstn_traverse_keys(T, T->root, f, p);
+    if (T && T->root) return bst_n_traverse_keys(T, T->root, f, p);
     return 0;
 }
 
 int bst_traverse_keys_r(bst *T, int (*f)(void *k, void *p), void *p) {
-    if (T && T->root) return bstn_traverse_keys_r(T, T->root, f, p);
+    if (T && T->root) return bst_n_traverse_keys_r(T, T->root, f, p);
     return 0;
 }
 
 int bst_traverse_values(bst *T, int (*f)(void *v, void *p), void *p) {
     check(T->value_type, "the tree doesn't store values");
-    if (T && T->root) return bstn_traverse_values(T, T->root, f, p);
+    if (T && T->root) return bst_n_traverse_values(T, T->root, f, p);
     return 0;
 error:
     return -1;
@@ -757,26 +757,26 @@ error:
 
 int bst_traverse_values_r(bst *T, int (*f)(void *v, void *p), void *p) {
     check(T->value_type, "the tree doesn't store values");
-    if (T && T->root) return bstn_traverse_values_r(T, T->root, f, p);
+    if (T && T->root) return bst_n_traverse_values_r(T, T->root, f, p);
     return 0;
 error:
     return -1;
 }
 
-/* size_t bstn_height(const bstn *n)
+/* size_t bst_n_height(const bst_n *n)
  * Get the height of the subtree with the root n, O(n)! */
-size_t bstn_height(const bstn *n)
+size_t bst_n_height(const bst_n *n)
 {
     if (!n) return 0;
-    size_t hl = bstn_height(n->left);
-    size_t hr = bstn_height(n->right);
+    size_t hl = bst_n_height(n->left);
+    size_t hr = bst_n_height(n->right);
     return (hl > hr ? hl : hr) + 1;
 }
 
-/* int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
+/* int bst_n_invariant(const bst *T, const bst_n *n, int depth, struct bst_stats *s)
  * Check if the subtree with the root n satisfies the inequality properties for keys in BSTs,
  * and collect stats of the tree while at it. */
-int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
+int bst_n_invariant(const bst *T, const bst_n *n, int depth, struct bst_stats *s)
 {
     if (!n) return 0;
 
@@ -789,18 +789,18 @@ int bstn_invariant(const bst *T, const bstn *n, int depth, struct bst_stats *s)
     }
 
     /* check key inequalities */
-    if (n->left && t_compare(T->key_type, bstn_key(T, n->left), bstn_key(T, n)) >= 0) {
+    if (n->left && t_compare(T->key_type, bst_n_key(T, n->left), bst_n_key(T, n)) >= 0) {
         log_error("BST invariant violated: left child > parent");
         return -1;
     }
-    if (n->right && t_compare(T->key_type, bstn_key(T, n->right), bstn_key(T, n)) <= 0) {
+    if (n->right && t_compare(T->key_type, bst_n_key(T, n->right), bst_n_key(T, n)) <= 0) {
         log_error("BST invariant violated: right child < parent");
         return -1;
     }
 
     /* process children */
-    if (n->left  && bstn_invariant(T, n->left,  depth, s) != 0)   return -1;
-    if (n->right && bstn_invariant(T, n->right, depth, s) != 0)   return -1;
+    if (n->left  && bst_n_invariant(T, n->left,  depth, s) != 0)   return -1;
+    if (n->right && bst_n_invariant(T, n->right, depth, s) != 0)   return -1;
 
     return 0;
 }
@@ -818,13 +818,13 @@ int bst_invariant(const bst *T, struct bst_stats *s_out)
 
     switch (T->flavor) {
         case RB:
-            rc = rbn_invariant(T, T->root, 0, 0, &s);
+            rc = rb_n_invariant(T, T->root, 0, 0, &s);
             break;
         case AVL:
-            rc = avln_invariant(T, T->root, 0, NULL, &s);
+            rc = avl_n_invariant(T, T->root, 0, NULL, &s);
             break;
         default:
-            rc = bstn_invariant(T, T->root, 0, &s);
+            rc = bst_n_invariant(T, T->root, 0, &s);
     }
 
     check((int)T->count == s.total_nodes,

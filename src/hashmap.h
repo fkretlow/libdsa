@@ -17,13 +17,13 @@
 
 #define MAP_N_BUCKETS 512
 
-struct hashmapn;
-typedef struct hashmapn {
-    struct hashmapn *   next;
-} hashmapn;
+struct hashmap_n;
+typedef struct hashmap_n {
+    struct hashmap_n *   next;
+} hashmap_n;
 
 typedef struct hashmap {
-    hashmapn **     buckets;
+    hashmap_n **     buckets;
     unsigned short  n_buckets;
     size_t          count;
     t_intf *        key_type;

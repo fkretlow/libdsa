@@ -20,36 +20,36 @@
 
 enum bst_flavors { NONE = 0, RB = 1, AVL = 2 };
 
-struct bstn_flags {
+struct bst_n_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
 };
 
-struct rbn_flags {
+struct rb_n_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
     unsigned char color     : 1;
 };
 
-struct avln_flags {
+struct avl_n_flags {
     unsigned char has_key   : 1;
     unsigned char has_value : 1;
     char balance            : 3;
 };
 
-struct bstn;
-typedef struct bstn {
-    struct bstn *left;
-    struct bstn *right;
+struct bst_n;
+typedef struct bst_n {
+    struct bst_n *left;
+    struct bst_n *right;
     union {
-        struct bstn_flags   plain;
-        struct rbn_flags    rb;
-        struct avln_flags   avl;
+        struct bst_n_flags   plain;
+        struct rb_n_flags    rb;
+        struct avl_n_flags   avl;
     } flags;
-} bstn;
+} bst_n;
 
 typedef struct bst {
-    bstn *      root;
+    bst_n *      root;
     size_t      count;
     uint8_t     flavor;
     t_intf *    key_type;
@@ -86,8 +86,8 @@ int     bst_traverse_keys       (bst *T, int (*f)(void *k, void *p), void *p);
 int     bst_traverse_keys_r     (bst *T, int (*f)(void *k, void *p), void *p);
 int     bst_traverse_values     (bst *T, int (*f)(void *v, void *p), void *p);
 int     bst_traverse_values_r   (bst *T, int (*f)(void *v, void *p), void *p);
-int     bst_traverse_nodes      (bst *T, int (*f)(bstn *n, void *p), void *p);
-int     bst_traverse_nodes_r    (bst *T, int (*f)(bstn *n, void *p), void *p);
+int     bst_traverse_nodes      (bst *T, int (*f)(bst_n *n, void *p), void *p);
+int     bst_traverse_nodes_r    (bst *T, int (*f)(bst_n *n, void *p), void *p);
 
 int     bst_invariant           (const bst *T, struct bst_stats *s_out);
 
@@ -102,56 +102,56 @@ int     bst_invariant           (const bst *T, struct bst_stats *s_out);
 
 /* subroutines on normal BST nodes */
 
-bstn *  bstn_new                (const bst *T, const void *k, const void *v);
-void    bstn_delete             (const bst *T, bstn *n);
-void    bstn_delete_rec         (const bst *T, bstn *n);
+bst_n *  bst_n_new                (const bst *T, const void *k, const void *v);
+void    bst_n_delete             (const bst *T, bst_n *n);
+void    bst_n_delete_rec         (const bst *T, bst_n *n);
 
-bstn *  bstn_copy_rec           (const bst *T, const bstn *n);
+bst_n *  bst_n_copy_rec           (const bst *T, const bst_n *n);
 
-bstn *  bstn_find               (const bst *T, bstn *n, const void *k);
+bst_n *  bst_n_find               (const bst *T, bst_n *n, const void *k);
 
-int     bstn_insert             (bst *T, bstn **np, const void *k, const void *v);
-int     bstn_remove             (bst *T, bstn **np, const void *k);
-int     bstn_remove_min         (bst *T, bstn **np);
+int     bst_n_insert             (bst *T, bst_n **np, const void *k, const void *v);
+int     bst_n_remove             (bst *T, bst_n **np, const void *k);
+int     bst_n_remove_min         (bst *T, bst_n **np);
 
-void    bstn_set_key            (const bst *T, bstn *n, const void *k);
-void    bstn_destroy_key        (const bst *T, bstn *n);
-void    bstn_set_value          (const bst *T, bstn *n, const void *v);
-void    bstn_destroy_value      (const bst *T, bstn *n);
-void    bstn_move_data          (const bst *T, bstn *dest, bstn *src);
+void    bst_n_set_key            (const bst *T, bst_n *n, const void *k);
+void    bst_n_destroy_key        (const bst *T, bst_n *n);
+void    bst_n_set_value          (const bst *T, bst_n *n, const void *v);
+void    bst_n_destroy_value      (const bst *T, bst_n *n);
+void    bst_n_move_data          (const bst *T, bst_n *dest, bst_n *src);
 
-int     bstn_traverse           (        bstn *n, int (*f)(bstn *n, void *p), void *p);
-int     bstn_traverse_r         (        bstn *n, int (*f)(bstn *n, void *p), void *p);
-int     bstn_traverse_keys      (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
-int     bstn_traverse_keys_r    (bst *T, bstn *n, int (*f)(void *k, void *p), void *p);
-int     bstn_traverse_values    (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
-int     bstn_traverse_values_r  (bst *T, bstn *n, int (*f)(void *v, void *p), void *p);
+int     bst_n_traverse           (        bst_n *n, int (*f)(bst_n *n, void *p), void *p);
+int     bst_n_traverse_r         (        bst_n *n, int (*f)(bst_n *n, void *p), void *p);
+int     bst_n_traverse_keys      (bst *T, bst_n *n, int (*f)(void *k, void *p), void *p);
+int     bst_n_traverse_keys_r    (bst *T, bst_n *n, int (*f)(void *k, void *p), void *p);
+int     bst_n_traverse_values    (bst *T, bst_n *n, int (*f)(void *v, void *p), void *p);
+int     bst_n_traverse_values_r  (bst *T, bst_n *n, int (*f)(void *v, void *p), void *p);
 
-size_t  bstn_height             (const bstn *n);
+size_t  bst_n_height             (const bst_n *n);
 
-#define bstn_data_size(T) \
+#define bst_n_data_size(T) \
     (t_size((T)->key_type) + ((T)->value_type ? t_size((T)->value_type) : 0))
-#define bstn_size(T) (sizeof(bstn) + bstn_data_size(T))
+#define bst_n_size(T) (sizeof(bst_n) + bst_n_data_size(T))
 
-#define bstn_has_key(n)   ((n)->flags.plain.has_key)
-#define bstn_has_value(n) ((n)->flags.plain.has_value)
+#define bst_n_has_key(n)   ((n)->flags.plain.has_key)
+#define bst_n_has_value(n) ((n)->flags.plain.has_value)
 
-#define bstn_key(T, n) (void*)(((char *)(n)) + sizeof(bstn))
-#define bstn_value(T, n) \
-    ((T)->value_type ? (void*)((char *)(n)) + sizeof(bstn) + t_size((T)->key_type) : NULL)
+#define bst_n_key(T, n) (void*)(((char *)(n)) + sizeof(bst_n))
+#define bst_n_value(T, n) \
+    ((T)->value_type ? (void*)((char *)(n)) + sizeof(bst_n) + t_size((T)->key_type) : NULL)
 
 /* RB node subroutines */
 
 enum rb_colors { RED = 0, BLACK = 1 };
 
-int rbn_invariant   (const bst *T, const bstn *n, int depth, int black_depth, struct bst_stats *s);
-int rbn_insert      (bst *T, bstn **np, const void *k, const void *v);
-int rbn_remove      (bst *T, bstn **np, const void *k);
+int rb_n_invariant   (const bst *T, const bst_n *n, int depth, int black_depth, struct bst_stats *s);
+int rb_n_insert      (bst *T, bst_n **np, const void *k, const void *v);
+int rb_n_remove      (bst *T, bst_n **np, const void *k);
 
 /* AVL node subroutines */
 
-int avln_invariant  (const bst *T, const bstn *n, int depth, int *height_out, struct bst_stats *s);
-int avln_insert     (bst *T, bstn **np, const void *k, const void *v, short *dhp);
-int avln_remove     (bst *T, bstn **np, const void *k, short *dhp);
+int avl_n_invariant  (const bst *T, const bst_n *n, int depth, int *height_out, struct bst_stats *s);
+int avl_n_insert     (bst *T, bst_n **np, const void *k, const void *v, short *dhp);
+int avl_n_remove     (bst *T, bst_n **np, const void *k, short *dhp);
 
 #endif /* _bst_h */
