@@ -11,31 +11,38 @@ int test_stack_new(void)
 {
     S = stack_new(&int_type);
     test(S != NULL);
-    test(S->top == NULL);
+    test(stack_top(S) == NULL);
     test(S->data_type->size == sizeof(int));
-    test(S->count == 0);
+    test(stack_count(S) == 0);
     return 0;
 }
 
 int test_stack_usage(void)
 {
     int val;
+    int *ip;
+    int rc;
 
     for (int i = 0; i < 8; ++i) {
-        test(!stack_push(S, &i));
+        rc = stack_push(S, &i);
+        test(rc == 1);
     }
-    test(S->count == 8);
+    test(stack_count(S) == 8);
 
-    test(*(int*)stack_top(S) == 7);
+    ip = stack_top(S);
+    test(*ip == 7);
 
     for (int i = 7; i >= 0; --i) {
-        test(!stack_pop(S, &val));
+        rc = stack_pop(S, &val);
+        test(rc == 1);
         test(val == i);
     }
-    test(S->count == 0);
+    test(stack_count(S) == 0);
 
     test(stack_top(S) == NULL);
-    test_fail(stack_pop(S, &val) == -1, "stack_pop from empty stack should fail.");
+
+    rc = stack_pop(S, &val);
+    test(rc == 0);
 
     return 0;
 }

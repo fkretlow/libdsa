@@ -1,7 +1,8 @@
 /*************************************************************************************************
  *
  * stack.h
- * Interface of a stack (LIFO queue).
+ *
+ * LIFO queue implemented in terms of a singly-linked list. Simple adapter for forward_list.
  *
  * Author: Florian Kretlow, 2020
  * Licensed under the MIT License.
@@ -11,35 +12,21 @@
 #ifndef _stack_h
 #define _stack_h
 
-#include <stdlib.h>
-#include <string.h>
+#include "forward_list.h"
 
-#include "type_interface.h"
+typedef flist stack;
 
-struct stackn;
-typedef struct stackn {
-    struct stackn *next;
-    char *data;
-} stackn;
+#define stack_top(S)            flist_front(S)
+#define stack_count(S)          (S)->count
+#define stack_empty(S)          ((S)->count == 0)
 
-typedef struct stack {
-    stackn *top;
-    size_t count;
-    t_intf *data_type;
-} stack;
+#define stack_initialize(S, dt) flist_initialize(S, dt)
+#define stack_new(dt)           flist_new(dt)
+#define stack_delete(S)         flist_delete(S)
+#define stack_destroy(S)        flist_destroy(S)
+#define stack_clear(S)          flist_clear(S)
 
-#define stackn_size(S) (sizeof(stackn) + t_size((S)->data_type))
-
-#define stack_top(S) ((S)->top ? (void*)(S)->top->data : NULL)
-#define stack_count(S) (S)->count
-#define stack_empty(S) ((S)->count == 0)
-
-int         stack_initialize    (stack *S, t_intf *dt);
-stack *     stack_new           (t_intf *dt);
-void        stack_delete        (stack *S);
-void        stack_clear         (stack *S);
-
-int         stack_push          (stack *S, const void *in);
-int         stack_pop           (stack *S, void *out);
+#define stack_push(S, v)        flist_push_front(S, v)
+#define stack_pop(S, out)       flist_pop_front(S, out)
 
 #endif // _stack_h

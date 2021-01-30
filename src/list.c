@@ -3,7 +3,7 @@
  * list.c
  *
  * Implementation of the list interface defined in list.h.
- * No data field is defined in the node header struct `listn`, but on construction enough memory
+ * No data field is defined in the node header struct `list_n`, but on construction enough memory
  * is allocated for the node header and one data object according to the type interface stored in
  * the list header. This allows for generic handling of arbitrary types while reducing memory
  * overhead and indirection. Disclaimer: Don't try this at home... ;)
@@ -30,21 +30,20 @@ error:
 
 /* Get the size of a node, which is the sum of the size of the node header + the size of data
  * objects. */
-#define listn_size(L) (sizeof(listn) + t_size((L)->data_type))
+#define list_n_size(L) (sizeof(list_n) + t_size((L)->data_type))
 
-/* static inline listn *listn_new(const list *L, const void *v)
+/* static inline list_n *list_n_new(const list *L, const void *v)
  * Create a new list node with the value v. Return a pointer to it or NULL on error. */
-static inline listn *listn_new(const list *L, const void *v)
+static inline list_n *list_n_new(const list *L, const void *v)
 {
-    log_call("L=%p", L);
     assert(L && L->data_type && v);
-    size_t size = listn_size(L);
-    assert(size > sizeof(listn));
+    size_t size = list_n_size(L);
+    assert(size > sizeof(list_n));
 
-    listn *n = calloc(1, size);
+    list_n *n = calloc(1, size);
     check_alloc(n);
 
-    t_copy(L->data_type, listn_data(n), v);
+    t_copy(L->data_type, list_n_data(n), v);
     n->has_data = 1;
 
     return n;
@@ -53,25 +52,23 @@ error:
     return NULL;
 }
 
-/* static inline void listn_delete(const list *L, listn *n)
+/* static inline void list_n_delete(const list *L, list_n *n)
  * Delete n, freeing any associated memory. */
-static inline void listn_delete(const list *L, listn *n)
+static inline void list_n_delete(const list *L, list_n *n)
 {
-    log_call("L=%p, n=%p", L, n);
     assert(L && L->data_type && n);
-    if (n->has_data) t_destroy(L->data_type, listn_data(n));
+    if (n->has_data) t_destroy(L->data_type, list_n_data(n));
     free(n);
 }
 
-/* static void listn_set(const list *L, listn *n, const void *v)
+/* static void list_n_set(const list *L, list_n *n, const void *v)
  * Set the payload of n to v, destroying any existing payload. */
-static void listn_set(const list *L, listn *n, const void *v)
+static void list_n_set(const list *L, list_n *n, const void *v)
 {
-    log_call("L=%p, n=%p, v=%p", L, n, v);
     assert(L && L->data_type && n && v);
 
-    if (n->has_data) t_destroy(L->data_type, listn_data(n));
-    t_copy(L->data_type, listn_data(n), v);
+    if (n->has_data) t_destroy(L->data_type, list_n_data(n));
+    t_copy(L->data_type, list_n_data(n), v);
     n->has_data = 1;
 }
 
@@ -80,13 +77,13 @@ static void listn_set(const list *L, listn *n, const void *v)
  * list_initialize initializes a list at the address pointed to by L (assuming there's enough
  * space), and returns 0 on success or -1 on error. list_new allocates and initializes a new list
  * and returns a pointer to it or NULL on error. */
-int list_initialize(list *L, t_intf *t)
+int list_initialize(list *L, t_intf *dt)
 {
-    check_ptr(t);
+    check_ptr(dt);
 
     L->first = L->last = NULL;
     L->count = 0;
-    L->data_type = t;
+    L->data_type = dt;
 
     assert(list_invariant(L) == 0);
     return 0;
@@ -94,12 +91,12 @@ error:
     return -1;
 }
 
-list *list_new(t_intf *t)
+list *list_new(t_intf *dt)
 {
     list *L = malloc(sizeof(*L));
     check_alloc(L);
 
-    int rc = list_initialize(L, t);
+    int rc = list_initialize(L, dt);
     check(rc == 0, "failed to initialize new list");
 
     return L;
@@ -115,12 +112,12 @@ void list_clear(list *L)
     if (L) {
         assert(list_invariant(L) == 0);
 
-        listn *cur;
-        listn *next;
+        list_n *cur;
+        list_n *next;
 
         for (cur = L->first; cur != NULL; cur = next) {
             next = cur->next;
-            listn_delete(L, cur);
+            list_n_delete(L, cur);
         }
         L->first = L->last = NULL;
         L->count = 0;
@@ -146,11 +143,11 @@ void list_delete(list *L)
     }
 }
 
-/* static inline listn *list_get_node(const list *L, size_t i)
+/* static inline list_n *list_get_node(const list *L, size_t i)
  * Returns the node at index i, assuming i is not out of range. */
-static inline listn *list_get_node(const list *L, size_t i)
+static inline list_n *list_get_node(const list *L, size_t i)
 {
-    listn *cur = L->first;
+    list_n *cur = L->first;
     for ( ; i >= 1; --i) cur = cur->next;
     return cur;
 }
@@ -164,8 +161,8 @@ void *list_get(list *L, const size_t i)
 
     if (i >= L->count) return NULL;
 
-    listn *n = list_get_node(L, i);
-    return listn_data(n);
+    list_n *n = list_get_node(L, i);
+    return list_n_data(n);
 error:
     return NULL;
 }
@@ -179,8 +176,8 @@ int list_set(list *L, const size_t i, const void *v)
     check(i < list_count(L), "index error");
     check_ptr(v);
 
-    listn *n = list_get_node(L, i);
-    listn_set(L, n, v);
+    list_n *n = list_get_node(L, i);
+    list_n_set(L, n, v);
 
     return 0;
 error:
@@ -197,7 +194,7 @@ int list_insert(list *L, const size_t i, const void *v)
     check(i < list_count(L) || i == 0, "index error");
     check_ptr(v);
 
-    listn *n = listn_new(L, v);
+    list_n *n = list_n_new(L, v);
     check(n != NULL, "failed to make new node");
 
     if (i == 0) {
@@ -206,8 +203,8 @@ int list_insert(list *L, const size_t i, const void *v)
         L->first = n;
         if (L->count == 0) L->last = n;
     } else {
-        listn *next = list_get_node(L, i);
-        listn *prev = next->prev;
+        list_n *next = list_get_node(L, i);
+        list_n *prev = next->prev;
 
         prev->next = n;
         n->prev = prev;
@@ -231,7 +228,7 @@ int list_remove(list *L, const size_t i)
     assert(list_invariant(L) == 0);
     check(i < list_count(L), "index error");
 
-    listn *n = list_get_node(L, i);
+    list_n *n = list_get_node(L, i);
 
     if (i == 0) {
         assert(n->prev == NULL);
@@ -246,13 +243,13 @@ int list_remove(list *L, const size_t i)
         L->last = n->prev;
         L->last->next = NULL;
     } else {
-        listn *next = n->next;
-        listn *prev = n->prev;
+        list_n *next = n->next;
+        list_n *prev = n->prev;
         prev->next = next;
         next->prev = prev;
     }
     --L->count;
-    listn_delete(L, n);
+    list_n_delete(L, n);
 
     assert(list_invariant(L) == 0);
     return 1;
@@ -269,7 +266,7 @@ int list_push_back(list *L, const void *v)
     assert(list_invariant(L) == 0);
     check_ptr(v);
 
-    listn *n = listn_new(L, v);
+    list_n *n = list_n_new(L, v);
     check(n != NULL, "failed to make new node");
 
     if (L->count == 0) {
@@ -298,17 +295,17 @@ int list_pop_front(list *L, void *out)
 
     if (L->count == 0) return 0;
 
-    listn *n = L->first;
+    list_n *n = L->first;
     if (n->next) L->first = n->next;
     else         L->first = L->last = NULL;
     --L->count;
 
     if (out) {
-        t_move(L->data_type, out, listn_data(n));
+        t_move(L->data_type, out, list_n_data(n));
         n->has_data = 0;
     }
 
-    listn_delete(L, n);
+    list_n_delete(L, n);
 
     assert(list_invariant(L) == 0);
     return 1;
@@ -323,17 +320,17 @@ int list_pop_back(list *L, void *out)
 
     if (L->count == 0) return 0;
 
-    listn *n = L->last;
+    list_n *n = L->last;
     if (n->prev) L->last = n->prev;
     else         L->last = L->first = NULL;
     --L->count;
 
     if (out) {
-        t_move(L->data_type, out, listn_data(n));
+        t_move(L->data_type, out, list_n_data(n));
         n->has_data = 0;
     }
 
-    listn_delete(L, n);
+    list_n_delete(L, n);
 
     assert(list_invariant(L) == 0);
     return 1;

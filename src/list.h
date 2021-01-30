@@ -18,29 +18,29 @@
 
 #include "type_interface.h"
 
-struct listn;
-typedef struct listn {
-    struct listn *prev;
-    struct listn *next;
+struct list_n;
+typedef struct list_n {
+    struct list_n *prev;
+    struct list_n *next;
     unsigned char has_data : 1;
-} listn;
+} list_n;
 
 typedef struct list {
-    listn *first;
-    listn *last;
+    list_n *first;
+    list_n *last;
     size_t count;
     t_intf *data_type;
 } list;
 
-#define listn_data(n)   (void*)((char*)n + sizeof(listn))
+#define list_n_data(n)   (void*)((char*)n + sizeof(list_n))
 
-#define list_first(L)   ((L)->first ? listn_data((L)->first) : NULL)
-#define list_last(L)    ((L)->last  ? listn_data((L)->last)  : NULL)
+#define list_first(L)   ((L)->first ? list_n_data((L)->first) : NULL)
+#define list_last(L)    ((L)->last  ? list_n_data((L)->last)  : NULL)
 #define list_count(L)   (L)->count
 #define list_empty(L)   ((L)->count == 0)
 
 int     list_initialize     (list *L, t_intf *t);
-list *  list_new            (t_intf *data_type);
+list *  list_new            (t_intf *dt);
 void    list_destroy        (list *L);
 void    list_delete         (list *L);
 void    list_clear          (list *L);
@@ -55,9 +55,9 @@ int     list_pop_front      (list *L, void *out);
 int     list_pop_back       (list *L, void *out);
 
 
-listn* __N;
+list_n* __N;
 #define list_foreach(L, D) \
-    for (__N = (L)->first, D = listn_data(__N); \
-            __N != NULL; __N = __N->next, D = __N ? listn_data(__N) : NULL)
+    for (__N = (L)->first, D = list_n_data(__N); \
+            __N != NULL; __N = __N->next, D = __N ? list_n_data(__N) : NULL)
 
 #endif /* _list_h */

@@ -46,4 +46,4 @@
 
 #define sentinel(fmt, ...) log_error(fmt, ...); goto error
 
-#endif // _check_h
+#endif /* _check_h */
