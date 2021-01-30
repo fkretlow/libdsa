@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * stats.h
+ *
+ * Very simple rolling statistics, only keeps track of min, max and avg.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #ifndef _stats_h
 #define _stats_h
 
@@ -11,7 +22,7 @@ typedef struct stats {
     size_t count;
 } stats;
 
-void stats_init (stats *s);
-void stats_add  (stats *s, double v);
+void stats_initialize   (stats *S);
+void stats_add          (stats *S, double v);
 
 #endif // _stats_h

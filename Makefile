@@ -9,9 +9,6 @@ LIB=./build/libdsa.a
 TEST_SOURCES=$(wildcard ./tests/*_tests.c)
 TEST=$(patsubst %.c,%,$(TEST_SOURCES))
 
-BIN_SOURCES=$(wildcard ./programs/*.c)
-BIN=$(patsubst ./programs/%.c,./build/%,$(BIN_SOURCES))
-
 .PHONY: all clean build test doc
 
 all: clean $(LIB) test
@@ -32,24 +29,21 @@ $(LIB): build $(LIB_OBJECTS)
 
 $(TEST): $(LIB)
 
+# Build, run the tests, and generate coverage info.
 test: $(TEST)
 	sh ./tests/runtests.sh
 	mkdir -p cov
 	lcov --quiet --capture --directory . --output-file ./cov/coverage.info
 	genhtml ./cov/coverage.info --output-directory ./cov --quiet
 
-
-$(BIN): $(LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(BIN_SOURCES) $(LIB)
-
-bin: CFLAGS += -DNDEBUG
-bin: $(BIN)
-	./build/sort_comparisons
-
+# Build and run the bst comparisons.
 bst: CFLAGS += -DNDEBUG
 bst: $(LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o ./build/bst_comparisons ./programs/bst_comparisons.c $(LIB)
 	./build/bst_comparisons
 
-doc:
-	find ./doc/ -name '*.tex' -exec xelatex -output-directory=./doc {} \;
+# Build and run the sort comparisons.
+sort: CFLAGS += -DNDEBUG
+sort: $(LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o ./build/sort_comparisons ./programs/sort_comparisons.c $(LIB)
+	./build/sort_comparisons

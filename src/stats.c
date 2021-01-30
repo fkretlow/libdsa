@@ -1,21 +1,29 @@
+/*************************************************************************************************
+ *
+ * stats.c
+ *
+ * Implementation file for stats.h.
+ *
+ ************************************************************************************************/
+
 #include <float.h>
 #include "stats.h"
 
-void stats_init(stats *s)
+/* void stats_initialize(stats *S) -- self-explainging */
+void stats_initialize(stats *S)
 {
-    s->avg = 0.0;
-    s->min = DBL_MAX;
-    s->max = DBL_MIN;
-    s->count = 0;
+    S->avg = 0.0;
+    S->min = DBL_MAX;
+    S->max = DBL_MIN;
+    S->count = 0;
 }
 
-void stats_add(stats *s, double v)
+/* void stats_add(stats *S, double v)
+ * Have the rolling stats munch v and update themselves accordingly. */
+void stats_add(stats *S, double v)
 {
-    s->avg = (s->count * s->avg + v) / (s->count + 1);
-    ++s->count;
-    if (v < s->min) {
-        s->min = v;
-    } else if (v > s->max) {
-        s->max = v;
-    }
+    S->avg = (S->count * S->avg + v) / (S->count + 1);
+    ++S->count;
+    if      (v < S->min)    S->min = v;
+    else if (v > S->max)    S->max = v;
 }

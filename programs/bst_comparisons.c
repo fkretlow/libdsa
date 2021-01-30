@@ -1,3 +1,11 @@
+/*************************************************************************************************
+ *
+ * bst_comparisons.c
+ *
+ * Compare the performance of the different BST balancing algorithms (none/BST, AVL, RB).
+ *
+ ************************************************************************************************/
+
 #include <stdlib.h>
 #include <time.h>
 
@@ -7,7 +15,7 @@
 #include "util.h"
 
 #define NRUNS 32
-#define NGETS 20000
+#define NGETS 1000
 #define NMEMB 512
 #define MAXV 4096
 
