@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * str.c
+ *
+ * Implementation of the string interface defined in str.h.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #include <assert.h>
 #include <string.h>
 
@@ -6,14 +17,22 @@
 #include "type_interface.h"
 
 
+/* int str_initialize(str *s)
+ * Initialize the string pointed to by s by setting everything to zero. Returns an int just for
+ * consistency with the other initializers in the library. */
 int str_initialize(str *s)
 {
     if (s) memset(s, 0, sizeof(*s));
     return 0;
 }
 
+/* str *str_new(void)
+ * Similarly simple, just allocate a new string. */
 str *str_new(void) { return calloc(1, sizeof(str)); }
 
+/* void str_destroy(void *sp)
+ * Destroy the internals of the string pointed to by sp (void pointer to silence irksome compiler
+ * warnings when used in type interfaces..., yes, dirty...). */
 void str_destroy(void *sp)
 {
     str *s = sp;
@@ -25,6 +44,8 @@ void str_destroy(void *sp)
     }
 }
 
+/* void str_delete(str *s)
+ * Destroy and deallocate s. */
 void str_delete(str *s)
 {
     if (s) {
@@ -33,8 +54,9 @@ void str_delete(str *s)
     }
 }
 
-/* Allocate memory for at least `capacity` characters.
- * Does not shrink the internal storage. */
+
+/* int str_reserve(str *s, const size_t capacity)
+ * Allocate memory for at least `capacity` characters. Does not shrink the internal storage. */
 int str_reserve(str *s, const size_t capacity)
 {
     check_ptr(s);
@@ -65,8 +87,9 @@ error:
     return -1;
 }
 
-/* Shrink the internal storage if and as possible. Does not necessarily shrink
- * it to the exact size needed. */
+/* int str_shrink_to_fit(str *s)
+ * Shrink the internal storage if and as possible. Does not necessarily shrink it to the exact
+ * size needed. */
 int str_shrink_to_fit(str *s)
 {
     check_ptr(s);
@@ -102,6 +125,9 @@ error:
     return -1;
 }
 
+/* void str_clear(str *s)
+ * Delete the string data, reset everything. Similar to str_initialize, but frees previously
+ * allocated heap storage. */
 void str_clear(str *s)
 {
     if (s) {
@@ -114,6 +140,8 @@ void str_clear(str *s)
     }
 }
 
+/* str *str_copy(const str *src)
+ * Create and return an exact copy of src. */
 str *str_copy(const str *src)
 {
     str *s = NULL;
@@ -131,12 +159,16 @@ error:
     return NULL;
 }
 
+/* void str_copy_to(void *dest, const void *src)
+ * Copy src to dest, assuming dest is a pointer to an uninitialized string. */
 void str_copy_to(void *dest, const void *src)
 {
     str_initialize(dest);
     str_assign(dest, src);
 }
 
+/* int str_assign(str *dest, const str *src)
+ * Copy src to dest, assuming dest is an initialized string. */
 int str_assign(str *dest, const str *src)
 {
     check_ptr(dest);
@@ -155,6 +187,8 @@ error:
     return -1;
 }
 
+/* int str_assign_cstr(str *dest, const char *cstr)
+ * Assign the C-string cstr to dest, assuming dest is an initialized string. */
 int str_assign_cstr(str *dest, const char *cstr)
 {
     check_ptr(dest);
@@ -174,6 +208,9 @@ error:
     return -1;
 }
 
+/* str *str_from_cstr(const char *cstr)
+ * Create a string from the C-string cstr. Only use this with string literals or char pointers
+ * where you know there's a terminating null byte. */
 str *str_from_cstr(const char *cstr)
 {
     str *s = NULL;
@@ -191,6 +228,8 @@ error:
     return NULL;
 }
 
+/* int str_compare(const void *a, const void *b)
+ * Adapter for strncmp. */
 int str_compare(const void *a, const void *b)
 {
     const str *s1 = a;
@@ -200,6 +239,8 @@ int str_compare(const void *a, const void *b)
                    s1->length > s2->length ? s1->length : s2->length);
 }
 
+/* int str_append(str *s1, const str *s2)
+ * Append s2 to s1, leaving s2 untouched. */
 int str_append(str *s1, const str *s2)
 {
     check_ptr(s1);
@@ -222,6 +263,8 @@ error:
     return -1;
 }
 
+/* int str_append_cstr(str *s, const char *cstr)
+ * Append the C-string cstr to s. */
 int str_append_cstr(str *s, const char *cstr)
 {
     check_ptr(s);
@@ -244,6 +287,8 @@ error:
     return -1;
 }
 
+/* int str_push_back(str *s, const char c)
+ * Append c to s. */
 int str_push_back(str *s, const char c)
 {
     check_ptr(s);
@@ -263,6 +308,8 @@ error:
     return -1;
 }
 
+/* int str_pop_back(str *s, char *out)
+ * Remove the last character of s, writing it to out if out is given. */
 int str_pop_back(str *s, char *out)
 {
     check_ptr(s);
@@ -278,6 +325,8 @@ error:
     return -1;
 }
 
+/* str *str_concat(const str *s1, const str *s2)
+ * Create a new string that contains the concatenation of s1 and s2. */
 str *str_concat(const str *s1, const str *s2)
 {
     str *s = NULL;
@@ -296,12 +345,16 @@ error:
     return NULL;
 }
 
+/* uint32_t str_hash(const void *s)
+ * Generate a hash of s (using the Jenkins hashing algorithm). */
 uint32_t str_hash(const void *s)
 {
     char *data = str_data((str*)s);
     return jenkins_hash(data, ((str *)s)->length);
 }
 
+/* void str_print(FILE *stream, const void *s)
+ * Print s to stream. */
 void str_print(FILE *stream, const void *s)
 {
     char *data = str_data((str *)s);

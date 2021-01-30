@@ -1,3 +1,18 @@
+/*************************************************************************************************
+ *
+ * type_interface.h
+ *
+ * Type interfaces are the means whereby the containers in the library can handle different types
+ * generically. A type interface is just a struct containing the type's size and function pointers
+ * for copy, move, swap, destruction, comparison, hash and print operations. Each of the
+ * containers takes one or more pointers to type interfaces as arguments for initialization and
+ * uses them to perform the required actions on its contents. Not all fields in a type interface
+ * need to be present for all containers. If move/copy/destruction operations are not defined,
+ * the operations will only handle the top level data of the type, ignoring possible pointers to
+ * sub-data.
+ *
+ ************************************************************************************************/
+
 #ifndef _type_interface_h
 #define _type_interface_h
 
@@ -48,4 +63,4 @@ void        int_print   (FILE *stream, const void *i);
 
 t_intf pointer_type;
 
-#endif // _type_interface_h
+#endif /* _type_interface_h */

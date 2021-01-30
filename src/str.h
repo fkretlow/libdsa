@@ -1,3 +1,17 @@
+/*************************************************************************************************
+ *
+ * str.h
+ *
+ * Interface for a string type that is somewhat safer than C's character array in that it stores
+ * the length of the string so it doesn't rely on a terminating null character. Implemented as a
+ * dynamic array of characters. Short strings are stored inside the top-level struct itself to
+ * avoid unnecessary memory allocations.
+ *
+ * Author: Florian Kretlow, 2020
+ * Licensed under the MIT License.
+ *
+ ************************************************************************************************/
+
 #ifndef _str_h
 #define _str_h
 

@@ -1,3 +1,14 @@
+/*************************************************************************************************
+ *
+ * type_interface.c
+ *
+ * Implementations of generic operations on objects specified by the given type interface that
+ * make use of the functions stored in the given type interface.
+ *
+ * A couple of pre-defined type interfaces for primitive types. Should be expanded.
+ *
+ ************************************************************************************************/
+
 #include "check.h"
 #include "str.h"
 #include "type_interface.h"
