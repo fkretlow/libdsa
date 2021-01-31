@@ -2,26 +2,25 @@
 
 [`stack.h`](./../src/stack.h), [`stack.c`](./../src/stack.c)
 
-Simple stack (LIFO queue), implemented in terms of a singly-linked list.
-
-- Fast adding and removing of elements at one side in O(1).
+Simple stack (LIFO queue), implemented in terms of a singly-linked list. Fast adding and removing
+of elements at one side in O(1).
 
 ```C
-// Pass the element size and, optionally, a copy constructor and a destructor for initialization.
-Stack S = Stack_new(sizeof(int), NULL, NULL);
+#include "stack.h"
+#include "type_interface.h"
 
-// Pass pointers to values you want to add.
-for (int i = 0; i < max; ++i) {
-    Stack_push(S, &i);
+stack *S = stack_new(&int_type);        /* S holds objects of type int */
+
+for (int i = 0; i < 8; ++i) {
+    stack_push(S, &i);                  /* pass addresses of values to add */
 }
 
-// Pass an address if you want to store popped values.
+int *top = stack_top(S);                /* top points into the stack, *top == 7 */
+
 int out;
-while (!Stack_empty(S)) {
-    Stack_pop(S, &out);
-    do_stuff_with(out);
+while (!stack_empty(S)) {
+    stack_pop(S, &out);                 /* each value is moved to out */
 }
 
-// Return the memory when you're done.
-Stack_delete(S);
+stack_delete(S);
 ```

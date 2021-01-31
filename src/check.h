@@ -2,7 +2,7 @@
  *
  * check.h
  *
- * Various error checking macros.
+ * Various error checking macros. Require a label `error` to jump to in case of failure.
  *
  * Author: Florian Kretlow, 2020, using patterns desribed by Zed A. Shaw.
  * License: MIT License

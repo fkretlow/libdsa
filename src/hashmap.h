@@ -23,7 +23,7 @@ typedef struct hashmap_n {
 } hashmap_n;
 
 typedef struct hashmap {
-    hashmap_n **     buckets;
+    hashmap_n **    buckets;
     unsigned short  n_buckets;
     size_t          count;
     t_intf *        key_type;

@@ -9,15 +9,14 @@
  *
  ************************************************************************************************/
 
-#include <assert.h>
 #include <stdlib.h>
-
 #include "heap.h"
 
 #define _lchild(i) (2 * (i) + 1)
 #define _rchild(i) (2 * (i) + 2)
 #define _parent(i) (((i) - 1) / 2)
 
+/* Test if the order of the elements in the given array satisfies the heap property. */
 int is_heap(char *base, const size_t n, const size_t size, compare_f compare)
 {
     if (n > 1) {
@@ -31,6 +30,7 @@ int is_heap(char *base, const size_t n, const size_t size, compare_f compare)
     return 1;
 }
 
+/* Rearrange the elements in the given array in such a way that they satisfy the heap property. */
 void make_heap(char *base, const size_t n, const size_t size,
                compare_f compare,
                char *temp)
@@ -38,9 +38,10 @@ void make_heap(char *base, const size_t n, const size_t size,
     for (int i = _parent((int)n - 1); i >= 0; --i) {
         heap_sift_down(base, n, size, (size_t)i, compare, temp);
     }
-    assert(is_heap(base, n, size, compare));
 }
 
+/* Make the element at index i move up the heap until it sits where it belongs. Used to repair the
+ * heap after inserting an element at the end of the array. */
 void heap_bubble_up(char *base, const size_t size,
                     size_t i,
                     compare_f compare,
@@ -54,6 +55,8 @@ void heap_bubble_up(char *base, const size_t size,
     }
 }
 
+/* Make the element at index i move down the heap until it sits where it belongs. Used by
+ * make_heap. */
 void heap_sift_down(char *base, const size_t n, const size_t size,
                     size_t i,
                     compare_f compare,

@@ -2,28 +2,23 @@
 
 [`queue.h`](./../src/queue.h)
 
-Simple FIFO queue, implemented in terms of a doubly-linked list.
-
-- Fast adding at the start and removing at the end in O(1).
+Simple FIFO queue, implemented in terms of a doubly-linked list. Fast adding at the start and removing at the end in O(1).
 
 ```C
-// Initialize with the element size and an optional callback for element destruction.
-Queue q;
-Queue_init(&q, sizeof(int), NULL);
+#include "queue.h"
 
-// Pass pointers to values you want to add.
-for (int i = 0; i < max; ++i) {
-    Queue_push(&q, &i);
-}
+queue *Q = queue_new(&int_type);        /* Q holds objects of type int */
 
-// Pass an address if you want to store popped values.
-int value;
-while (Queue_size(&q) > 0) {
-    Queue_pop(&q, &value);
-    // Do stuff with value.
-}
+for (int i = 0; i < 8; ++i) {
+    rc = queue_enqueue(Q, &i);          /* pass pointers to values you want to add */
+}                                       /* rc < 0 on error */
 
-// There's no memory block allocated anywhere, but all elements are on the heap.
-// Clear non-empty queues when you're done to return the memory.
-Queue_clear(&q);
+int *next = queue_next(Q);              /* next points into the queue */
+
+int out;
+while (!queue_empty(Q)) {
+    rc = queue_dequeue(Q, &out);        /* the next value is moved to out */
+}                                       /* again, rc < 0 on error
+
+queue_delete(Q);
 ```
